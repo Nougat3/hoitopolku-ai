@@ -4,13 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#FFFFFF">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="light-content">
-<meta name="apple-mobile-web-app-title" content="Hoitopolku">
-<link rel="manifest" href="manifest-main.json">
 <link rel="icon" type="image/svg+xml" href="icon.svg">
-<!-- iOS ei tue SVG:ta kotinaytön kuvakkeena, joten se tarvitsee PNG:n. -->
 <link rel="apple-touch-icon" href="icon-192.png">
 <title>Hoitopolku — terveytesi tärkeimmät luvut, yksi selkeä suunnitelma</title>
 <meta name="description" content="Verenpaine, kolesteroli, verensokeri ja paino. Hoitopolku auttaa ymmärtämään terveydentilasi, asettamaan tavoitteet ja seuraamaan niiden kehittymistä oman lääkärisi kanssa.">
@@ -198,7 +192,7 @@ footer a:hover{color:var(--ink)}
       <a href="#hinnasto">Hinnasto</a>
       <a href="#kenelle">Kenelle sopii</a>
       <a href="#nayttö">Miksi teemme tämän</a>
-      <a class="nav-cta" href="https://hoitopolku-app.vercel.app/aloita?kutsu=demo-potilas-token">Aloita →</a>
+      <a class="nav-cta" href="demo.html">Aloita →</a>
     </nav>
   </div>
 </header>
@@ -215,7 +209,7 @@ footer a:hover{color:var(--ink)}
     </div>
     <p class="lead" style="margin-top:24px">Hoitopolku auttaa sinua ymmärtämään terveydentilasi, asettamaan tärkeimmät tavoitteet ja seuraamaan niiden kehittymistä yhdessä oman lääkärisi kanssa.</p>
     <div class="cta-row" style="margin-top:30px">
-      <a class="btn arrow" href="https://hoitopolku-app.vercel.app/aloita?kutsu=demo-potilas-token">Aloita hoitopolku</a>
+      <a class="btn arrow" href="demo.html">Aloita hoitopolku</a>
       <a class="btn ghost" href="#nain">Näin se toimii</a>
     </div>
     <div class="monitor">
@@ -307,7 +301,7 @@ footer a:hover{color:var(--ink)}
           <li>Verenpainemittarin lainaus</li>
           <li>Yksi lisäkäynti tarvittaessa</li>
         </ul>
-        <a class="btn" href="https://hoitopolku-app.vercel.app/aloita?kutsu=demo-potilas-token">Aloita</a>
+        <a class="btn" href="demo.html">Aloita</a>
       </div>
     </div>
     <p class="pnote">
@@ -406,7 +400,7 @@ footer a:hover{color:var(--ink)}
     <h2>Aloita hoitopolku</h2>
     <p class="lead" style="margin-top:18px">Hoitopolku alkaa kutsusta omalta lääkäriltä. Avaa kutsu tai pyydä se lääkäriltäsi.</p>
     <div class="cta-row" style="margin-top:30px">
-      <a class="btn arrow" href="https://hoitopolku-app.vercel.app/aloita?kutsu=demo-potilas-token">Aloita hoitopolku</a>
+      <a class="btn arrow" href="demo.html">Aloita hoitopolku</a>
       <a class="btn ghost" href="#hinnasto">Katso hinnasto</a>
     </div>
   </div>
@@ -517,13 +511,6 @@ if(!reduce&&'IntersectionObserver' in window){
   document.querySelectorAll('.rev').forEach(n=>io.observe(n));
 }else{document.querySelectorAll('.rev').forEach(n=>n.classList.add('in'));}
 
-if('serviceWorker' in navigator){
-  window.addEventListener('load',()=>{
-    navigator.serviceWorker.register('sw-main.js')
-      .then(reg=>console.log('SW registered'))
-      .catch(err=>console.log('SW error:',err));
-  });
-}
 </script>
 </body>
 </html>

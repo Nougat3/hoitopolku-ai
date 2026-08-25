@@ -1,5 +1,10 @@
 # hoitopolku.ai
-Landing page for hoitopolku.ai.
+
 Suomen Omalääkärit.
-GitHub Pages from the main branch root.
-Hoitopolku 249 € / 6 kk.
+
+| Tiedosto | Rooli |
+|---|---|
+| `index.html` | Landing page |
+| `demo.html` | Itse sovellus (kirjautuminen, mittaukset, lääkärinäkymä) |
+
+Julkaisu: GitHub Pages, `main`-haaran juuri.

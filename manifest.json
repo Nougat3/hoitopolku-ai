@@ -1,7 +1,7 @@
 {
-  "name": "Hoitopolku Demo",
+  "name": "Hoitopolku",
   "short_name": "Hoitopolku",
-  "description": "Demo Hoitopolku-alustasta: seuraa terveytesi tärkeimpiä lukuja",
+  "description": "Terveytesi tärkeimmät luvut, yksi selkeä suunnitelma oman lääkärisi kanssa",
   "start_url": "demo.html",
   "scope": "./",
   "display": "standalone",
