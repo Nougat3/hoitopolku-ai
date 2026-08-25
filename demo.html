@@ -794,7 +794,11 @@ const fmt=(v,d)=>d?v.toFixed(1).replace('.',','):String(Math.round(v));
 const DAYS=84, TODAY=DAYS-1;
 const midnight=d=>{const x=new Date(d);x.setHours(0,0,0,0);return x;};
 function dayIndex(iso){
-  return TODAY-Math.round((midnight(new Date())-midnight(iso))/86400000);
+  /* Aikavyöhyke voi siirtää juuri tallennetun UTC-leiman huomiseen
+     paikallisella asteikolla. Silloin piste jäisi ikkunan ulkopuolelle. */
+  const i=TODAY-Math.round((midnight(new Date())-midnight(iso))/86400000);
+  if(i>TODAY)return TODAY;
+  return i;
 }
 const WEEKDAYS=['su','ma','ti','ke','to','pe','la'];
 function dayLabel(iso){
@@ -1061,7 +1065,7 @@ entrySaveBtn.addEventListener('click',async()=>{
 
   const latausvirhe=await lataaMittaukset();
   if(latausvirhe)console.error('Kirjauksen jälkeinen päivitys:',latausvirhe);
-  renderRecent();renderMuut();renderTiles();drawChart(entryCur.i);
+  paivitaSeuranta(entryCur.i);
 
   if(varoitus){msg(varoitus,'warn');return;}
   msg('Tallennettu. Lääkärisi näkee kirjauksen automaattisesti.','ok');
@@ -1264,7 +1268,7 @@ saveMBtn.addEventListener('click',async()=>{
 
   const latausvirhe=await lataaMittaukset();
   if(latausvirhe)console.error('Mittauslistan päivitys:',latausvirhe);
-  renderRecent();renderJakso();renderTiles();renderEtusivu();
+  paivitaSeuranta(0);
   sysEl.value='';diaEl.value='';pulEl.value='';
   if(sys>=180||dia>=110)
     vihje(h,'Tallennettu. Lukema on korkea — lepää viisi minuuttia ja mittaa uudelleen. Jos arvo toistuu, ota yhteys hoitavaan tahoon. Rintakivun tai halvausoireiden yhteydessä soita 112.','warn');
@@ -1295,17 +1299,21 @@ const SG=[
 ];
 
 const fmtv=(v,d)=>d?v.toFixed(1).replace('.',','):String(Math.round(v));
-function rolling(points){
+/* 7 vrk liukuva keskiarvo. Näytetään heti kun ikkunassa on mittauksia —
+   aiempi vaatimus viidestä mittauksesta piilotti käyrän ja laatikon
+   kokonaan, joten tallennettu arvo ei näkynyt seurannassa. */
+function rolling(points,minN){
+  const tarve=minN==null?1:minN;
   const out=[];
-  for(let d=6;d<DAYS;d++){
+  for(let d=0;d<=TODAY;d++){
     const w=points.filter(p=>p.d>d-7&&p.d<=d);
-    if(w.length>=5)out.push({d:d,v:w.reduce((s,p)=>s+p.v,0)/w.length});
+    if(w.length>=tarve)out.push({d:d,v:w.reduce((s,p)=>s+p.v,0)/w.length});
   }
   return out;
 }
 function project(r,days){
   const last=r.slice(-days);
-  if(last.length<5)return null;
+  if(last.length<3)return null;
   const n=last.length,mx=last.reduce((s,p)=>s+p.d,0)/n,my=last.reduce((s,p)=>s+p.v,0)/n;
   let num=0,den=0;
   last.forEach(p=>{num+=(p.d-mx)*(p.v-my);den+=(p.d-mx)**2;});
@@ -1341,7 +1349,11 @@ function drawChart(i){
 
   const dMin=m.dense?Math.max(0,TODAY-range+1):0;
   const pts=m.data.filter(p=>p.d>=dMin);
-  const line=m.dense?rolling(m.data).filter(p=>p.d>=dMin):pts;
+  /* Tiheässä sarjassa käyrä on 7 vrk keskiarvo. Jos ikkunassa ei vielä
+     ole yhtään pistettä keskiarvoon, näytetään yksittäiset mittaukset
+     viivana jotta tallennus näkyy heti. */
+  let line=m.dense?rolling(m.data).filter(p=>p.d>=dMin):pts.slice();
+  if(m.dense&&!line.length&&pts.length)line=pts.slice();
   const proj=m.dense?project(rolling(m.data),28):null;
 
   let projEnd=null;
@@ -1434,6 +1446,14 @@ function drawChart(i){
   if(line.length){
     const l=line[line.length-1];
     svg.appendChild(el('circle',{cx:x(l.d),cy:y(l.v),r:5,fill:'#1D1D1F',stroke:'#fff','stroke-width':2.2}));
+  }
+  /* Juuri tallennettu lukema erottuu, jotta tallennus näkyy käyrällä heti. */
+  if(m.dense&&pts.length){
+    const tuore=pts[pts.length-1];
+    if(tuore.d===TODAY){
+      svg.appendChild(el('circle',{cx:x(tuore.d),cy:y(tuore.v),r:7,fill:'none',stroke:m.color,'stroke-width':2.2,'stroke-opacity':'.9'}));
+      svg.appendChild(el('circle',{cx:x(tuore.d),cy:y(tuore.v),r:3.2,fill:m.color}));
+    }
   }
 
   updateSummary(m,line,pts,proj,projEnd);
@@ -1595,7 +1615,17 @@ document.querySelectorAll('#segRange button').forEach(b=>{
     b.setAttribute('aria-selected','true');range=+b.dataset.r;drawChart(cur);
   });
 });
-drawChart(0);
+/* Kaaviota ei piirretä sivun latautuessa — data tulee kannasta vasta
+   kirjautumisen jälkeen. openMetric ja paivitaSeuranta piirtävät sen. */
+
+/* Tallennuksen jälkeen seuranta ja avoinna oleva käyrä päivitetään
+   samasta paikasta, jotta uusi arvo näkyy heti laatikoissa ja kaaviossa. */
+function paivitaSeuranta(metricIndex){
+  renderRecent();renderJakso();renderMuut();renderTiles();renderEtusivu();
+  const graphAuki=document.getElementById('v-graph').classList.contains('on');
+  if(graphAuki&&metricIndex!=null)openMetric(metricIndex);
+  else if(graphAuki)drawChart(cur);
+}
 
 /* ══════════ TILES + SPARKLINE ══════════ */
 // Catmull-Rom -> kuutiollinen bezier, pehmeä käyrä ilman ylilyöntejä
@@ -1647,7 +1677,9 @@ function sparkline(vals,color,w,h,target){
 function tileSeries(m){
   if(m.dense){
     const r=rolling(m.data);
-    return r.slice(-10).map(p=>p.v);
+    if(r.length)return r.slice(-10).map(p=>p.v);
+    /* Ensimmäiset kirjaukset ennen kuin keskiarvo ehtii muodostua. */
+    return m.data.slice(-10).map(p=>p.v);
   }
   return m.data.slice(-10).map(p=>p.v);
 }
