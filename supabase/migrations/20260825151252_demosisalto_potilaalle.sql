@@ -2,10 +2,10 @@
 update public.users set full_name = 'Matti Korhonen'  where id = 'usr_potilas_demo';
 update public.users set full_name = 'Liisa Virtanen'  where id = 'usr_potilas_toinen';
 update public.users set full_name = 'Anna Lehtinen',
-                        title = 'Yleislaaketieteen erikoislaakari, LL'
+                        title = 'Yleislääketieteen erikoislääkäri, LL'
   where id = 'usr_laakari_demo';
 update public.users set full_name = 'Pekka Salo',
-                        title = 'Sisatautien erikoislaakari, LT'
+                        title = 'Sisätautien erikoislääkäri, LT'
   where id = 'usr_laakari_toinen';
 
 -- Migraatio on ajettavissa uudelleen: demopotilaan sisalto rakennetaan aina
@@ -71,38 +71,38 @@ values
 -- ── taman viikon tehtavat ────────────────────────────────────────────
 insert into public.patient_tasks (patient_id, title, detail, due_hint, target_view, sort_order, done, done_at)
 values
-  ('usr_potilas_demo', 'Mittaa aamun verenpaine', 'Kaksi mittausta viiden minuutin valein',
+  ('usr_potilas_demo', 'Mittaa aamun verenpaine', 'Kaksi mittausta viiden minuutin välein',
    'Tehty klo 7.10', null, 1, true, now() - interval '6 hours'),
   ('usr_potilas_demo', 'Punnitse itsesi', 'Kerran viikossa, mieluiten samana aamuna',
-   'Taman viikon aikana', 'mittaa', 2, false, null),
-  ('usr_potilas_demo', 'Kay verikokeissa', 'Kolesteroli, verensokeri ja munuaisarvot',
+   'Tämän viikon aikana', 'mittaa', 2, false, null),
+  ('usr_potilas_demo', 'Käy verikokeissa', 'Kolesteroli, verensokeri ja munuaisarvot',
    'Tehty viikko sitten', null, 3, true, now() - interval '3 days'),
-  ('usr_potilas_demo', 'Vahvista vastaanottoaika', 'Etavastaanotto, 40 min',
+  ('usr_potilas_demo', 'Vahvista vastaanottoaika', 'Etävastaanotto, 40 min',
    'Vahvista ennen maanantaita', 'hoitopolku', 4, false, null),
-  ('usr_potilas_demo', 'Tayta oirekysely', 'Ennen seuraavaa vastaanottoa',
-   'Kestaa noin minuutin', 'kysely', 5, false, null);
+  ('usr_potilas_demo', 'Täytä oirekysely', 'Ennen seuraavaa vastaanottoa',
+   'Kestää noin minuutin', 'kysely', 5, false, null);
 
 -- ── hoitopolun aikajana ──────────────────────────────────────────────
 insert into public.care_events (patient_id, when_label, title, detail, status, card_note, card_button, sort_order)
 values
   ('usr_potilas_demo', 'Viikko 1', 'Hoitopolku alkoi',
-   'Valitsit laakariksesi Anna Lehtisen.', 'done', null, null, 1),
+   'Valitsit lääkäriksesi Anna Lehtisen.', 'done', null, null, 1),
   ('usr_potilas_demo', 'Viikko 1-2', 'Mittausjakso, 7 vrk',
    'Kotimittaukset kirjattu. Sarja riitti diagnoosiin.', 'done', null, null, 2),
   ('usr_potilas_demo', 'Viikko 2', 'Verikokeet',
    'Kolesteroli, verensokeri, munuaisarvot ja suolat.', 'done', null, null, 3),
-  ('usr_potilas_demo', 'Ensi viikolla', 'Laakarin etavastaanotto',
-   '40 min. Kaytte tulokset lapi ja tarkistatte hoidon vasteen.', 'now',
-   'Laakarillasi on jo kaikki tuloksesi. Sinun ei tarvitse valmistautua mitenkaan.',
+  ('usr_potilas_demo', 'Ensi viikolla', 'Lääkärin etävastaanotto',
+   '40 min. Käytte tulokset läpi ja tarkistatte hoidon vasteen.', 'now',
+   'Lääkärilläsi on jo kaikki tuloksesi. Sinun ei tarvitse valmistautua mitenkään.',
    'Siirry vastaanotolle', 4),
   ('usr_potilas_demo', 'Viikko 14', 'Uusi mittausjakso',
-   '7 vrk mittauksia annoksen noston jalkeen.', 'next', null, null, 5),
+   '7 vrk mittauksia annoksen noston jälkeen.', 'next', null, null, 5),
   ('usr_potilas_demo', 'Viikko 18', 'Kontrolli',
-   '20 min. Vaste, haittavaikutukset ja tarvittaessa annoksen saato.', 'next', null, null, 6),
+   '20 min. Vaste, haittavaikutukset ja tarvittaessa annoksen säätö.', 'next', null, null, 6),
   ('usr_potilas_demo', 'Viikko 20', 'Loppuverikokeet',
-   'Samat kokeet kuin alussa, jotta muutos on nahtavissa.', 'next', null, null, 7),
+   'Samat kokeet kuin alussa, jotta muutos on nähtävissä.', 'next', null, null, 7),
   ('usr_potilas_demo', 'Kuukausi 6', 'Loppuarvio',
-   'Katsotaan kaikki nelja lukua ja sovitaan jatkosta.', 'next', null, null, 8);
+   'Katsotaan kaikki neljä lukua ja sovitaan jatkosta.', 'next', null, null, 8);
 
 -- ── tavoitearvot ─────────────────────────────────────────────────────
 insert into public.patient_targets (patient_id, bp_sys, bp_dia, ldl, hba1c, weight, weight_note)
