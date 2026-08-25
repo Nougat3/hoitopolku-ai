@@ -1,4 +1,4 @@
-const CACHE_NAME = 'hoitopolku-demo-v3';
+const CACHE_NAME = 'hoitopolku-demo-v4';
 
 /* Polut ovat suhteellisia tähän tiedostoon, jotta ne toimivat myös
    kun sivusto on julkaistu alihakemistoon. Juuresta lähtevä '/demo.html'
@@ -6,6 +6,8 @@ const CACHE_NAME = 'hoitopolku-demo-v3';
 const urlsToCache = [
   'demo.html',
   'icon.svg',
+  'icon-192.png',
+  'icon-512.png',
   'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap'
 ];
 

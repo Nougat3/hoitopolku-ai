@@ -1,4 +1,4 @@
-const CACHE_NAME = 'hoitopolku-main-v3';
+const CACHE_NAME = 'hoitopolku-main-v4';
 
 /* Polut ovat suhteellisia tähän tiedostoon, jotta ne toimivat myös
    kun sivusto on julkaistu alihakemistoon. Juuresta lähtevä '/index.html'
@@ -8,6 +8,8 @@ const urlsToCache = [
   'index.html',
   'aloita.html',
   'icon.svg',
+  'icon-192.png',
+  'icon-512.png',
   'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap'
 ];
 
