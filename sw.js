@@ -1,4 +1,4 @@
-const CACHE_NAME = 'hoitopolku-demo-v4';
+const CACHE_NAME = 'hoitopolku-v5';
 
 /* Polut ovat suhteellisia tähän tiedostoon, jotta ne toimivat myös
    kun sivusto on julkaistu alihakemistoon. Juuresta lähtevä '/demo.html'
@@ -28,6 +28,11 @@ self.addEventListener('install', event => {
    Välimuistia käytetään vain kun verkko ei vastaa. Muut resurssit
    (fontit) välimuistista ensin, koska ne eivät muutu. */
 self.addEventListener('fetch', event => {
+  /* Potilastietoa ei talleteta laitteelle. Kannan ja kirjautumisen pyynnöt
+     jätetään kokonaan service workerin ulkopuolelle, jotta vastaus ei voi
+     päätyä välimuistiin edes vahingossa. */
+  if (new URL(event.request.url).hostname.endsWith('.supabase.co')) return;
+
   const isPage = event.request.mode === 'navigate' ||
                  event.request.destination === 'document';
 
