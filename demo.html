@@ -368,7 +368,11 @@ body[data-role="laakari"] .app{padding-bottom:34px}
 .task .box{
   width:22px;height:22px;border-radius:980px;border:1.8px solid var(--hair);flex:none;margin-top:1px;
   display:flex;align-items:center;justify-content:center;background:#fff;color:#fff;transition:.15s;
+  position:relative;
 }
+/* Ruksin kosketusalue on ympyrää suurempi, jotta se osuu sormella. */
+.task .box::after{content:"";position:absolute;inset:-12px}
+.task .arrow{margin-left:auto;align-self:center;flex:none;color:var(--muted-2);font-size:19px;line-height:1}
 .task.done .box{background:var(--green);border-color:var(--green)}
 .task .t{font-size:15px;font-weight:500;display:block}
 .task .d{font-size:13px;color:var(--muted);display:block;margin-top:2px}
@@ -861,12 +865,15 @@ function renderTasks(){
     const b=document.createElement('button');
     b.className='task'+(k.done?' done':'');
     b.innerHTML='<span class="box"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg></span>'+
-      '<span><span class="t"></span><span class="d"></span><span class="when"></span></span>';
+      '<span><span class="t"></span><span class="d"></span><span class="when"></span></span>'+
+      (k.go?'<span class="arrow" aria-hidden="true">›</span>':'');
     b.querySelector('.t').textContent=k.t;
     b.querySelector('.d').textContent=k.d||'';
     b.querySelector('.when').textContent=k.when||'';
-    b.addEventListener('click',()=>{
-      if(k.go){go(k.go);return;}
+    /* Ruksista kuitataan, muualta siirrytään tehtävän näkymään. Ilman tätä
+       ohjaavia tehtäviä ei voinut merkitä tehdyksi lainkaan. */
+    b.addEventListener('click',ev=>{
+      if(k.go&&!ev.target.closest('.box')){go(k.go);return;}
       kuittaaTehtava(i);
     });
     taskList.appendChild(b);
