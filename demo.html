@@ -146,8 +146,16 @@ p{margin:0 0 14px}
 /* rows */
 .row{display:flex;justify-content:space-between;gap:14px;padding:13px 0;border-bottom:1px solid var(--hair);font-size:15px}
 .row:last-child{border-bottom:none}
-.row .k{color:var(--muted)}
-.row .v{font-weight:500;white-space:nowrap;font-variant-numeric:tabular-nums}
+.row .k{flex:1 1 auto;color:var(--muted);min-width:0}
+/* Sanallinen arvo saa kääriytyä kapealla näytöllä. Pelkkä nowrap leikkasi
+   pitkät tavoitetekstit kortin reunan yli. Katto pitää selitteen luettavana. */
+.row .v{flex:0 1 auto;max-width:62%;font-weight:500;font-variant-numeric:tabular-nums;text-align:right;min-width:0;overflow-wrap:break-word}
+/* Kaikkein kapeimmilla puhelimilla selite ja arvo eivät mahdu rinnakkain
+   ilman että pitkä sana katkeaa keskeltä. */
+@media (max-width:359px){
+  .row{flex-direction:column;gap:3px}
+  .row .v{max-width:100%;text-align:left}
+}
 
 /* dots */
 .dots{display:flex;gap:7px;margin:14px 0 4px;flex-wrap:wrap}
@@ -1653,7 +1661,9 @@ function renderTiles(){
     const [cls,txt]=tileState(m,vals);
     const b=document.createElement('button');
     b.className='tile';
-    b.innerHTML='<span class="top"><i style="background:'+m.color+'"></i>'+m.name.replace('LDL-','')+'</span>'+
+    const lyhyt=m.name.replace('LDL-','');
+    b.innerHTML='<span class="top"><i style="background:'+m.color+'"></i>'+
+      lyhyt.charAt(0).toUpperCase()+lyhyt.slice(1)+'</span>'+
       '<span class="val"></span><span class="tgt">tavoite alle '+fmtv(m.target,m.dec)+'</span>';
     b.querySelector('.val').textContent=fmtv(last,m.dec)+' '+m.unit;
     b.appendChild(sparkline(vals,m.color,300,74,m.target));
