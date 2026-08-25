@@ -4,12 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#FFFFFF">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="light-content">
 <meta name="apple-mobile-web-app-title" content="Hoitopolku">
-<link rel="manifest" href="/manifest-main.json">
-<link rel="icon" type="image/svg+xml" href="/icon.svg">
-<link rel="apple-touch-icon" href="/icon.svg">
+<link rel="manifest" href="manifest-main.json">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+<!-- iOS ei tue SVG:ta kotinaytön kuvakkeena, joten se tarvitsee PNG:n. -->
+<link rel="apple-touch-icon" href="icon-192.png">
 <title>Hoitopolku — terveytesi tärkeimmät luvut, yksi selkeä suunnitelma</title>
 <meta name="description" content="Verenpaine, kolesteroli, verensokeri ja paino. Hoitopolku auttaa ymmärtämään terveydentilasi, asettamaan tavoitteet ja seuraamaan niiden kehittymistä oman lääkärisi kanssa.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -517,7 +519,7 @@ if(!reduce&&'IntersectionObserver' in window){
 
 if('serviceWorker' in navigator){
   window.addEventListener('load',()=>{
-    navigator.serviceWorker.register('/sw-main.js')
+    navigator.serviceWorker.register('sw-main.js')
       .then(reg=>console.log('SW registered'))
       .catch(err=>console.log('SW error:',err));
   });
