@@ -41,7 +41,7 @@ h3{font-size:17px;letter-spacing:-.02em}
 p{margin:0 0 14px}
 
 /* ---------- app shell ---------- */
-.app{max-width:920px;margin:0 auto;padding:0 18px 120px}
+.app{max-width:920px;margin:0 auto;padding:0 18px 90px}
 .appbar{
   position:sticky;top:0;z-index:60;background:rgba(245,245,247,.86);backdrop-filter:saturate(180%) blur(20px);
   border-bottom:1px solid rgba(0,0,0,.08);
@@ -57,18 +57,18 @@ p{margin:0 0 14px}
 .tabbar{
   position:fixed;left:0;right:0;bottom:0;z-index:60;background:rgba(255,255,255,.92);
   backdrop-filter:saturate(180%) blur(20px);border-top:1px solid rgba(0,0,0,.08);
-  padding:6px 0 max(8px,env(safe-area-inset-bottom));
+  padding:4px 0 max(4px,env(safe-area-inset-bottom));
 }
 .tabbar-in{max-width:920px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr)}
 .tabbar button{
-  background:none;border:none;cursor:pointer;padding:6px 4px;display:flex;flex-direction:column;
-  align-items:center;gap:4px;color:var(--muted-2);font-size:11px;font-weight:500;transition:color .2s;
+  background:none;border:none;cursor:pointer;padding:4px 4px;display:flex;flex-direction:column;
+  align-items:center;gap:2px;color:var(--muted-2);font-size:10px;font-weight:500;transition:color .2s;
 }
 .tabbar button[aria-selected="true"]{color:var(--gold)}
 .tabbar button.action{color:var(--ink)}
 .tabbar button.action .plus{
-  width:34px;height:34px;border-radius:980px;background:var(--gold);color:#fff;
-  display:flex;align-items:center;justify-content:center;margin-top:-3px;transition:opacity .2s;
+  width:30px;height:30px;border-radius:980px;background:var(--gold);color:#fff;
+  display:flex;align-items:center;justify-content:center;margin-top:-2px;transition:opacity .2s;
 }
 .tabbar button.action:hover .plus{opacity:.85}
 .tabbar button.action[aria-selected="true"]{color:var(--gold)}
@@ -591,19 +591,19 @@ input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appear
 <div class="tabbar">
   <div class="tabbar-in">
     <button aria-selected="true" data-v="koti">
-      <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7v9a1 1 0 01-1 1h-5v-6H9v6H4a1 1 0 01-1-1z"/></svg>
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7v9a1 1 0 01-1 1h-5v-6H9v6H4a1 1 0 01-1-1z"/></svg>
       Etusivu
     </button>
     <button aria-selected="false" data-v="hoitopolku">
-      <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.5" cy="6.5" r="1.8"/><circle cx="5.5" cy="17.5" r="1.8"/><path d="M5.5 8.3v7.4M10.5 6.5H19M10.5 12H16M10.5 17.5H19"/></svg>
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.5" cy="6.5" r="1.8"/><circle cx="5.5" cy="17.5" r="1.8"/><path d="M5.5 8.3v7.4M10.5 6.5H19M10.5 12H16M10.5 17.5H19"/></svg>
       Hoitopolku
     </button>
     <button aria-selected="false" data-v="seuranta">
-      <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16l5-6 4 3 7-8"/></svg>
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16l5-6 4 3 7-8"/></svg>
       Seuranta
     </button>
     <button class="action" aria-selected="false" data-v="mittaa">
-      <span class="plus"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>
+      <span class="plus"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>
       Mittaa
     </button>
   </div>
