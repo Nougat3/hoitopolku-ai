@@ -2,7 +2,10 @@
 <html lang="fi">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F5F5F7">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <title>Hoitopolku — alusta (demo)</title>
 <meta name="description" content="Demo Hoitopolku-alustasta: aloitus, mittaukset, tulokset ja oma lääkäri.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -21,8 +24,8 @@
   --r:18px;
 }
 *{box-sizing:border-box;min-width:0}
-html,body{max-width:100%;overflow-x:hidden}
-html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+html,body{max-width:100%;overflow-x:hidden;min-height:100vh}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%;background:var(--bg-alt)}
 body{margin:0;background:var(--bg-alt);color:var(--ink);font-family:var(--font);font-size:16px;line-height:1.5;letter-spacing:-.01em;-webkit-font-smoothing:antialiased;overflow-wrap:break-word}
 svg{max-width:100%}
 a{color:inherit;text-decoration:none}
@@ -38,6 +41,7 @@ p{margin:0 0 14px}
 .appbar{
   position:sticky;top:0;z-index:60;background:rgba(245,245,247,.86);backdrop-filter:saturate(180%) blur(20px);
   border-bottom:1px solid rgba(0,0,0,.08);
+  padding-top:env(safe-area-inset-top);
 }
 .appbar-in{max-width:920px;margin:0 auto;padding:0 18px;height:54px;display:flex;align-items:center;gap:12px}
 .brand{display:flex;align-items:center;gap:9px;flex:0 1 auto;overflow:hidden}
