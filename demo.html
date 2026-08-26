@@ -291,6 +291,11 @@ body[data-role="laakari"] .app{padding-bottom:34px}
 .prow .bp-badge.ok{background:var(--green-tint);color:var(--green)}
 .prow .bp-badge.muted{background:var(--bg-alt);color:var(--muted)}
 .prow .flag{color:var(--amber);font-weight:500}
+.share-code{
+  font-size:clamp(26px,7vw,32px);font-weight:700;letter-spacing:.16em;text-align:center;
+  padding:18px 12px;background:var(--bg-alt);border-radius:14px;font-variant-numeric:tabular-nums;
+  color:var(--ink);user-select:all;
+}
 .prow .arrow{margin-left:0;color:var(--muted-2);flex:none}
 
 /* action sheet */
@@ -643,6 +648,11 @@ body[data-role="laakari"] .app{padding-bottom:34px}
       <button class="btn sec sm" onclick="go('kysely')">Tee oirekysely</button>
     </div>
 
+    <div class="section-label">JAA LÄÄKÄRILLE</div>
+    <div class="card" id="shareCard">
+      <p class="sub" style="margin:0">Ladataan…</p>
+    </div>
+
     <div class="section-label">TILI</div>
     <div class="card">
       <h3>Kirjautuneena</h3>
@@ -734,11 +744,23 @@ body[data-role="laakari"] .app{padding-bottom:34px}
   <!-- LÄÄKÄRI: POTILASLISTA -->
   <div class="view" id="v-laakari">
     <div class="pagehead">
-      <h1 id="docHello">Potilaasi</h1>
+      <h1 id="docHello">Vastaanotto</h1>
       <div class="sub" id="docSub">—</div>
     </div>
 
-    <div class="section-label">HOIDOSSASI</div>
+    <div class="section-label">AVAA POTILAS</div>
+    <div class="card">
+      <h3 style="margin-bottom:8px">Syötä potilaan jakokoodi</h3>
+      <p class="sub" style="margin:0 0 14px">Potilas luo koodin ennen etävastaanottoa. Varaa aika erikseen — koodi antaa pääsyn potilaan tietoihin 24 tunniksi.</p>
+      <div class="field">
+        <label for="docAccessCode">Jakokoodi</label>
+        <input type="text" id="docAccessCode" placeholder="XXXX-XXXX" autocapitalize="characters" autocomplete="off" spellcheck="false" style="font-size:20px;font-weight:600;letter-spacing:.12em;text-transform:uppercase">
+      </div>
+      <button class="btn full" id="docRedeemBtn">Avaa potilas</button>
+      <p class="hint" id="docRedeemHint" hidden></p>
+    </div>
+
+    <div class="section-label">AVATUT ISTUNNOT</div>
     <div class="card">
       <div class="plist" id="patientList"></div>
     </div>
@@ -2187,6 +2209,7 @@ function renderPotilasnakyma(){
   renderEtusivu();renderTasks();renderTimeline();renderHoitoOhje();renderLaakariKortti();
   renderRecent();renderJakso();renderMuut();renderTavoitteet();renderSx();renderTiles();
   renderMeds(document.getElementById('medList'));
+  renderJakokoodi();
   const acct=document.getElementById('acctInfo');
   if(acct)acct.textContent=(me.full_name?me.full_name+' · ':'')+me.email;
   document.getElementById('avatar').textContent=nimikirjaimet(me.full_name||me.email);
@@ -2332,6 +2355,89 @@ async function lataaTausta(potilas){
     doctor=dr||null;
   }
   return null;
+}
+
+function fmtPaivaAika(iso){
+  if(!iso)return '—';
+  const d=new Date(iso);
+  if(isNaN(d.getTime()))return String(iso);
+  return d.getDate()+'.'+(d.getMonth()+1)+'. klo '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+}
+
+/* ══════════ JAKOKOODI (POTILAS) ══════════ */
+let naytaJakokoodi=null;
+
+async function renderJakokoodi(){
+  const card=document.getElementById('shareCard');
+  if(!card)return;
+  const {data:aktiivinen,error}=await sb.from('patient_access_codes')
+    .select('expires_at')
+    .eq('patient_id',me.id)
+    .is('revoked_at',null)
+    .is('redeemed_at',null)
+    .gt('expires_at',new Date().toISOString())
+    .order('created_at',{ascending:false})
+    .limit(1)
+    .maybeSingle();
+  if(error){
+    card.innerHTML='<p class="sub" style="margin:0">'+esc(virheteksti(error))+'</p>';
+    return;
+  }
+
+  let html='<p class="sub" style="margin:0 0 14px">Luo koodi ennen etävastaanottoa ja lähetä se lääkärille chatissa tai sähköpostilla. Varaa aika erikseen Omalääkäreillä.</p>';
+  if(naytaJakokoodi){
+    html+='<div class="share-code" id="shareCodeVal">'+esc(naytaJakokoodi.code)+'</div>';
+    html+='<p class="sub" style="margin:8px 0 14px">Voimassa '+esc(fmtPaivaAika(naytaJakokoodi.expires_at))+'. Kopioi nyt — koodia ei näytetä uudelleen.</p>';
+    html+='<button class="btn sec sm" type="button" id="copyShareBtn">Kopioi koodi</button>';
+  }else if(aktiivinen){
+    html+='<p class="sub" style="margin:0 0 14px">Sinulla on voimassa oleva koodi (vanhenee '+esc(fmtPaivaAika(aktiivinen.expires_at))+'). Luo uusi korvataksesi sen — vanha koodi mitätöityy.</p>';
+  }
+  html+='<div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap">';
+  html+='<button class="btn full" type="button" id="createShareBtn" style="flex:1;min-width:140px">'+
+    (aktiivinen||naytaJakokoodi?'Luo uusi koodi':'Luo jakokoodi')+'</button>';
+  if(aktiivinen&&!naytaJakokoodi){
+    html+='<button class="btn sec sm" type="button" id="revokeShareBtn">Peru koodi</button>';
+  }
+  html+='</div><p class="hint" id="shareHint" hidden></p>';
+  card.innerHTML=html;
+
+  const hint=document.getElementById('shareHint');
+  const vihje=(t,ok)=>{hint.textContent=t;hint.hidden=!t;hint.className='hint'+(ok?' ok':t?' warn':'');};
+
+  const kopio=document.getElementById('copyShareBtn');
+  if(kopio)kopio.addEventListener('click',async()=>{
+    const teksti=naytaJakokoodi?naytaJakokoodi.code:'';
+    if(!teksti)return;
+    try{
+      await navigator.clipboard.writeText(teksti);
+      vihje('Koodi kopioitu leikepöydälle.',true);
+    }catch{
+      vihje('Kopioi koodi käsin yllä olevasta laatikosta.','');
+    }
+  });
+
+  const luo=document.getElementById('createShareBtn');
+  if(luo)luo.addEventListener('click',async()=>{
+    luo.disabled=true;
+    vihje('Luodaan…');
+    const {data,error:e2}=await sb.rpc('create_patient_access_code');
+    luo.disabled=false;
+    if(e2){vihje(virheteksti(e2));return;}
+    naytaJakokoodi={code:data.code,expires_at:data.expires_at};
+    await renderJakokoodi();
+    vihje('Jakokoodi luotu. Lähetä se lääkärillesi ennen vastaanottoa.',true);
+  });
+
+  const peru=document.getElementById('revokeShareBtn');
+  if(peru)peru.addEventListener('click',async()=>{
+    peru.disabled=true;
+    const {error:e3}=await sb.rpc('revoke_patient_access_code');
+    peru.disabled=false;
+    if(e3){vihje(virheteksti(e3));return;}
+    naytaJakokoodi=null;
+    await renderJakokoodi();
+    vihje('Jakokoodi mitätöity.',true);
+  });
 }
 
 /* ══════════ LÄÄKÄRIN NÄKYMÄ ══════════ */
@@ -2519,18 +2625,28 @@ function renderSeuraavaEhdotus(){
 
 async function lataaPotilaslista(){
   const lista=document.getElementById('patientList');
-  const {data:en,error:e1}=await sb.from('enrollments')
-    .select('patient_id,status').eq('doctor_id',me.id).eq('status','active');
+  const nyt=new Date().toISOString();
+  const {data:sessions,error:e1}=await sb.from('care_sessions')
+    .select('patient_id,expires_at')
+    .eq('doctor_id',me.id)
+    .is('ended_at',null)
+    .gt('expires_at',nyt)
+    .order('expires_at',{ascending:false});
   if(e1)return virheteksti(e1);
 
-  const idt=(en||[]).map(r=>r.patient_id);
+  const idt=[...new Set((sessions||[]).map(s=>s.patient_id))];
+  const istuntoVanhenee=new Map();
+  (sessions||[]).forEach(s=>{
+    if(!istuntoVanhenee.has(s.patient_id))istuntoVanhenee.set(s.patient_id,s.expires_at);
+  });
+
   document.getElementById('docEmail').textContent=me.email;
-  document.getElementById('docHello').textContent=
-    me.full_name?me.full_name:'Potilaasi';
+  document.getElementById('docHello').textContent='Vastaanotto';
 
   lista.innerHTML='';
   if(!idt.length){
-    lista.innerHTML='<p class="sub" style="margin:0">Ei potilaita.</p>';
+    document.getElementById('docSub').textContent='Syötä potilaan jakokoodi avataksesi potilaan tiedot';
+    lista.innerHTML='<p class="sub" style="margin:0">Ei avoimia istuntoja. Potilas luo koodin Seuranta-näkymässä ennen vastaanottoa.</p>';
     return null;
   }
 
@@ -2583,7 +2699,7 @@ async function lataaPotilaslista(){
     b.className='prow';
     b.innerHTML='<span class="ph">'+esc(nimikirjaimet(u.full_name||u.email))+'</span>'+
       '<span style="min-width:0;flex:1"><span class="n">'+esc(u.full_name||u.email)+'</span>'+
-      '<span class="d">'+esc(rivi)+'</span></span>'+
+      '<span class="d">'+esc(rivi)+' · istunto '+esc(fmtPaivaAika(istuntoVanhenee.get(u.id)))+' asti</span></span>'+
       '<span class="bp-badge '+triage.cls+'">'+esc(triage.label)+'</span>'+
       '<svg class="arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>';
     b.addEventListener('click',()=>avaaPotilas(u));
@@ -2591,10 +2707,37 @@ async function lataaPotilaslista(){
   });
 
   document.getElementById('docSub').textContent=
-    idt.length
-      ? idt.length+' potilasta'+(huomioita?' · '+huomioita+' vaatii huomiota':'')
-      : 'Sinulle ei ole vielä nimetty potilaita';
+    idt.length+' avointa istuntoa'+(huomioita?' · '+huomioita+' vaatii huomiota':'');
   return null;
+}
+
+async function lunastaJakokoodi(){
+  const input=document.getElementById('docAccessCode');
+  const btn=document.getElementById('docRedeemBtn');
+  const hint=document.getElementById('docRedeemHint');
+  const koodi=(input?.value||'').trim();
+  if(!koodi){
+    hint.textContent='Syötä potilaan jakokoodi.';
+    hint.hidden=false;
+    hint.className='hint warn';
+    return;
+  }
+  btn.disabled=true;
+  hint.textContent='Avataan…';
+  hint.hidden=false;
+  hint.className='hint';
+  const {data,error}=await sb.rpc('redeem_patient_access_code',{p_code:koodi});
+  btn.disabled=false;
+  if(error){
+    hint.textContent=String(error.message||virheteksti(error));
+    hint.className='hint warn';
+    return;
+  }
+  hint.textContent='Potilas avattu. Istunto voimassa '+fmtPaivaAika(data.expires_at)+' asti.';
+  hint.className='hint ok';
+  input.value='';
+  await lataaPotilaslista();
+  avaaPotilas({id:data.patient_id,full_name:data.full_name,email:data.email});
 }
 
 async function avaaPotilas(u){
@@ -2740,6 +2883,12 @@ const logoutBtn=document.getElementById('logoutBtn');
 if(logoutBtn)logoutBtn.addEventListener('click',kirjauduUlos);
 const docLogout=document.getElementById('docLogout');
 if(docLogout)docLogout.addEventListener('click',kirjauduUlos);
+const docRedeemBtn=document.getElementById('docRedeemBtn');
+const docAccessCode=document.getElementById('docAccessCode');
+if(docRedeemBtn)docRedeemBtn.addEventListener('click',lunastaJakokoodi);
+if(docAccessCode)docAccessCode.addEventListener('keydown',e=>{
+  if(e.key==='Enter'){e.preventDefault();lunastaJakokoodi();}
+});
 bootLogout.addEventListener('click',kirjauduUlos);
 
 /* ══════════ KÄYNNISTYS ══════════ */
