@@ -71,7 +71,7 @@ values (
   'usr_potilas_demo',
   'Ramipril',
   '5 mg',
-  date '2026-08-24',
+  (current_date - 42),
   'bp',
   'Aloitus verenpaineen hoitoon',
   'usr_laakari_demo'
