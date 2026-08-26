@@ -290,6 +290,7 @@ body[data-role="laakari"] .app{padding-bottom:34px}
 .prow .bp-badge.warn{background:var(--amber-tint);color:var(--amber)}
 .prow .bp-badge.ok{background:var(--green-tint);color:var(--green)}
 .prow .bp-badge.muted{background:var(--bg-alt);color:var(--muted)}
+.prow .flag{color:var(--amber);font-weight:500}
 .prow .arrow{margin-left:0;color:var(--muted-2);flex:none}
 
 /* action sheet */
@@ -759,6 +760,9 @@ body[data-role="laakari"] .app{padding-bottom:34px}
       <div class="sub" id="pSub">—</div>
     </div>
 
+    <div class="section-label">MITÄ SEURAAVAKSI?</div>
+    <div class="card tight" id="pNextStep"></div>
+
     <div class="section-label">SMARTGRAPH · VERENPAINE</div>
     <div class="card" id="pGraphCard">
       <div class="readout">
@@ -1174,6 +1178,7 @@ entrySaveBtn.addEventListener('click',async()=>{
       if(!started){msg('Anna lopetuspäivä.','warn');return;}
       entryBusy=true;entrySaveBtn.disabled=true;
       msg('Tallennetaan…');
+      const lopetettava=MEDS.find(m=>m.id===medId);
       const {error}=await sb.from('patient_medications').update({ended_on:started}).eq('id',medId);
       entryBusy=false;entrySaveBtn.disabled=false;
       if(error){
@@ -1184,8 +1189,16 @@ entrySaveBtn.addEventListener('click',async()=>{
       const latausvirhe=await lataaLaakitykset(potilasId);
       if(latausvirhe)console.error('Lääkityslistan päivitys:',latausvirhe);
       if(docMedPatient){
+        await ilmoitaLaakemuutoksesta(potilasId,'stop',
+          (lopetettava?(lopetettava.name+' '+lopetettava.dose):'lääkitys'));
         drawPatientChart();
         renderDocMeds(document.getElementById('pMeds'));
+        renderSeuraavaEhdotus();
+        await lataaTehtavat(potilasId);
+        document.getElementById('pTasks').innerHTML=
+          TASKS.length
+            ? TASKS.map(t=>rivi(t.t,t.done?'tehty':'kesken')).join('')
+            : rivi('Ei tehtäviä','');
       }else{
         paivitaSeuranta(0);
       }
@@ -1219,8 +1232,15 @@ entrySaveBtn.addEventListener('click',async()=>{
     const latausvirhe=await lataaLaakitykset(potilasId);
     if(latausvirhe)console.error('Lääkityslistan päivitys:',latausvirhe);
     if(docMedPatient){
+      await ilmoitaLaakemuutoksesta(potilasId,kind,name+' '+dose);
       drawPatientChart();
       renderDocMeds(document.getElementById('pMeds'));
+      renderSeuraavaEhdotus();
+      await lataaTehtavat(potilasId);
+      document.getElementById('pTasks').innerHTML=
+        TASKS.length
+          ? TASKS.map(t=>rivi(t.t,t.done?'tehty':'kesken')).join('')
+          : rivi('Ei tehtäviä','');
     }else{
       paivitaSeuranta(0);
     }
@@ -2232,7 +2252,8 @@ async function lataaOireet(potilas){
     s:(r.symptoms||[]).join(', '),
     l:r.severity,
     t:r.note||'',
-    when:dayLabel(r.reported_at)
+    when:dayLabel(r.reported_at),
+    at:r.reported_at
   }));
   return null;
 }
@@ -2323,11 +2344,177 @@ function potilasKa7(patientId,bpRows){
   const ka=rolling(pts);
   return ka.length?ka[ka.length-1].v:null;
 }
-function bpTila(ka,tavoite){
-  if(ka===null)return {cls:'muted',label:'Ei dataa'};
-  if(ka<=tavoite)return {cls:'ok',label:'Tavoitteessa'};
-  if(ka>tavoite+10)return {cls:'bad',label:'Korkea'};
-  return {cls:'warn',label:'Yli tavoitteen'};
+function potilasBpPisteet(patientId,bpRows){
+  return (bpRows||[]).filter(m=>m.patient_id===patientId)
+    .map(m=>({d:dayIndex(m.measured_at),v:m.sys}))
+    .filter(p=>p.d>=0&&p.d<=TODAY);
+}
+function viimeMittausPaiva(pisteet){
+  if(!pisteet.length)return null;
+  return TODAY-Math.max(...pisteet.map(p=>p.d));
+}
+function oirePaiviaSitten(at){
+  if(!at)return 999;
+  return Math.max(0,Math.round((Date.now()-new Date(at).getTime())/86400000));
+}
+function oireIkaleima(paivia){
+  if(paivia===0)return 'tänään';
+  if(paivia===1)return 'eilen';
+  return paivia+' pv sitten';
+}
+function onAceEstaja(nimi){
+  return /ramipril|enalapril|perindopril|lisinopril|kaptopril|trandolapril|kinapril/i.test(nimi||'');
+}
+function triagePotilas(patientId,{ka,tavoite,bpRows,meds,symptom}){
+  const pisteet=potilasBpPisteet(patientId,bpRows);
+  const katko=viimeMittausPaiva(pisteet);
+  const aktiiviset=(meds||[]).filter(m=>!m.ended_on);
+  const flags=[];
+  let cls='ok', label='Tavoitteessa', priority=0;
+
+  if(ka===null){
+    return {cls:'muted',label:'Ei dataa',priority:-1,flags:['Ei mittauksia'],ka,meds:aktiiviset};
+  }
+  if(ka>tavoite+5){cls='bad';label='Korkea';priority=3;}
+  else if(ka>tavoite){cls='warn';label='Yli tavoitteen';priority=2;}
+  else{cls='ok';label='Tavoitteessa';priority=0;}
+
+  if(katko!==null&&katko>=5){
+    flags.push('Ei mittauksia '+katko+' pv');
+    if(priority<2){cls='warn';label='Mittauskatko';priority=2;}
+  }
+  if(symptom){
+    const pv=oirePaiviaSitten(symptom.reported_at);
+    if(pv<=14){
+      const oire=(symptom.symptoms||[]).join(', ');
+      flags.push('Oire '+oireIkaleima(pv));
+      if(priority<2){cls='warn';label='Uudet oireet';priority=2;}
+      if(onAceEstaja(aktiiviset[0]?.name)&&/kuiva yskä|yskä/i.test(oire)){
+        flags.push('Kuiva yskä + ACE');
+        cls='warn';label='Harkitse vaihtoa';priority=2;
+      }
+    }
+  }
+  if(aktiiviset.length&&ka>tavoite){
+    const alku=dayIndex(aktiiviset[0].started_on+'T12:00:00');
+    if(alku>=0&&TODAY-alku>=21){
+      const roll=rolling(pisteet);
+      const ennen=roll.filter(p=>p.d>=alku-14&&p.d<alku).map(p=>p.v);
+      const jalkeen=roll.filter(p=>p.d>alku&&p.d<=alku+14).map(p=>p.v);
+      if(ennen.length>=3&&jalkeen.length>=3){
+        const e=ennen.reduce((s,v)=>s+v,0)/ennen.length;
+        const j=jalkeen.reduce((s,v)=>s+v,0)/jalkeen.length;
+        if(e-j<3){
+          flags.push('Vaste heikko');
+          if(priority<2){cls='warn';label='Vaste heikko';priority=2;}
+        }
+      }
+    }
+  }
+  if(!aktiiviset.length&&ka>tavoite+5){
+    flags.push('Ei lääkitystä');
+    cls='bad';label='Aloitus?';priority=3;
+  }
+  return {cls,label,priority,flags,ka,meds:aktiiviset};
+}
+function listRiviTeksti(triage){
+  const osat=[];
+  if(triage.ka!==null)osat.push(Math.round(triage.ka)+' mmHg');
+  const med=triage.meds[0];
+  if(med)osat.push(med.name+' '+med.dose);
+  else osat.push('ei lääkitystä');
+  if(triage.flags.length)osat.push(triage.flags[0]);
+  return osat.join(' · ');
+}
+
+async function ilmoitaLaakemuutoksesta(patientId,kind,details){
+  const tekstit={
+    start:'Lääkärisi on aloittanut sinulle lääkityksen: '+details+'.',
+    change:'Lääkärisi on päivittänyt lääkitystäsi: '+details+'.',
+    stop:'Lääkärisi on lopettanut lääkityksen: '+details+'.'
+  };
+  const {error}=await sb.from('patient_tasks').insert({
+    patient_id:patientId,
+    title:'Lääkärisi päivitti lääkitystä',
+    detail:tekstit[kind]||details,
+    due_hint:'Juuri nyt',
+    target_view:'seuranta',
+    sort_order:0,
+    done:false
+  });
+  if(error)console.error('Potilasilmoitus:',error);
+  return error?virheteksti(error):null;
+}
+
+function laskeSeuraavaEhdotus(){
+  const tavoite=targets?targets.bp_sys:135;
+  const ka=rolling(BP);
+  const viimeKa=ka.length?ka[ka.length-1].v:null;
+  const aktiiviset=MEDS.filter(m=>!m.ended_on);
+  const viimeOire=state.aes[0];
+  const katko=viimeMittausPaiva(BP);
+  const kynnys=3;
+
+  if(katko!==null&&katko>=5){
+    return {k:'warn',t:'Pyydä mittaamaan',
+      d:'Ei kotimittauksia '+katko+' päivään. Seuranta ei ole luotettava ilman tuoreita arvoja.'};
+  }
+  if(viimeOire&&viimeOire.at&&oirePaiviaSitten(viimeOire.at)<=14){
+    const ace=aktiiviset.some(m=>onAceEstaja(m.name));
+    if(ace&&/kuiva yskä|yskä/i.test(viimeOire.s)){
+      return {k:'warn',t:'Harkitse lääkkeen vaihtoa',
+        d:'Potilas kirjasi "'+viimeOire.s+'" '+viimeOire.when+'. ACE-estäjä voi aiheuttaa kuivan yskän — harkitse toista lääkeryhmää.'};
+    }
+    if(viimeOire.l>=4){
+      return {k:'warn',t:'Oireet vaativat huomiota',
+        d:'Viimeisin oirekirjaus ('+viimeOire.s+') haittaa arkea '+viimeOire.l+'/5. Keskustele potilaan kanssa ennen lääkityksen muutosta.'};
+    }
+  }
+  if(viimeKa!==null&&viimeKa<=tavoite){
+    return {k:'good',t:'Ylläpitohoidossa',
+      d:'7 vrk keskiarvo '+Math.round(viimeKa)+' mmHg on tavoitteessa (alle '+tavoite+'). Jatka nykyistä seurantaa.'};
+  }
+  if(!aktiiviset.length&&viimeKa!==null&&viimeKa>tavoite){
+    return {k:'warn',t:'Aloita verenpainelääkitys',
+      d:'Keskiarvo '+Math.round(viimeKa)+' mmHg ilman lääkitystä. Harkitse aloitusta hoitopolun mukaisesti.'};
+  }
+  const m=SG[0];
+  const medEv=graphEvents(m).filter(e=>e.kind==='med'&&e.impact&&e.impact.tila==='ok')
+    .sort((a,b)=>b.day-a.day)[0];
+  if(medEv&&viimeKa!==null&&viimeKa>tavoite){
+    const v=medEv.impact;
+    if(v.delta>=kynnys){
+      return {k:'info',t:'Vaste osittainen',
+        d:medEv.label+': '+fmtv(v.ennen,m.dec)+' → '+fmtv(v.jalkeen,m.dec)+' mmHg (−'+fmtv(v.delta,m.dec)+'). Keskiarvo yhä '+Math.round(viimeKa)+' — harkitse annoksen nostoa tai toista lääkettä.'};
+    }
+    return {k:'warn',t:'Vaste riittämätön',
+      d:medEv.label+' aloitettu, mutta keskiarvo '+Math.round(viimeKa)+' mmHg yhä tavoitteen yläpuolella. Harkitse annoksen muutosta tai lisälääkettä.'};
+  }
+  const uusinMed=aktiiviset[0];
+  if(uusinMed&&viimeKa!==null&&viimeKa>tavoite){
+    const paivia=TODAY-dayIndex(uusinMed.started_on+'T12:00:00');
+    if(paivia>=0&&paivia<14){
+      return {k:'info',t:'Seuraa vasteen kehittymistä',
+        d:uusinMed.name+' aloitettu '+paivia+' pv sitten. Arvioi vaikutus uudelleen, kun mittauksia on kertynyt kaksi viikkoa aloituksesta.'};
+    }
+  }
+  if(viimeKa!==null&&viimeKa>tavoite){
+    return {k:'info',t:'Arvioi hoitoa',
+      d:'Keskiarvo '+Math.round(viimeKa)+' mmHg on tavoitteen yläpuolella. Käy läpi mittaukset, oireet ja lääkitys ennen seuraavaa kontaktia.'};
+  }
+  return {k:'info',t:'Jatka seurantaa',d:'Tarkista SmartGraph ja viimeisimmät mittaukset ennen päätöstä.'};
+}
+
+function renderSeuraavaEhdotus(){
+  const box=document.getElementById('pNextStep');
+  if(!box)return;
+  const e=laskeSeuraavaEhdotus();
+  const icon=e.k==='good'?'<path d="M5 13l4 4L19 7"/>'
+    :(e.k==='warn'?'<path d="M12 7v6M12 16.5v.5"/><circle cx="12" cy="12" r="9"/>'
+                  :'<path d="M12 8h.01M11 12h1v4h1"/><circle cx="12" cy="12" r="9"/>');
+  box.innerHTML='<div class="alert '+e.k+'">'+
+    '<span class="ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">'+icon+'</svg></span>'+
+    '<span><span class="t">'+esc(e.t)+'</span><span class="d">'+esc(e.d)+'</span></span></div>';
 }
 
 async function lataaPotilaslista(){
@@ -2337,8 +2524,6 @@ async function lataaPotilaslista(){
   if(e1)return virheteksti(e1);
 
   const idt=(en||[]).map(r=>r.patient_id);
-  document.getElementById('docSub').textContent=
-    idt.length?idt.length+' potilasta hoidossasi':'Sinulle ei ole vielä nimetty potilaita';
   document.getElementById('docEmail').textContent=me.email;
   document.getElementById('docHello').textContent=
     me.full_name?me.full_name:'Potilaasi';
@@ -2361,6 +2546,19 @@ async function lataaPotilaslista(){
     .order('measured_at',{ascending:false});
   if(e3)return virheteksti(e3);
 
+  const {data:meds,error:e4}=await sb.from('patient_medications')
+    .select('patient_id,name,dose,started_on,ended_on')
+    .in('patient_id',idt).order('started_on',{ascending:false});
+  if(e4)return virheteksti(e4);
+
+  const {data:sx,error:e5}=await sb.from('symptom_reports')
+    .select('patient_id,symptoms,reported_at')
+    .in('patient_id',idt).order('reported_at',{ascending:false});
+  if(e5)return virheteksti(e5);
+
+  const viimeOire=new Map();
+  (sx||[]).forEach(r=>{if(!viimeOire.has(r.patient_id))viimeOire.set(r.patient_id,r);});
+
   const viimeisin=new Map(), maara=new Map();
   (bp||[]).forEach(m=>{
     if(!viimeisin.has(m.patient_id))viimeisin.set(m.patient_id,m);
@@ -2368,32 +2566,34 @@ async function lataaPotilaslista(){
   });
 
   const tavoiteOletus=135;
+  let huomioita=0;
   const jarjestetty=(us||[]).slice().sort((a,b)=>{
-    const kaA=potilasKa7(a.id,bp), kaB=potilasKa7(b.id,bp);
-    if(kaA===null&&kaB===null)return 0;
-    if(kaA===null)return 1;
-    if(kaB===null)return -1;
-    return kaB-kaA;
+    const ta=triagePotilas(a.id,{ka:potilasKa7(a.id,bp),tavoite:tavoiteOletus,bpRows:bp,meds:meds,symptom:viimeOire.get(a.id)});
+    const tb=triagePotilas(b.id,{ka:potilasKa7(b.id,bp),tavoite:tavoiteOletus,bpRows:bp,meds:meds,symptom:viimeOire.get(b.id)});
+    if(ta.priority!==tb.priority)return tb.priority-ta.priority;
+    return (tb.ka||0)-(ta.ka||0);
   });
 
   jarjestetty.forEach(u=>{
-    const v=viimeisin.get(u.id), n=maara.get(u.id)||0;
     const ka=potilasKa7(u.id,bp);
-    const tila=bpTila(ka,tavoiteOletus);
+    const triage=triagePotilas(u.id,{ka,tavoite:tavoiteOletus,bpRows:bp,meds:meds,symptom:viimeOire.get(u.id)});
+    if(triage.priority>=2)huomioita++;
+    const rivi=listRiviTeksti(triage);
     const b=document.createElement('button');
     b.className='prow';
     b.innerHTML='<span class="ph">'+esc(nimikirjaimet(u.full_name||u.email))+'</span>'+
       '<span style="min-width:0;flex:1"><span class="n">'+esc(u.full_name||u.email)+'</span>'+
-      '<span class="d">'+(ka!==null
-        ? esc('7 vrk '+Math.round(ka)+' mmHg · '+n+' mittausta')
-        : (v
-          ? esc(v.sys+'/'+v.dia+' · '+dayLabel(v.measured_at)+' · '+n+' mittausta')
-          : 'ei mittauksia'))+'</span></span>'+
-      '<span class="bp-badge '+tila.cls+'">'+esc(tila.label)+'</span>'+
+      '<span class="d">'+esc(rivi)+'</span></span>'+
+      '<span class="bp-badge '+triage.cls+'">'+esc(triage.label)+'</span>'+
       '<svg class="arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>';
     b.addEventListener('click',()=>avaaPotilas(u));
     lista.appendChild(b);
   });
+
+  document.getElementById('docSub').textContent=
+    idt.length
+      ? idt.length+' potilasta'+(huomioita?' · '+huomioita+' vaatii huomiota':'')
+      : 'Sinulle ei ole vielä nimetty potilaita';
   return null;
 }
 
@@ -2423,6 +2623,7 @@ async function avaaPotilas(u){
       ? (viimeKa<=tavoite?'tavoitteessa':'ylitavoitteen '+Math.round(viimeKa)+' mmHg')
       : 'ei keskiarvoa');
 
+  renderSeuraavaEhdotus();
   drawPatientChart();
 
   document.getElementById('pBpList').innerHTML=

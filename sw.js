@@ -1,4 +1,4 @@
-const CACHE_NAME = 'hoitopolku-v10';
+const CACHE_NAME = 'hoitopolku-v11';
 
 /* Polut ovat suhteellisia tähän tiedostoon, jotta ne toimivat myös
    kun sivusto on julkaistu alihakemistoon. Juuresta lähtevä '/demo.html'
