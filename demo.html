@@ -1676,9 +1676,8 @@ function openMetric(i,backTo){
   graphBackTo=backTo||(me&&me.role!=='potilas'?'potilas':'seuranta');
   if(graphBackBtn)graphBackBtn.textContent=graphBackTo==='potilas'?'‹ Potilas':'‹ Seuranta';
   document.getElementById('gTitle').textContent=m.name;
-  document.getElementById('gSub').textContent=m.dense
-    ? 'Kotimittaukset, lääkitykset ja suunta samassa kuvassa.'
-    : 'Mittaukset ja niihin liittyvät lääkitykset hoitopolun varrelta.';
+  document.getElementById('gSub').textContent=
+    'Kotimittaukset, verenpainelääkitykset ja suunta samassa kuvassa.';
   document.getElementById('segRange').style.display=m.dense?'':'none';
   go('graph');
   drawChart(i);
