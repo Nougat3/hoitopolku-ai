@@ -623,7 +623,7 @@ body[data-role="laakari"] .app{padding-bottom:34px}
   <div class="view" id="v-seuranta">
     <div class="pagehead">
       <h1>Seuranta</h1>
-      <div class="sub">SmartGraph näyttää trendin ja lääkemuutosten vaikutuksen.</div>
+      <div class="sub">Mittaukset, lääkitys, oireet ja verikokeet. Jaa koodi lääkärille tarvittaessa.</div>
     </div>
 
     <div class="section-label">VERENPAINE</div>
@@ -643,9 +643,17 @@ body[data-role="laakari"] .app{padding-bottom:34px}
     <div class="section-label">OIREET JA HAITTAVAIKUTUKSET</div>
     <div class="card">
       <h3>Kirjatut oireet</h3>
-      <p class="sub" style="margin:6px 0 14px">Lääkärisi näkee kirjaukset ennen seuraavaa käyntiä.</p>
+      <p class="sub" style="margin:6px 0 14px">Lääkärisi näkee kirjaukset, kun jaat koodin.</p>
       <div id="aeList" style="margin-bottom:14px"></div>
       <button class="btn sec sm" onclick="go('kysely')">Tee oirekysely</button>
+    </div>
+
+    <div class="section-label">VERIKOKEET</div>
+    <div class="card">
+      <h3>Kirjatut tulokset</h3>
+      <p class="sub" style="margin:6px 0 14px">Natrium, kalium ja kreatiniini. Kirjaa arvot sellaisenaan — sovellus ei analysoi niitä.</p>
+      <div id="labList" style="margin-bottom:14px"></div>
+      <button class="btn sec sm" id="addLabBtn">Lisää verikokeet</button>
     </div>
 
     <div class="section-label">JAA LÄÄKÄRILLE</div>
@@ -812,6 +820,9 @@ body[data-role="laakari"] .app{padding-bottom:34px}
     <div class="section-label">OIREKIRJAUKSET</div>
     <div class="card tight" id="pSymptoms"></div>
 
+    <div class="section-label">VERIKOKEET</div>
+    <div class="card tight" id="pLabs"></div>
+
     <div class="section-label">TEHTÄVÄT</div>
     <div class="card tight" id="pTasks"></div>
   </div>
@@ -887,7 +898,7 @@ let me=null;        /* kirjautunut käyttäjä: {id, role, full_name, email, tit
 let doctor=null;    /* potilaan hoitava lääkäri */
 let targets=null;   /* tavoitearvot */
 let care=null;      /* hoito-ohje steps-taulusta */
-let state={time:'Aamu',measurements:[],aes:[]};
+let state={time:'Aamu',measurements:[],aes:[],labs:[]};
 
 const fmt=(v,d)=>d?v.toFixed(1).replace('.',','):String(Math.round(v));
 
@@ -1031,10 +1042,11 @@ document.getElementById('sheetCancel').addEventListener('click',closeSheet);
 document.getElementById('entryCancel').addEventListener('click',closeEntry);
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeSheet();closeEntry();}});
 
-/* Verenpaineen hoitopolku: mittaus, verenpainelääkitys ja oirekysely. */
+/* MVP: verenpaine, lääkitys, oireet ja verikokeet. */
 const ENTRY=[
  {key:'bp', i:0, name:'Verenpaine', d:'Ylä- ja alapaine, aamu tai ilta', color:'#B3452C', tint:'var(--red-tint)'},
- {key:'med',i:0, name:'Verenpainelääkitys', d:'Aloitus tai annosmuutos SmartGraphiin', color:'#A67C2E', tint:'var(--gold-tint)'}
+ {key:'med',i:0, name:'Verenpainelääkitys', d:'Aloitus tai annosmuutos', color:'#A67C2E', tint:'var(--gold-tint)'},
+ {key:'lab',i:0, name:'Verikokeet', d:'Natrium, kalium, kreatiniini', color:'#3D6B8C', tint:'#E8F0F5'}
 ];
 const sheetOpts=document.getElementById('sheetOpts');
 ENTRY.forEach(e=>{
@@ -1042,7 +1054,9 @@ ENTRY.forEach(e=>{
   b.className='sheet-opt';
   const icon=e.key==='med'
     ? '<path d="M9 3h6v4H9z"/><path d="M10 7h4v14a2 2 0 01-2 2h0a2 2 0 01-2-2V7z"/><path d="M8 12h8"/>'
-    : '<path d="M3 12h4l2-5 4 10 2-5h6"/>';
+    : (e.key==='lab'
+      ? '<path d="M9 3v6l-4 8a3 3 0 002.7 4.5h8.6A3 3 0 0019 17l-4-8V3"/><path d="M8 3h8"/>'
+      : '<path d="M3 12h4l2-5 4 10 2-5h6"/>');
   b.innerHTML='<span class="ic" style="background:'+e.tint+';color:'+e.color+'">'+
     '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">'+icon+'</svg></span>'+
     '<span><span class="n">'+e.name+'</span><span class="d">'+e.d+'</span></span>';
@@ -1054,13 +1068,16 @@ document.querySelectorAll('.sheet-opt[data-go]').forEach(b=>{
 });
 const addMedBtn=document.getElementById('addMedBtn');
 if(addMedBtn)addMedBtn.addEventListener('click',()=>openEntry(ENTRY.find(e=>e.key==='med')));
+const addLabBtn=document.getElementById('addLabBtn');
+if(addLabBtn)addLabBtn.addEventListener('click',()=>openEntry(ENTRY.find(e=>e.key==='lab')));
 function openDocMed(patient){openEntry(ENTRY.find(e=>e.key==='med'),patient);}
 
 /* ══════════ PIKAKIRJAUS ══════════ */
 let entryCur=null, entryTime='Aamu', docMedPatient=null;
 const FIELDS={
  bp:[{id:'e_sys',l:'Yläpaine (mmHg)',ph:'yläpaine'},{id:'e_dia',l:'Alapaine (mmHg)',ph:'alapaine'},{id:'e_pulse',l:'Syke, valinnainen',ph:'syke'}],
- med:[{id:'e_med_name',l:'Lääkkeen nimi',ph:'esim. Ramipril'},{id:'e_med_dose',l:'Annos',ph:'esim. 5 mg'}]
+ med:[{id:'e_med_name',l:'Lääkkeen nimi',ph:'esim. Ramipril'},{id:'e_med_dose',l:'Annos',ph:'esim. 5 mg'}],
+ lab:[{id:'e_lab_na',l:'Natrium Na (mmol/l)',ph:'esim. 140'},{id:'e_lab_k',l:'Kalium K (mmol/l)',ph:'esim. 4.2'},{id:'e_lab_krea',l:'Kreatiniini (µmol/l)',ph:'esim. 78'}]
 };
 function openEntry(e,forPatient){
   docMedPatient=forPatient||null;
@@ -1089,10 +1106,18 @@ function openEntry(e,forPatient){
   FIELDS[e.key].forEach(f=>{
     const d=document.createElement('div');
     d.className='field';
-    const mode=e.key==='bp'?'decimal':'text';
+    const mode=(e.key==='bp'||e.key==='lab')?'decimal':'text';
     d.innerHTML='<label for="'+f.id+'">'+f.l+'</label><input type="text" inputmode="'+mode+'" id="'+f.id+'" placeholder="'+f.ph+'">';
     wrap.appendChild(d);
   });
+  if(e.key==='lab'){
+    const day=document.createElement('div');
+    day.className='field';
+    const tanaan=new Date();
+    const ymd=tanaan.getFullYear()+'-'+String(tanaan.getMonth()+1).padStart(2,'0')+'-'+String(tanaan.getDate()).padStart(2,'0');
+    day.innerHTML='<label for="e_lab_date">Näytteenottopäivä</label><input type="date" id="e_lab_date" value="'+ymd+'">';
+    wrap.appendChild(day);
+  }
   if(e.key==='med'){
     const start=document.createElement('div');
     start.className='field';
@@ -1272,6 +1297,18 @@ entrySaveBtn.addEventListener('click',async()=>{
       : 'Lääkitys tallennettu. Aloitus näkyy SmartGraphissa.','ok');
     setTimeout(closeEntry,1300);
     return;
+  }else if(k==='lab'){
+    const na=num('e_lab_na'), kVal=num('e_lab_k'), krea=num('e_lab_krea');
+    const pvm=document.getElementById('e_lab_date')?.value||'';
+    if(na===null&&kVal===null&&krea===null){msg('Anna vähintään yksi labra-arvo.','warn');return;}
+    if(na!==null&&(na<100||na>180)){msg('Tarkista natrium (tyypillisesti 100–180).','warn');return;}
+    if(kVal!==null&&(kVal<2||kVal>8)){msg('Tarkista kalium (tyypillisesti 2–8).','warn');return;}
+    if(krea!==null&&(krea<20||krea>1000)){msg('Tarkista kreatiniini (tyypillisesti 20–1000).','warn');return;}
+    if(!pvm){msg('Anna näytteenottopäivä.','warn');return;}
+    const hetki=pvm+'T09:00:00';
+    if(na!==null)rivit.push({taulu:'metric_measurements',data:{patient_id:me.id,metric:'sodium',value:na,source:'patient',measured_at:hetki}});
+    if(kVal!==null)rivit.push({taulu:'metric_measurements',data:{patient_id:me.id,metric:'potassium',value:kVal,source:'patient',measured_at:hetki}});
+    if(krea!==null)rivit.push({taulu:'metric_measurements',data:{patient_id:me.id,metric:'creatinine',value:krea,source:'patient',measured_at:hetki}});
   }else{
     msg('Tuntematon kirjaus.','warn');
     return;
@@ -1285,12 +1322,21 @@ entrySaveBtn.addEventListener('click',async()=>{
   entryBusy=false;entrySaveBtn.disabled=false;
   if(virhe){msg(virhe,'warn');return;}
 
+  if(k==='lab'){
+    const latausvirhe=await lataaLabrat();
+    if(latausvirhe)console.error('Labralistan päivitys:',latausvirhe);
+    renderLabs();
+    msg('Verikokeet tallennettu. Lääkäri näkee ne, kun jaat koodin.','ok');
+    setTimeout(closeEntry,1300);
+    return;
+  }
+
   const latausvirhe=await lataaMittaukset();
   if(latausvirhe)console.error('Kirjauksen jälkeinen päivitys:',latausvirhe);
   paivitaSeuranta(entryCur.i);
 
   if(varoitus){msg(varoitus,'warn');return;}
-  msg('Tallennettu. Lääkärisi näkee kirjauksen automaattisesti.','ok');
+  msg('Tallennettu. Lääkärisi näkee kirjauksen, kun jaat koodin.','ok');
   setTimeout(closeEntry,1300);
 });
 
@@ -2209,6 +2255,7 @@ function renderPotilasnakyma(){
   renderEtusivu();renderTasks();renderTimeline();renderHoitoOhje();renderLaakariKortti();
   renderRecent();renderJakso();renderMuut();renderTavoitteet();renderSx();renderTiles();
   renderMeds(document.getElementById('medList'));
+  renderLabs();
   renderJakokoodi();
   const acct=document.getElementById('acctInfo');
   if(acct)acct.textContent=(me.full_name?me.full_name+' · ':'')+me.email;
@@ -2279,6 +2326,53 @@ async function lataaOireet(potilas){
     at:r.reported_at
   }));
   return null;
+}
+
+const LAB_NIMET={sodium:'Natrium (Na)',potassium:'Kalium (K)',creatinine:'Kreatiniini'};
+const LAB_YKSIKOT={sodium:'mmol/l',potassium:'mmol/l',creatinine:'µmol/l'};
+const LAB_DEC={sodium:0,potassium:1,creatinine:0};
+
+async function lataaLabrat(potilas){
+  const id=potilas||me.id;
+  const {data,error}=await sb.from('metric_measurements')
+    .select('metric,value,measured_at')
+    .eq('patient_id',id)
+    .in('metric',['sodium','potassium','creatinine'])
+    .order('measured_at',{ascending:false})
+    .limit(60);
+  if(error)return virheteksti(error);
+
+  /* Ryhmittele saman päivän arvot yhdeksi kirjaukseksi. */
+  const byDay=new Map();
+  (data||[]).forEach(r=>{
+    const day=String(r.measured_at).slice(0,10);
+    if(!byDay.has(day))byDay.set(day,{at:r.measured_at,day,values:{}});
+    byDay.get(day).values[r.metric]=r.value;
+  });
+  state.labs=[...byDay.values()].sort((a,b)=>String(b.at).localeCompare(String(a.at)));
+  return null;
+}
+
+function labRiviTeksti(values){
+  return ['sodium','potassium','creatinine']
+    .filter(k=>values[k]!=null)
+    .map(k=>{
+      const dec=LAB_DEC[k];
+      const v=dec?Number(values[k]).toFixed(dec).replace('.',','):String(Math.round(values[k]));
+      return LAB_NIMET[k].split(' ')[0]+' '+v;
+    }).join(' · ');
+}
+
+function renderLabs(el){
+  const box=el||document.getElementById('labList');
+  if(!box)return;
+  if(!state.labs.length){
+    box.innerHTML='<div class="row"><span class="k">Ei vielä kirjauksia</span><span class="v"></span></div>';
+    return;
+  }
+  box.innerHTML=state.labs.slice(0,8).map(l=>
+    rivi(labRiviTeksti(l.values),dayLabel(l.at))
+  ).join('');
 }
 
 async function lataaLaakitykset(potilas){
@@ -2748,6 +2842,7 @@ async function avaaPotilas(u){
 
   const virhe=await lataaMittaukset(u.id)
     || await lataaOireet(u.id)
+    || await lataaLabrat(u.id)
     || await lataaLaakitykset(u.id)
     || await lataaTehtavat(u.id)
     || await lataaAikajana(u.id)
@@ -2780,6 +2875,11 @@ async function avaaPotilas(u){
     state.aes.length
       ? state.aes.slice(0,8).map(a=>rivi(a.s+(a.l?' · haitta '+a.l+'/5':''),a.when)).join('')
       : rivi('Ei oirekirjauksia','');
+
+  document.getElementById('pLabs').innerHTML=
+    state.labs.length
+      ? state.labs.slice(0,8).map(l=>rivi(labRiviTeksti(l.values),dayLabel(l.at))).join('')
+      : rivi('Ei verikokeita','');
 
   document.getElementById('pTasks').innerHTML=
     TASKS.length
@@ -2924,6 +3024,7 @@ async function rakennaNakyma(uid){
   if(me.role==='potilas'){
     const virhe=await lataaMittaukset()
       || await lataaOireet()
+      || await lataaLabrat()
       || await lataaLaakitykset()
       || await lataaTehtavat()
       || await lataaAikajana()
