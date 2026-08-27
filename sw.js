@@ -1,19 +1,13 @@
-const CACHE_NAME = 'hoitopolku-v18';
+const CACHE_NAME = 'hoitopolku-v19';
 
-/* Polut ovat suhteellisia tähän tiedostoon, jotta ne toimivat myös
-   kun sivusto on julkaistu alihakemistoon. Juuresta lähtevä '/demo.html'
-   osoitti GitHub Pagesissa väärään paikkaan. */
+/* Älä precache demo.html — muuten vanha sovellus jää PWA-välimuistiin
+   ja uudet mittarit (paino, verensokeri) eivät näy. */
 const urlsToCache = [
-  'demo.html',
   'icon.svg',
   'icon-192.png',
-  'icon-512.png',
-  'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap'
+  'icon-512.png'
 ];
 
-/* Jokainen osoite lisätään erikseen. cache.addAll hylkää koko
-   asennuksen jos yksikin pyyntö epäonnistuu, jolloin service worker
-   jäisi kokonaan asentumatta esimerkiksi fonttipalvelun häiriössä. */
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
@@ -24,26 +18,21 @@ self.addEventListener('install', event => {
   );
 });
 
-/* Sivupyynnöt verkosta ensin, jotta päivitykset näkyvät heti.
-   Välimuistia käytetään vain kun verkko ei vastaa. Muut resurssit
-   (fontit) välimuistista ensin, koska ne eivät muutu. */
 self.addEventListener('fetch', event => {
-  /* Potilastietoa ei talleteta laitteelle. Kannan ja kirjautumisen pyynnöt
-     jätetään kokonaan service workerin ulkopuolelle, jotta vastaus ei voi
-     päätyä välimuistiin edes vahingossa. */
   if (new URL(event.request.url).hostname.endsWith('.supabase.co')) return;
 
-  const isPage = event.request.mode === 'navigate' ||
-                 event.request.destination === 'document';
+  const url = new URL(event.request.url);
+  const isHtml = event.request.mode === 'navigate' ||
+    event.request.destination === 'document' ||
+    url.pathname.endsWith('.html') ||
+    url.pathname.endsWith('/hoitopolku-ai/') ||
+    url.pathname.endsWith('/hoitopolku-ai');
 
-  if (isPage) {
+  /* HTML aina verkosta ensin, jotta mittari- ja näkymäpäivitykset näkyvät. */
+  if (isHtml) {
     event.respondWith(
       fetch(event.request)
-        .then(response => {
-          const copy = response.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
-          return response;
-        })
+        .then(response => response)
         .catch(() => caches.match(event.request))
     );
     return;
@@ -56,14 +45,10 @@ self.addEventListener('fetch', event => {
 
 self.addEventListener('activate', event => {
   event.waitUntil(
-    caches.keys().then(cacheNames => {
-      return Promise.all(
-        cacheNames.map(cacheName => {
-          if (cacheName !== CACHE_NAME) {
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    }).then(() => self.clients.claim())
+    caches.keys().then(cacheNames => Promise.all(
+      cacheNames.map(cacheName => {
+        if (cacheName !== CACHE_NAME) return caches.delete(cacheName);
+      })
+    )).then(() => self.clients.claim())
   );
 });
