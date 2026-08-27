@@ -680,7 +680,7 @@ body[data-role="laakari"] .app{padding-bottom:34px}
     <div class="card">
       <div class="seg" id="segRange">
         <button aria-selected="false" data-r="14">14 pv</button>
-        <button aria-selected="false" data-r="42">6 vk</button>
+        <button aria-selected="false" data-r="42">42 pv</button>
         <button aria-selected="true" data-r="999">3 kk</button>
       </div>
       <div class="readout">
@@ -1619,6 +1619,26 @@ function calLabel(day){
   const d=dayToDate(day);
   return d.getDate()+'.'+(d.getMonth()+1)+'.';
 }
+/* Akselin merkit kalenterin mukaan: lyhyellä jaksolla tiheämmin,
+   pidemmällä kuun 1. ja 15. — ei viikkoaskeleita. */
+function axisTickDays(dMin,dMax){
+  const span=Math.max(1,dMax-dMin);
+  const ticks=new Set([dMin,dMax]);
+  if(span<=16){
+    const step=span<=8?2:3;
+    for(let d=dMin;d<=dMax;d+=step)ticks.add(d);
+  }else if(span<=55){
+    for(let d=dMin;d<=dMax;d++){
+      const dom=dayToDate(d).getDate();
+      if(dom===1||dom===15)ticks.add(d);
+    }
+  }else{
+    for(let d=dMin;d<=dMax;d++){
+      if(dayToDate(d).getDate()===1)ticks.add(d);
+    }
+  }
+  return [...ticks].sort((a,b)=>a-b);
+}
 function fmtPaiva(iso){
   if(!iso)return '—';
   const d=new Date(String(iso).length<=10?iso+'T12:00:00':iso);
@@ -1726,12 +1746,9 @@ function drawChart(i){
 
   [vMax,vMin].forEach(v=>svg.appendChild(el('text',{x:PL-8,y:y(v)+4,'text-anchor':'end','font-family':'Inter, sans-serif','font-size':axisFs,fill:'#86868B'},fmtv(v,m.dec))));
   svg.appendChild(el('line',{x1:PL,y1:H-PB,x2:W-PR,y2:H-PB,stroke:'#D2D2D7','stroke-width':1}));
-  const step=narrowChart()?28:21;
-  for(let d=dMin;d<=TODAY;d++){
-    if((d-dMin)%step===0||d===TODAY){
-      svg.appendChild(el('text',{x:x(d),y:H-PB+18,'text-anchor':d===TODAY?'end':'middle','font-family':'Inter, sans-serif','font-size':axisFs,fill:'#86868B'},calLabel(d)));
-    }
-  }
+  axisTickDays(dMin,TODAY).forEach(d=>{
+    svg.appendChild(el('text',{x:x(d),y:H-PB+18,'text-anchor':d===TODAY?'end':'middle','font-family':'Inter, sans-serif','font-size':axisFs,fill:'#86868B'},calLabel(d)));
+  });
 
   /* Numeroidut merkit käyrällä; nimet ja vaikutus listataan alle. */
   const rawEvs=graphEvents(m).filter(e=>e.day>=dMin&&e.day<=TODAY)

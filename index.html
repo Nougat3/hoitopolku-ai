@@ -259,7 +259,7 @@ footer a:hover{color:var(--ink)}
       <div class="mon-body">
         <div class="seg" id="segRange" role="tablist" aria-label="Aikaväli">
           <button type="button" aria-selected="false" data-r="14">14 pv</button>
-          <button type="button" aria-selected="false" data-r="42">6 vk</button>
+          <button type="button" aria-selected="false" data-r="42">42 pv</button>
           <button type="button" aria-selected="true" data-r="999">3 kk</button>
         </div>
         <div class="readout">
@@ -511,6 +511,24 @@ function calLabel(day){
   const d=dayToDate(day);
   return d.getDate()+'.'+(d.getMonth()+1)+'.';
 }
+function axisTickDays(dMin,dMax){
+  const span=Math.max(1,dMax-dMin);
+  const ticks=new Set([dMin,dMax]);
+  if(span<=16){
+    const step=span<=8?2:3;
+    for(let d=dMin;d<=dMax;d+=step)ticks.add(d);
+  }else if(span<=55){
+    for(let d=dMin;d<=dMax;d++){
+      const dom=dayToDate(d).getDate();
+      if(dom===1||dom===15)ticks.add(d);
+    }
+  }else{
+    for(let d=dMin;d<=dMax;d++){
+      if(dayToDate(d).getDate()===1)ticks.add(d);
+    }
+  }
+  return [...ticks].sort((a,b)=>a-b);
+}
 
 function el(n,a,t){
   const e=document.createElementNS(NS,n);
@@ -600,10 +618,9 @@ function drawChart(animate){
 
   [vMax,vMin].forEach(v=>svg.appendChild(el('text',{x:PL-8,y:y(v)+4,'text-anchor':'end','font-family':'Inter, sans-serif','font-size':10.5,fill:'#86868B'},fmtv(v))));
   svg.appendChild(el('line',{x1:PL,y1:H-PB,x2:W-PR,y2:H-PB,stroke:'#D2D2D7','stroke-width':1}));
-  for(let d=dMin;d<=TODAY;d++){
-    if((d-dMin)%21===0||d===TODAY)
-      svg.appendChild(el('text',{x:x(d),y:H-PB+17,'text-anchor':d===TODAY?'end':'middle','font-family':'Inter, sans-serif','font-size':10.5,fill:'#86868B'},calLabel(d)));
-  }
+  axisTickDays(dMin,TODAY).forEach(d=>{
+    svg.appendChild(el('text',{x:x(d),y:H-PB+17,'text-anchor':d===TODAY?'end':'middle','font-family':'Inter, sans-serif','font-size':10.5,fill:'#86868B'},calLabel(d)));
+  });
 
   DEMO.events.filter(e=>e.day>=dMin&&e.day<=TODAY).forEach(e=>{
     svg.appendChild(el('line',{x1:x(e.day),y1:PT-10,x2:x(e.day),y2:H-PB,stroke:'#A67C2E','stroke-width':1.1,'stroke-dasharray':'3 3','stroke-opacity':'.7'}));
@@ -737,8 +754,8 @@ function updateSummary(line,pts,proj,projEnd,animate){
       d:'Mittaukset puuttuvat '+katko.pituus+' päivältä. Katkoksen ajalta ei lasketa keskiarvoa.'});
   }
   DEMO.events.filter(e=>e.day<=TODAY).slice(-1).forEach(e=>{
-    items.push({k:'info',t:e.label,
-      d:'Tapahtuma on merkitty käyrälle viikolle '+(Math.floor(e.day/7)+1)+'. Annoksen nosto taittoi käyrää alaspäin noin kahden viikon viiveellä.'});
+    items.push({k:'info',t:e.label+' '+calLabel(e.day),
+      d:'Tapahtuma on merkitty käyrälle. Annoksen nosto taittoi käyrää alaspäin noin kahden viikon viiveellä.'});
   });
 
   items.forEach((i,idx)=>{
