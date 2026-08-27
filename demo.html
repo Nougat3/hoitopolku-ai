@@ -187,7 +187,8 @@ input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appear
 
 /* Lääkärin tilannekuva etäarviota varten */
 .snap-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.snap-grid .snap{padding:12px 12px 10px;border:1px solid var(--hair);border-radius:14px;background:#fff;min-width:0}
+.snap-grid .snap{padding:12px 12px 10px;border:1px solid var(--hair);border-radius:14px;background:#fff;min-width:0;text-align:left;font:inherit;color:inherit;cursor:pointer;width:100%}
+.snap-grid button.snap:active{transform:scale(.99)}
 .snap-grid .snap .l{display:block;font-size:11.5px;font-weight:600;letter-spacing:.02em;color:var(--muted);margin-bottom:4px}
 .snap-grid .snap .v{display:block;font-size:22px;font-weight:600;letter-spacing:-.03em;line-height:1.1}
 .snap-grid .snap .u{font-size:12.5px;font-weight:500;color:var(--muted);margin-left:3px}
@@ -555,8 +556,11 @@ body[data-role="laakari"] .app{padding-bottom:34px}
       <div class="lbl">SEURAAVA ASKEL</div>
       <h2 id="nextTitle">—</h2>
       <p id="nextBody">—</p>
-      <button class="btn" onclick="go('mittaa')">Kirjaa mittaus</button>
+      <button class="btn" type="button" id="homeMittaaBtn">Kirjaa mittaus</button>
     </div>
+
+    <div class="section-label">VIIMEISIMMÄT ARVOT</div>
+    <div class="card tight" id="homeMetrics"></div>
 
     <div class="section-label">HOITOPOLUN TEHTÄVÄT</div>
     <div class="card">
@@ -575,7 +579,7 @@ body[data-role="laakari"] .app{padding-bottom:34px}
   <div class="view" id="v-hoitopolku">
     <div class="pagehead">
       <h1>Hoitopolku</h1>
-      <div class="sub" id="pathSub">Verenpaineen hoitopolku: mittaukset, lääkitys ja oirekyselyt.</div>
+      <div class="sub" id="pathSub">Mittaukset, lääkitys ja oireet — verenpaine, verensokeri ja paino.</div>
     </div>
 
     <div class="card">
@@ -2220,30 +2224,29 @@ function renderTiles(){
   tilesEl.innerHTML='';
   SG.forEach((m,i)=>{
     const vals=tileSeries(m);
-    if(!vals.length)return;
-    const last=vals[vals.length-1];
-    const [cls,txt]=tileState(m,vals);
     const b=document.createElement('button');
     b.className='tile';
     const lyhyt=m.name.replace('LDL-','');
-    b.innerHTML='<span class="top"><i style="background:'+m.color+'"></i>'+
-      lyhyt.charAt(0).toUpperCase()+lyhyt.slice(1)+'</span>'+
-      '<span class="val"></span><span class="tgt">tavoite alle '+fmtv(m.target,m.dec)+'</span>';
-    b.querySelector('.val').textContent=fmtv(last,m.dec)+' '+m.unit;
-    b.appendChild(sparkline(vals,m.color,300,74,m.target));
-    const p=document.createElement('span');
-    p.className='pill '+cls;p.textContent=txt;
-    b.appendChild(p);
+    if(!vals.length){
+      b.innerHTML='<span class="top"><i style="background:'+m.color+'"></i>'+
+        lyhyt.charAt(0).toUpperCase()+lyhyt.slice(1)+'</span>'+
+        '<span class="val">—</span><span class="tgt">tavoite alle '+fmtv(m.target,m.dec)+'</span>'+
+        '<span class="pill mid">Ei vielä mittauksia</span>';
+    }else{
+      const last=vals[vals.length-1];
+      const [cls,txt]=tileState(m,vals);
+      b.innerHTML='<span class="top"><i style="background:'+m.color+'"></i>'+
+        lyhyt.charAt(0).toUpperCase()+lyhyt.slice(1)+'</span>'+
+        '<span class="val"></span><span class="tgt">tavoite alle '+fmtv(m.target,m.dec)+'</span>';
+      b.querySelector('.val').textContent=fmtv(last,m.dec)+' '+m.unit;
+      b.appendChild(sparkline(vals,m.color,300,74,m.target));
+      const p=document.createElement('span');
+      p.className='pill '+cls;p.textContent=txt;
+      b.appendChild(p);
+    }
     b.addEventListener('click',()=>openMetric(i));
     tilesEl.appendChild(b);
   });
-  if(!tilesEl.children.length){
-    const p=document.createElement('p');
-    p.className='sub';
-    p.style.margin='0';
-    p.textContent='Kun kirjaat mittauksia, tärkeimmät lukusi näkyvät tässä.';
-    tilesEl.appendChild(p);
-  }
 }
 
 /* ══════════ KOOSTENÄKYMÄT ══════════ */
@@ -2275,6 +2278,8 @@ function renderEtusivu(){
   document.getElementById('homeSub').textContent=
     seuraava?'Seuraavaksi: '+seuraava.t.toLowerCase()+' · '+seuraava.w:'Hoitopolkusi on käynnissä';
 
+  renderHomeMetrics();
+
   /* Seuraava askel valitaan siitä, mitä tältä päivältä puuttuu. */
   const tanaan=midnight(new Date()).getTime();
   const paivan=state.measurements.filter(m=>midnight(m.at).getTime()===tanaan);
@@ -2284,10 +2289,10 @@ function renderEtusivu(){
   const nytAamu=vuorokaudenaika()==='Aamu';
   if(!aamu&&nytAamu){
     t.textContent='Mittaa aamun verenpaine';
-    b.textContent='Istu viisi minuuttia rauhassa ennen mittausta. Kirjaa lukema heti.';
+    b.textContent='Voit kirjata samalla myös verensokerin tai painon Mittaa-valikosta.';
   }else if(!ilta&&!nytAamu){
     t.textContent='Mittaa illan verenpaine';
-    b.textContent='Illan mittaus täydentää päivän parin. Kirjaa lukema heti mittauksen jälkeen.';
+    b.textContent='Illan mittaus täydentää päivän. Verensokeri ja paino löytyvät Mittaa-valikosta.';
   }else{
     t.textContent='Päivän mittaukset tehty';
     b.textContent=kesken
@@ -2314,6 +2319,27 @@ function renderEtusivu(){
   up.innerHTML=tulossa.length
     ? tulossa.map(e=>rivi(e.t,e.w)).join('')
     : rivi('Ei suunniteltuja tapahtumia','');
+}
+
+function renderHomeMetrics(){
+  const box=document.getElementById('homeMetrics');
+  if(!box)return;
+  const bpKa=rolling(BP);
+  const bpV=bpKa.length?bpKa[bpKa.length-1].v:null;
+  const gKa=rolling(GLU);
+  const gV=gKa.length?gKa[gKa.length-1].v:(GLU.length?GLU[GLU.length-1].v:null);
+  const w=WT.length?WT[WT.length-1]:null;
+  box.innerHTML='<div class="snap-grid">'+
+    '<button type="button" class="snap" data-mi="0"><span class="l">Verenpaine</span><span class="v">'+(bpV!=null?Math.round(bpV):'—')+
+      (bpV!=null?'<span class="u">mmHg</span>':'')+'</span><span class="s">7 vrk ka · avaa käyrä</span></button>'+
+    '<button type="button" class="snap" data-mi="1"><span class="l">Verensokeri</span><span class="v">'+(gV!=null?fmt(gV,1):'—')+
+      (gV!=null?'<span class="u">mmol/l</span>':'')+'</span><span class="s">7 vrk ka · avaa käyrä</span></button>'+
+    '<button type="button" class="snap" data-mi="2"><span class="l">Paino</span><span class="v">'+(w?fmt(w.v,1):'—')+
+      (w?'<span class="u">kg</span>':'')+'</span><span class="s">'+(w?dayLabel(w.at)+' · avaa käyrä':'Kirjaa Mittaa-valikosta')+'</span></button>'+
+    '</div>';
+  box.querySelectorAll('[data-mi]').forEach(btn=>{
+    btn.addEventListener('click',()=>openMetric(+btn.dataset.mi));
+  });
 }
 
 function renderTavoitteet(){
@@ -3276,11 +3302,16 @@ sb.auth.onAuthStateChange((event,session)=>{
 /* ══════════ SERVICE WORKER ══════════ */
 if('serviceWorker' in navigator){
   window.addEventListener('load',()=>{
-    navigator.serviceWorker.register('sw.js')
-      .then(reg=>console.log('SW registered'))
+    navigator.serviceWorker.register('sw.js?v=19')
+      .then(reg=>{
+        reg.update();
+        console.log('SW registered');
+      })
       .catch(err=>console.log('SW error:',err));
   });
 }
+const homeMittaaBtn=document.getElementById('homeMittaaBtn');
+if(homeMittaaBtn)homeMittaaBtn.addEventListener('click',()=>openSheet());
 </script>
 </body>
 </html>
