@@ -258,9 +258,9 @@ footer a:hover{color:var(--ink)}
       </div>
       <div class="mon-body">
         <div class="seg" id="segRange" role="tablist" aria-label="Aikaväli">
-          <button type="button" aria-selected="false" data-r="14">14 vrk</button>
-          <button type="button" aria-selected="false" data-r="42">6 vk</button>
-          <button type="button" aria-selected="true" data-r="999">Koko polku</button>
+          <button type="button" aria-selected="false" data-r="14">14 pv</button>
+          <button type="button" aria-selected="false" data-r="42">42 pv</button>
+          <button type="button" aria-selected="true" data-r="999">3 kk</button>
         </div>
         <div class="readout">
           <span class="v" id="rVal">—</span>
@@ -501,6 +501,35 @@ const svg=document.getElementById('chart');
 const tip=document.getElementById('tip');
 let range=999, hit=[], drawn=false;
 
+function midnight(d){const x=new Date(d);x.setHours(0,0,0,0);return x;}
+function dayToDate(day){
+  const d=midnight(new Date());
+  d.setDate(d.getDate()-(TODAY-day));
+  return d;
+}
+function calLabel(day){
+  const d=dayToDate(day);
+  return d.getDate()+'.'+(d.getMonth()+1)+'.';
+}
+function axisTickDays(dMin,dMax){
+  const span=Math.max(1,dMax-dMin);
+  const ticks=new Set([dMin,dMax]);
+  if(span<=16){
+    const step=span<=8?2:3;
+    for(let d=dMin;d<=dMax;d+=step)ticks.add(d);
+  }else if(span<=55){
+    for(let d=dMin;d<=dMax;d++){
+      const dom=dayToDate(d).getDate();
+      if(dom===1||dom===15)ticks.add(d);
+    }
+  }else{
+    for(let d=dMin;d<=dMax;d++){
+      if(dayToDate(d).getDate()===1)ticks.add(d);
+    }
+  }
+  return [...ticks].sort((a,b)=>a-b);
+}
+
 function el(n,a,t){
   const e=document.createElementNS(NS,n);
   for(const k in a)e.setAttribute(k,a[k]);
@@ -516,7 +545,7 @@ function rnd(seed){
 
 function buildDemo(){
   const r=rnd(20260825);
-  const pts=[], events=[{day:48,label:'Annoksen nosto',sub:'viikko 7'}];
+  const pts=[], events=[{day:48,label:'Annoksen nosto',sub:calLabel(48)}];
   for(let d=0;d<=TODAY;d++){
     /* Katko viikoilla 5–6: mittaukset puuttuvat ~10 päivää. */
     if(d>=32&&d<=41)continue;
@@ -589,10 +618,9 @@ function drawChart(animate){
 
   [vMax,vMin].forEach(v=>svg.appendChild(el('text',{x:PL-8,y:y(v)+4,'text-anchor':'end','font-family':'Inter, sans-serif','font-size':10.5,fill:'#86868B'},fmtv(v))));
   svg.appendChild(el('line',{x1:PL,y1:H-PB,x2:W-PR,y2:H-PB,stroke:'#D2D2D7','stroke-width':1}));
-  for(let d=dMin;d<=TODAY;d++){
-    if((d-dMin)%21===0||d===TODAY)
-      svg.appendChild(el('text',{x:x(d),y:H-PB+17,'text-anchor':d===TODAY?'end':'middle','font-family':'Inter, sans-serif','font-size':10.5,fill:'#86868B'},'vk '+(Math.floor(d/7)+1)));
-  }
+  axisTickDays(dMin,TODAY).forEach(d=>{
+    svg.appendChild(el('text',{x:x(d),y:H-PB+17,'text-anchor':d===TODAY?'end':'middle','font-family':'Inter, sans-serif','font-size':10.5,fill:'#86868B'},calLabel(d)));
+  });
 
   DEMO.events.filter(e=>e.day>=dMin&&e.day<=TODAY).forEach(e=>{
     svg.appendChild(el('line',{x1:x(e.day),y1:PT-10,x2:x(e.day),y2:H-PB,stroke:'#A67C2E','stroke-width':1.1,'stroke-dasharray':'3 3','stroke-opacity':'.7'}));
@@ -644,7 +672,7 @@ function drawChart(animate){
     svg.appendChild(forecast);
     if(projEnd){
       const mark=el('circle',{cx:x(projEnd),cy:y(TARGET),r:4.5,fill:'#fff',stroke:'#A67C2E','stroke-width':2.2});
-      const lab=el('text',{x:x(projEnd),y:y(TARGET)+20,'text-anchor':'end','font-family':'Inter, sans-serif','font-size':10.5,'font-weight':600,fill:'#A67C2E'},'~vk '+(Math.floor(projEnd/7)+1));
+      const lab=el('text',{x:x(projEnd),y:y(TARGET)+20,'text-anchor':'end','font-family':'Inter, sans-serif','font-size':10.5,'font-weight':600,fill:'#A67C2E'},'~'+calLabel(projEnd));
       if(animate&&!reduce){mark.style.opacity='0';lab.style.opacity='0';}
       svg.appendChild(mark);svg.appendChild(lab);
       if(forecast){forecast._marks=[mark,lab];}
@@ -688,10 +716,10 @@ function updateSummary(line,pts,proj,projEnd,animate){
   pill.textContent=ok?'Tavoitteessa':(change>3?'Laskusuunnassa':'Ei laskusuuntaa');
   pill.className='pill '+(ok?'ok':(change>3?'mid':'off'));
 
-  const wk=projEnd?Math.floor(projEnd/7)+1:null;
+  const wk=projEnd?calLabel(projEnd):null;
   document.getElementById('rSub').textContent=ok
     ?'Tavoite saavutettu. Seuraavaksi ylläpitoseuranta.'
-    :(wk?'Tällä vauhdilla tavoitteessa noin viikolla '+wk+'.':'Nykyinen suunta ei riitä tavoitteeseen.');
+    :(wk?'Tällä vauhdilla tavoitteessa noin '+wk:'Nykyinen suunta ei riitä tavoitteeseen.');
 
   document.getElementById('legend').innerHTML=
     '<span><i class="lg-dot"></i>Yksittäinen mittaus</span>'+
@@ -719,16 +747,15 @@ function updateSummary(line,pts,proj,projEnd,animate){
   if(change>3)items.push({k:'good',t:'Suunta on oikea',
     d:'Keskiarvo on laskenut '+fmtv(change)+' mmHg seurannan alusta.'});
   if(!ok&&projEnd)items.push({k:'info',t:'Arvio tavoitteesta',
-    d:'Tällä vauhdilla olet tavoitteessa noin viikolla '+(Math.floor(projEnd/7)+1)+'. Arvio perustuu viimeisen neljän viikon kehitykseen.'});
+    d:'Tällä vauhdilla olet tavoitteessa noin '+calLabel(projEnd)+'. Arvio perustuu viimeisen neljän viikon kehitykseen.'});
   const katko=pisinKatko(pts);
   if(katko&&katko.pituus>=4){
-    const vkA=Math.floor(katko.alku/7)+1,vkB=Math.floor(katko.loppu/7)+1;
-    items.push({k:'warn',t:'Mittauskatko '+(vkA===vkB?'viikolla '+vkA:'viikoilla '+vkA+'–'+vkB),
+    items.push({k:'warn',t:'Mittauskatko '+calLabel(katko.alku)+(katko.alku!==katko.loppu?'–'+calLabel(katko.loppu):''),
       d:'Mittaukset puuttuvat '+katko.pituus+' päivältä. Katkoksen ajalta ei lasketa keskiarvoa.'});
   }
   DEMO.events.filter(e=>e.day<=TODAY).slice(-1).forEach(e=>{
-    items.push({k:'info',t:e.label,
-      d:'Tapahtuma on merkitty käyrälle viikolle '+(Math.floor(e.day/7)+1)+'. Annoksen nosto taittoi käyrää alaspäin noin kahden viikon viiveellä.'});
+    items.push({k:'info',t:e.label+' '+calLabel(e.day),
+      d:'Tapahtuma on merkitty käyrälle. Annoksen nosto taittoi käyrää alaspäin noin kahden viikon viiveellä.'});
   });
 
   items.forEach((i,idx)=>{
@@ -757,7 +784,7 @@ function showTip(e){
   const cx=(e.clientX-r.left)/r.width*W, cy=(e.clientY-r.top)/r.height*H;
   const n=nearest(cx,cy);
   if(!n){tip.classList.remove('on');return;}
-  tip.innerHTML='<b>'+fmtv(n.p.v)+' mmHg</b><span>viikko '+(Math.floor(n.p.d/7)+1)+' · '+(n.p.t==='am'?'aamu':'ilta')+'</span>';
+  tip.innerHTML='<b>'+fmtv(n.p.v)+' mmHg</b><span>'+calLabel(n.p.d)+' · '+(n.p.t==='am'?'aamu':'ilta')+'</span>';
   tip.style.left=(n.px/W*100)+'%';
   tip.style.top=(n.py/H*100)+'%';
   tip.classList.add('on');
