@@ -2832,33 +2832,48 @@ async function lataaPotilaslista(){
   return null;
 }
 
+function normalisoiJakokoodi(raw){
+  /* text-transform:uppercase ei muuta .valuea — normalisoi ennen RPC:tä. */
+  return String(raw||'').trim().toUpperCase().replace(/[^A-Z0-9]/g,'');
+}
+
 async function lunastaJakokoodi(){
   const input=document.getElementById('docAccessCode');
   const btn=document.getElementById('docRedeemBtn');
   const hint=document.getElementById('docRedeemHint');
-  const koodi=(input?.value||'').trim();
+  const koodi=normalisoiJakokoodi(input?.value);
   if(!koodi){
     hint.textContent='Syötä potilaan jakokoodi.';
     hint.hidden=false;
     hint.className='hint warn';
     return;
   }
+  if(koodi.length!==8){
+    hint.textContent='Koodi on virheellinen. Käytä muotoa XXXX-XXXX.';
+    hint.hidden=false;
+    hint.className='hint warn';
+    return;
+  }
+  const naytto=koodi.slice(0,4)+'-'+koodi.slice(4);
+  if(input)input.value=naytto;
   btn.disabled=true;
   hint.textContent='Avataan…';
   hint.hidden=false;
   hint.className='hint';
-  const {data,error}=await sb.rpc('redeem_patient_access_code',{p_code:koodi});
+  const {data,error}=await sb.rpc('redeem_patient_access_code',{p_code:naytto});
   btn.disabled=false;
   if(error){
-    hint.textContent=String(error.message||virheteksti(error));
+    const m=String(error.message||'');
+    hint.textContent=/Koodi|Kirjautuminen|laakari|Potilas/i.test(m)?m:virheteksti(error);
     hint.className='hint warn';
     return;
   }
-  hint.textContent='Potilas avattu. Istunto voimassa '+fmtPaivaAika(data.expires_at)+' asti.';
+  const tulos=typeof data==='string'?JSON.parse(data):data;
+  hint.textContent='Potilas avattu. Istunto voimassa '+fmtPaivaAika(tulos.expires_at)+' asti.';
   hint.className='hint ok';
   input.value='';
   await lataaPotilaslista();
-  avaaPotilas({id:data.patient_id,full_name:data.full_name,email:data.email});
+  avaaPotilas({id:tulos.patient_id,full_name:tulos.full_name,email:tulos.email});
 }
 
 async function avaaPotilas(u){
