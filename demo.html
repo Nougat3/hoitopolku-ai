@@ -185,6 +185,17 @@ input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appear
 }
 .seg button[aria-selected="true"]{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.1)}
 
+/* Lääkärin tilannekuva etäarviota varten */
+.snap-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.snap-grid .snap{padding:12px 12px 10px;border:1px solid var(--hair);border-radius:14px;background:#fff;min-width:0}
+.snap-grid .snap .l{display:block;font-size:11.5px;font-weight:600;letter-spacing:.02em;color:var(--muted);margin-bottom:4px}
+.snap-grid .snap .v{display:block;font-size:22px;font-weight:600;letter-spacing:-.03em;line-height:1.1}
+.snap-grid .snap .u{font-size:12.5px;font-weight:500;color:var(--muted);margin-left:3px}
+.snap-grid .snap .s{display:block;font-size:12.5px;color:var(--muted);margin-top:4px;line-height:1.35}
+.snap-grid .snap.warn{border-color:#E8C9B8;background:#FDF7F3}
+.snap-grid .snap.ok{border-color:#C9DCC9;background:#F5FAF5}
+@media(min-width:480px){.snap-grid{grid-template-columns:1fr 1fr 1fr}}
+
 /* chart */
 .chart{display:block;width:100%;height:auto;margin-top:6px}
 .readout{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;row-gap:6px}
@@ -626,13 +637,13 @@ body[data-role="laakari"] .app{padding-bottom:34px}
       <div class="sub">Mittaukset, lääkitys, oireet ja verikokeet. Jaa koodi lääkärille tarvittaessa.</div>
     </div>
 
-    <div class="section-label">VERENPAINE</div>
+    <div class="section-label">SEURANTA</div>
     <div class="tiles" id="tiles"></div>
 
-    <div class="section-label">TAVOITE</div>
+    <div class="section-label">TAVOITTEET</div>
     <div class="card tight" id="targetList"></div>
 
-    <div class="section-label">VERENPAINELÄÄKITYS</div>
+    <div class="section-label">LÄÄKITYS</div>
     <div class="card">
       <h3>Käytössä olevat lääkkeet</h3>
       <p class="sub" style="margin:6px 0 14px">Aloitus ja annosmuutos merkitään SmartGraphiin, jotta vaikutus näkyy trendissä.</p>
@@ -793,8 +804,16 @@ body[data-role="laakari"] .app{padding-bottom:34px}
     <div class="section-label">MITÄ SEURAAVAKSI?</div>
     <div class="card tight" id="pNextStep"></div>
 
-    <div class="section-label">SMARTGRAPH · VERENPAINE</div>
+    <div class="section-label">TILANNEKUVA</div>
+    <div class="card tight" id="pSnapshot"></div>
+
+    <div class="section-label" id="pGraphLabel">SMARTGRAPH</div>
     <div class="card" id="pGraphCard">
+      <div class="seg" id="pMetricSeg" style="margin-bottom:14px" role="tablist" aria-label="Mittari">
+        <button type="button" aria-selected="true" data-mi="0">Verenpaine</button>
+        <button type="button" aria-selected="false" data-mi="1">Verensokeri</button>
+        <button type="button" aria-selected="false" data-mi="2">Paino</button>
+      </div>
       <div class="readout">
         <span class="v" id="pRVal">—</span>
         <span class="u" id="pRUnit">—</span>
@@ -802,7 +821,7 @@ body[data-role="laakari"] .app{padding-bottom:34px}
       </div>
       <div class="subline" id="pRSub">—</div>
       <div class="chartwrap">
-        <svg class="chart" id="pChart" viewBox="0 0 560 260" role="img" aria-label="Potilaan verenpaineen kehitys."></svg>
+        <svg class="chart" id="pChart" viewBox="0 0 560 260" role="img" aria-label="Potilaan seurannan kehitys."></svg>
         <div class="tip" id="pTip"></div>
       </div>
       <div class="graph-events" id="pGraphEvents"></div>
@@ -814,10 +833,10 @@ body[data-role="laakari"] .app{padding-bottom:34px}
     <div class="section-label">VIIMEISIMMÄT MITTAUKSET</div>
     <div class="card tight" id="pBpList"></div>
 
-    <div class="section-label">VERENPAINELÄÄKITYS</div>
+    <div class="section-label">LÄÄKITYS</div>
     <div class="card tight" id="pMeds"></div>
 
-    <div class="section-label">OIREKIRJAUKSET</div>
+    <div class="section-label">OIREET</div>
     <div class="card tight" id="pSymptoms"></div>
 
     <div class="section-label">VERIKOKEET</div>
@@ -1042,10 +1061,12 @@ document.getElementById('sheetCancel').addEventListener('click',closeSheet);
 document.getElementById('entryCancel').addEventListener('click',closeEntry);
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeSheet();closeEntry();}});
 
-/* MVP: verenpaine, lääkitys, oireet ja verikokeet. */
+/* Etäarvio: verenpaine, verensokeri, paino + lääkitys, oireet, verikokeet. */
 const ENTRY=[
  {key:'bp', i:0, name:'Verenpaine', d:'Ylä- ja alapaine, aamu tai ilta', color:'#B3452C', tint:'var(--red-tint)'},
- {key:'med',i:0, name:'Verenpainelääkitys', d:'Aloitus tai annosmuutos', color:'#A67C2E', tint:'var(--gold-tint)'},
+ {key:'glu',i:1, name:'Verensokeri', d:'Kotimittaus mmol/l, aamu tai ilta', color:'#2F6690', tint:'#EAF1F7'},
+ {key:'wt', i:2, name:'Paino', d:'Punnitus ja vyötärönympärys', color:'#6B5B95', tint:'#F0EDF7'},
+ {key:'med',i:0, name:'Lääkitys', d:'Aloitus tai annosmuutos', color:'#A67C2E', tint:'var(--gold-tint)'},
  {key:'lab',i:0, name:'Verikokeet', d:'Natrium, kalium, kreatiniini', color:'#3D6B8C', tint:'#E8F0F5'}
 ];
 const sheetOpts=document.getElementById('sheetOpts');
@@ -1056,7 +1077,11 @@ ENTRY.forEach(e=>{
     ? '<path d="M9 3h6v4H9z"/><path d="M10 7h4v14a2 2 0 01-2 2h0a2 2 0 01-2-2V7z"/><path d="M8 12h8"/>'
     : (e.key==='lab'
       ? '<path d="M9 3v6l-4 8a3 3 0 002.7 4.5h8.6A3 3 0 0019 17l-4-8V3"/><path d="M8 3h8"/>'
-      : '<path d="M3 12h4l2-5 4 10 2-5h6"/>');
+      : (e.key==='wt'
+        ? '<path d="M12 3v18M5 8h14M7 12h10M9 16h6"/>'
+        : (e.key==='glu'
+          ? '<path d="M12 3c4 5 7 8.5 7 12a7 7 0 11-14 0c0-3.5 3-7 7-12z"/>'
+          : '<path d="M3 12h4l2-5 4 10 2-5h6"/>')));
   b.innerHTML='<span class="ic" style="background:'+e.tint+';color:'+e.color+'">'+
     '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">'+icon+'</svg></span>'+
     '<span><span class="n">'+e.name+'</span><span class="d">'+e.d+'</span></span>';
@@ -1076,6 +1101,8 @@ function openDocMed(patient){openEntry(ENTRY.find(e=>e.key==='med'),patient);}
 let entryCur=null, entryTime='Aamu', docMedPatient=null;
 const FIELDS={
  bp:[{id:'e_sys',l:'Yläpaine (mmHg)',ph:'yläpaine'},{id:'e_dia',l:'Alapaine (mmHg)',ph:'alapaine'},{id:'e_pulse',l:'Syke, valinnainen',ph:'syke'}],
+ glu:[{id:'e_glu',l:'Verensokeri (mmol/l)',ph:'esim. 6,8'}],
+ wt:[{id:'e_wt',l:'Paino (kg)',ph:'paino'},{id:'e_waist',l:'Vyötärönympärys (cm), valinnainen',ph:'vyötärönympärys'}],
  med:[{id:'e_med_name',l:'Lääkkeen nimi',ph:'esim. Ramipril'},{id:'e_med_dose',l:'Annos',ph:'esim. 5 mg'}],
  lab:[{id:'e_lab_na',l:'Natrium Na (mmol/l)',ph:'esim. 140'},{id:'e_lab_k',l:'Kalium K (mmol/l)',ph:'esim. 4.2'},{id:'e_lab_krea',l:'Kreatiniini (µmol/l)',ph:'esim. 78'}]
 };
@@ -1091,7 +1118,7 @@ function openEntry(e,forPatient){
   document.getElementById('entryMsg').className='entry-msg';
   const wrap=document.getElementById('entryFields');
   wrap.innerHTML='';
-  if(e.key==='bp'){
+  if(e.key==='bp'||e.key==='glu'){
     const seg=document.createElement('div');
     seg.className='seg';
     const aamuValittu=entryTime==='Aamu';
@@ -1106,7 +1133,7 @@ function openEntry(e,forPatient){
   FIELDS[e.key].forEach(f=>{
     const d=document.createElement('div');
     d.className='field';
-    const mode=(e.key==='bp'||e.key==='lab')?'decimal':'text';
+    const mode=(e.key==='bp'||e.key==='lab'||e.key==='glu'||e.key==='wt')?'decimal':'text';
     d.innerHTML='<label for="'+f.id+'">'+f.l+'</label><input type="text" inputmode="'+mode+'" id="'+f.id+'" placeholder="'+f.ph+'">';
     wrap.appendChild(d);
   });
@@ -1311,6 +1338,28 @@ entrySaveBtn.addEventListener('click',async()=>{
     if(na!==null)rivit.push({taulu:'metric_measurements',data:{patient_id:me.id,metric:'sodium',value:na,source:'patient',measured_at:hetki}});
     if(kVal!==null)rivit.push({taulu:'metric_measurements',data:{patient_id:me.id,metric:'potassium',value:kVal,source:'patient',measured_at:hetki}});
     if(krea!==null)rivit.push({taulu:'metric_measurements',data:{patient_id:me.id,metric:'creatinine',value:Math.round(krea),source:'patient',measured_at:hetki}});
+  }else if(k==='glu'){
+    const v=num('e_glu');
+    if(v===null){msg('Syötä verensokeri.','warn');return;}
+    if(v<2||v>30){msg('Tarkista lukema (tyypillisesti 2–30 mmol/l).','warn');return;}
+    const stamp=new Date();
+    stamp.setHours(entryTime==='Ilta'?19:7,0,0,0);
+    if(stamp.getTime()>Date.now())stamp.setTime(Date.now());
+    rivit.push({taulu:'metric_measurements',data:{
+      patient_id:me.id,metric:'glucose',value:Math.round(v*10)/10,source:'patient',
+      measured_at:stamp.toISOString()
+    }});
+    if(v>=13.9)
+      varoitus='Tallennettu. Lukema on korkea. Jos sinulla on oireita (oksentelu, uneliaisuus, hengitysvaikeus), ota yhteys päivystykseen.';
+    else if(v<3.9)
+      varoitus='Tallennettu. Lukema on matala. Syö nopeasti imeytyvää hiilihydraattia ja mittaa uudelleen. Vakavissa oireissa soita 112.';
+  }else if(k==='wt'){
+    const v=num('e_wt'),vy=num('e_waist');
+    if(v===null){msg('Syötä paino.','warn');return;}
+    if(v<30||v>300){msg('Tarkista lukema.','warn');return;}
+    if(vy!==null&&(vy<40||vy>200)){msg('Tarkista vyötärönympärys.','warn');return;}
+    rivit.push(metriikka('weight',Math.round(v*10)/10));
+    if(vy!==null)rivit.push(metriikka('waist',Math.round(vy*10)/10));
   }else{
     msg('Tuntematon kirjaus.','warn');
     return;
@@ -1393,7 +1442,7 @@ sxSaveBtn.addEventListener('click',async()=>{
   sxSel.clear();sxLvl=null;
   document.querySelectorAll('#sxOpts .opt,#sxScale button').forEach(o=>o.setAttribute('aria-pressed','false'));
   document.getElementById('sxText').value='';
-  vihje(h,'Kysely lähetetty. Lääkärisi näkee sen ennen seuraavaa käyntiä.','ok');
+  vihje(h,'Kysely lähetetty. Lääkärisi näkee sen, kun jaat koodin.','ok');
   setTimeout(()=>vihje(h,'Jos oireesi on vakava tai äkillinen, älä odota vastausta — soita 112.',''),8000);
 });
 function renderSx(){
@@ -1524,22 +1573,26 @@ saveMBtn.addEventListener('click',async()=>{
   if(sys>=180||dia>=110)
     vihje(h,'Tallennettu. Lukema on korkea — lepää viisi minuuttia ja mittaa uudelleen. Jos arvo toistuu, ota yhteys hoitavaan tahoon. Rintakivun tai halvausoireiden yhteydessä soita 112.','warn');
   else
-    vihje(h,'Tallennettu. Lääkärisi näkee mittauksen automaattisesti.','ok');
+    vihje(h,'Tallennettu. Lääkärisi näkee mittauksen, kun jaat koodin.','ok');
   setTimeout(()=>vihje(h,'',''),12000);
 });
 
 /* ══════════ SEURANTASARJAT ══════════ */
 /* Taulukot täytetään kannasta paikallaan (length=0 + push), koska SG ja
    kaavio pitävät niihin viitteen. */
-const BP=[], WT=[], LDL=[], HBA=[], WAIST=[];
+const BP=[], WT=[], LDL=[], HBA=[], WAIST=[], GLU=[];
 const EVENTS=[];
 const MEDS=[];
-const MED_LINK_LABEL={bp:'Verenpaine'};
+const MED_LINK_LABEL={bp:'Verenpaine',glucose:'Verensokeri',weight:'Paino'};
 
-/* Aluksi seurataan vain verenpainetta. Muut mittarit tulevat myöhemmin. */
+/* Etäarvio: verenpaine, kotiverensokeri ja paino SmartGraphissa. */
 const SG=[
  {name:"Verenpaine",metricKey:"bp",unit:"mmHg",u:"mmHg · 7 vrk keskiarvo",target:135,dec:0,color:"#B3452C",dense:true,data:BP,
-  note:"",emptyNote:"Kirjaa kotimittauksia, niin käyrä alkaa muodostua."}
+  note:"",emptyNote:"Kirjaa kotimittauksia, niin käyrä alkaa muodostua."},
+ {name:"Verensokeri",metricKey:"glucose",unit:"mmol/l",u:"mmol/l · 7 vrk keskiarvo",target:7,dec:1,color:"#2F6690",dense:true,data:GLU,
+  note:"Kotimittaus sormenpäästä.",emptyNote:"Kirjaa aamu- ja iltamittauksia, niin suunta näkyy."},
+ {name:"Paino",metricKey:"weight",unit:"kg",u:"kg · viikkopunnitus",target:89.5,dec:1,color:"#6B5B95",dense:false,data:WT,
+  note:"",emptyNote:"Punnitse itsesi kerran viikossa, niin suunta näkyy."}
 ];
 
 /* SmartGraph-merkit: aktiiviset verenpainelääkitykset (lopetetut pois).
@@ -2048,12 +2101,30 @@ function openMetric(i,backTo){
   go('graph');
   drawChart(i);
 }
-function drawPatientChart(){
+function drawPatientChart(metricIndex){
+  const i=metricIndex==null?docMetricIndex:metricIndex;
+  docMetricIndex=i;
   chartTarget='patient';
   range=999;
-  drawChart(0);
+  const seg=document.getElementById('pMetricSeg');
+  if(seg){
+    seg.querySelectorAll('button').forEach(b=>{
+      b.setAttribute('aria-selected',String(+b.dataset.mi===i));
+    });
+  }
+  const m=SG[i];
+  const label=document.getElementById('pGraphLabel');
+  if(label)label.textContent='SMARTGRAPH · '+m.name.toUpperCase();
+  drawChart(i);
   chartTarget='graph';
 }
+let docMetricIndex=0;
+document.getElementById('pMetricSeg')?.querySelectorAll('button').forEach(b=>{
+  b.addEventListener('click',()=>{
+    drawPatientChart(+b.dataset.mi);
+    renderDocMittaukset();
+  });
+});
 document.querySelectorAll('#segRange button').forEach(b=>{
   b.addEventListener('click',()=>{
     document.querySelectorAll('#segRange button').forEach(o=>o.setAttribute('aria-selected','false'));
@@ -2065,7 +2136,7 @@ window.addEventListener('resize',()=>{
   clearTimeout(chartResizeT);
   chartResizeT=setTimeout(()=>{
     if(document.getElementById('v-graph').classList.contains('on'))drawChart(cur);
-    else if(document.getElementById('v-potilas').classList.contains('on'))drawPatientChart();
+    else if(document.getElementById('v-potilas').classList.contains('on'))drawPatientChart(docMetricIndex);
   },160);
 });
 /* Kaaviota ei piirretä sivun latautuessa — data tulee kannasta vasta
@@ -2251,7 +2322,12 @@ function renderTavoitteet(){
     wrap.innerHTML=rivi('Tavoitetta ei ole vielä asetettu','');
     return;
   }
-  wrap.innerHTML=rivi('Verenpaine','alle '+targets.bp_sys+'/'+targets.bp_dia);
+  let html=rivi('Verenpaine','alle '+targets.bp_sys+'/'+targets.bp_dia);
+  const gluT=targets.glucose!=null?targets.glucose:7;
+  html+=rivi('Verensokeri','alle '+fmt(gluT,1)+' mmol/l');
+  if(targets.weight!=null)
+    html+=rivi('Paino',targets.weight_note||('alle '+fmt(targets.weight,1)+' kg'));
+  wrap.innerHTML=html;
 }
 
 function renderHoitoOhje(){
@@ -2326,15 +2402,18 @@ async function lataaMittaukset(potilas){
     .order('measured_at',{ascending:true});
   if(e2)return virheteksti(e2);
 
-  WT.length=0;LDL.length=0;HBA.length=0;WAIST.length=0;
-  const kohde={weight:WT,ldl:LDL,hba1c:HBA,waist:WAIST};
-  const merkki={weight:'wk',ldl:'lab',hba1c:'lab',waist:'wk'};
+  WT.length=0;LDL.length=0;HBA.length=0;WAIST.length=0;GLU.length=0;
+  const kohde={weight:WT,ldl:LDL,hba1c:HBA,waist:WAIST,glucose:GLU};
+  const merkki={weight:'wk',ldl:'lab',hba1c:'lab',waist:'wk',glucose:'glu'};
   mm.forEach(r=>{
     const lista=kohde[r.metric];
     if(!lista)return;
     const i=dayIndex(r.measured_at);
     if(i<0||i>TODAY)return;
-    lista.push({d:i,t:merkki[r.metric],v:r.value,at:r.measured_at});
+    const tod=r.metric==='glucose'
+      ? (new Date(r.measured_at).getHours()>=15?'pm':'am')
+      : merkki[r.metric];
+    lista.push({d:i,t:tod,v:r.value,at:r.measured_at});
   });
   return null;
 }
@@ -2451,12 +2530,14 @@ async function lataaTausta(potilas){
   const id=potilas||me.id;
 
   const {data:tg,error:e1}=await sb.from('patient_targets')
-    .select('bp_sys,bp_dia,ldl,hba1c,weight,weight_note')
+    .select('bp_sys,bp_dia,ldl,hba1c,weight,weight_note,glucose')
     .eq('patient_id',id).maybeSingle();
   if(e1)return virheteksti(e1);
   targets=tg||null;
   if(targets){
     SG[0].target=targets.bp_sys;
+    if(targets.glucose!=null)SG[1].target=targets.glucose;
+    if(targets.weight!=null)SG[2].target=targets.weight;
   }
 
   const {data:st,error:e2}=await sb.from('steps')
@@ -2878,6 +2959,7 @@ async function lunastaJakokoodi(){
 
 async function avaaPotilas(u){
   docPatient=u;
+  docMetricIndex=0;
   document.getElementById('pTitle').textContent=u.full_name||u.email;
   document.getElementById('pSub').textContent='Ladataan…';
   go('potilas');
@@ -2894,23 +2976,12 @@ async function avaaPotilas(u){
     return;
   }
 
-  const ka=rolling(BP);
-  const viimeKa=ka.length?ka[ka.length-1].v:null;
-  const tavoite=targets?targets.bp_sys:135;
-  document.getElementById('pSub').textContent=
-    state.measurements.length+' mittausta · '+
-    (viimeKa!==null
-      ? (viimeKa<=tavoite?'tavoitteessa':'ylitavoitteen '+Math.round(viimeKa)+' mmHg')
-      : 'ei keskiarvoa');
+  document.getElementById('pSub').textContent=docTilanneYhteenveto();
 
   renderSeuraavaEhdotus();
-  drawPatientChart();
-
-  document.getElementById('pBpList').innerHTML=
-    state.measurements.length
-      ? state.measurements.slice(0,10).map(m=>rivi(m.d+' · '+m.t,m.v+(m.p?' · '+m.p:''))).join('')
-      : rivi('Ei mittauksia','');
-
+  renderDocSnapshot();
+  drawPatientChart(0);
+  renderDocMittaukset();
   renderDocMeds(document.getElementById('pMeds'));
 
   document.getElementById('pSymptoms').innerHTML=
@@ -2918,15 +2989,104 @@ async function avaaPotilas(u){
       ? state.aes.slice(0,8).map(a=>rivi(a.s+(a.l?' · haitta '+a.l+'/5':''),a.when)).join('')
       : rivi('Ei oirekirjauksia','');
 
-  document.getElementById('pLabs').innerHTML=
-    state.labs.length
-      ? state.labs.slice(0,8).map(l=>rivi(labRiviTeksti(l.values),dayLabel(l.at))).join('')
-      : rivi('Ei verikokeita','');
+  document.getElementById('pLabs').innerHTML=renderDocLabsHtml();
 
   document.getElementById('pTasks').innerHTML=
     TASKS.length
       ? TASKS.map(t=>rivi(t.t,t.done?'tehty':'kesken')).join('')
       : rivi('Ei tehtäviä','');
+}
+
+function viimeSarja(lista){
+  if(!lista||!lista.length)return null;
+  return lista[lista.length-1];
+}
+function docTilanneYhteenveto(){
+  const osat=[];
+  const bpKa=rolling(BP);
+  const bpV=bpKa.length?bpKa[bpKa.length-1].v:null;
+  const bpT=targets?targets.bp_sys:135;
+  if(bpV!=null)osat.push(bpV<=bpT?'BP ok':'BP ↑'+Math.round(bpV));
+  const gKa=rolling(GLU);
+  const gV=gKa.length?gKa[gKa.length-1].v:(viimeSarja(GLU)?.v);
+  const gT=targets&&targets.glucose!=null?targets.glucose:7;
+  if(gV!=null)osat.push(gV<=gT?'Gluk ok':'Gluk ↑'+fmt(gV,1));
+  const w=viimeSarja(WT);
+  if(w)osat.push(fmt(w.v,1)+' kg');
+  if(state.aes.length)osat.push(state.aes.length+' oire');
+  if(state.labs.length)osat.push('labrat');
+  return osat.length?osat.join(' · '):'Ei vielä seurantadataa';
+}
+function renderDocSnapshot(){
+  const box=document.getElementById('pSnapshot');
+  if(!box)return;
+  const bpKa=rolling(BP);
+  const bpV=bpKa.length?bpKa[bpKa.length-1].v:null;
+  const bpT=targets?targets.bp_sys:135;
+  const bpCls=bpV==null?'':(bpV<=bpT?'ok':'warn');
+  const gKa=rolling(GLU);
+  const gV=gKa.length?gKa[gKa.length-1].v:(viimeSarja(GLU)?.v);
+  const gT=targets&&targets.glucose!=null?targets.glucose:7;
+  const gCls=gV==null?'':(gV<=gT?'ok':'warn');
+  const w=viimeSarja(WT);
+  const wT=targets&&targets.weight!=null?targets.weight:null;
+  const wCls=w&&wT!=null?(w.v<=wT?'ok':'warn'):'';
+  const medN=MEDS.filter(m=>!m.ended_on).length;
+  const sx=state.aes[0];
+  const lab=state.labs[0];
+
+  box.innerHTML='<div class="snap-grid">'+
+    '<div class="snap '+bpCls+'"><span class="l">Verenpaine</span><span class="v">'+(bpV!=null?Math.round(bpV):'—')+
+      (bpV!=null?'<span class="u">mmHg</span>':'')+'</span>'+
+      '<span class="s">'+(bpV!=null?'7 vrk ka · tavoite '+bpT:'Ei mittauksia')+'</span></div>'+
+    '<div class="snap '+gCls+'"><span class="l">Verensokeri</span><span class="v">'+(gV!=null?fmt(gV,1):'—')+
+      (gV!=null?'<span class="u">mmol/l</span>':'')+'</span>'+
+      '<span class="s">'+(gV!=null?'7 vrk ka · tavoite '+fmt(gT,1):'Ei mittauksia')+'</span></div>'+
+    '<div class="snap '+wCls+'"><span class="l">Paino</span><span class="v">'+(w?fmt(w.v,1):'—')+
+      (w?'<span class="u">kg</span>':'')+'</span>'+
+      '<span class="s">'+(w?(dayLabel(w.at)+(wT!=null?' · tavoite '+fmt(wT,1):'')):'Ei punnituksia')+'</span></div>'+
+    '<div class="snap"><span class="l">Lääkitys</span><span class="v">'+medN+
+      '<span class="u">aktiivista</span></span>'+
+      '<span class="s">'+(medN?MEDS.filter(m=>!m.ended_on).slice(0,2).map(m=>m.name).join(', '):'Ei kirjattua lääkitystä')+'</span></div>'+
+    '<div class="snap '+(sx&&sx.l>=4?'warn':'')+'"><span class="l">Oireet</span><span class="v">'+(sx?esc(sx.s.split(',')[0]):'—')+'</span>'+
+      '<span class="s">'+(sx?(sx.when+(sx.l?' · haitta '+sx.l+'/5':'')):'Ei oirekirjauksia')+'</span></div>'+
+    '<div class="snap"><span class="l">Verikokeet</span><span class="v">'+(lab?esc(labRiviTeksti(lab.values).split(' · ')[0]):'—')+'</span>'+
+      '<span class="s">'+(lab?dayLabel(lab.at)+' · Na/K/krea':'Ei labroja')+'</span></div>'+
+    '</div>';
+}
+function renderDocMittaukset(){
+  const box=document.getElementById('pBpList');
+  if(!box)return;
+  const m=SG[docMetricIndex]||SG[0];
+  if(m.metricKey==='bp'){
+    box.innerHTML=state.measurements.length
+      ? state.measurements.slice(0,10).map(x=>rivi(x.d+' · '+x.t,x.v+(x.p?' · '+x.p:''))).join('')
+      : rivi('Ei mittauksia','');
+    return;
+  }
+  const lista=(m.data||[]).slice().reverse();
+  box.innerHTML=lista.length
+    ? lista.slice(0,10).map(p=>{
+        const when=p.at?dayLabel(p.at):calLabel(p.d);
+        const tod=p.t==='am'?'Aamu':(p.t==='pm'?'Ilta':'');
+        return rivi(when+(tod?' · '+tod:''),fmtv(p.v,m.dec)+' '+m.unit);
+      }).join('')
+    : rivi('Ei mittauksia','');
+}
+function renderDocLabsHtml(){
+  const rows=[];
+  if(HBA.length){
+    const h=HBA[HBA.length-1];
+    rows.push(rivi('HbA1c '+fmtv(h.v,0)+' mmol/mol',h.at?dayLabel(h.at):''));
+  }
+  if(LDL.length){
+    const l=LDL[LDL.length-1];
+    rows.push(rivi('LDL '+fmtv(l.v,1)+' mmol/l',l.at?dayLabel(l.at):''));
+  }
+  if(state.labs.length){
+    state.labs.slice(0,6).forEach(l=>rows.push(rivi(labRiviTeksti(l.values),dayLabel(l.at))));
+  }
+  return rows.length?rows.join(''):rivi('Ei verikokeita','');
 }
 
 function renderDocMeds(el){
