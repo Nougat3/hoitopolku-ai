@@ -491,7 +491,7 @@ body[data-role="laakari"] .app{padding-bottom:34px}
     </div>
     <div class="card">
       <h1>Kirjaudu sisään</h1>
-      <div class="sub">Tietosi ovat suojattuja. Näet vain oman hoitopolkusi.</div>
+      <div class="sub">Kokeile demoa. Valitse alla potilas tai lääkäri — tai kirjaudu tunnuksilla.</div>
       <form id="loginForm" novalidate>
         <div class="field">
           <label for="li_email">Sähköposti</label>
@@ -514,7 +514,7 @@ body[data-role="laakari"] .app{padding-bottom:34px}
         </button>
       </div>
     </div>
-    <p class="foot">Jos et pääse kirjautumaan, ota yhteys hoitavaan yksikköösi.<br>Hätätilanteessa soita 112.</p>
+    <p class="foot">Tämä on demosovellus. Demotunnukset yllä.<br>Hätätilanteessa soita 112.</p>
   </div>
 </div>
 
@@ -634,7 +634,12 @@ body[data-role="laakari"] .app{padding-bottom:34px}
   <div class="view" id="v-seuranta">
     <div class="pagehead">
       <h1>Seuranta</h1>
-      <div class="sub">Mittaukset, lääkitys, oireet ja verikokeet. Jaa koodi lääkärille tarvittaessa.</div>
+      <div class="sub">Mittaukset, lääkitys, oireet ja verikokeet. Jaa koodi lääkärille etävastaanottoa varten.</div>
+    </div>
+
+    <div class="section-label">JAA LÄÄKÄRILLE</div>
+    <div class="card" id="shareCard">
+      <p class="sub" style="margin:0">Ladataan…</p>
     </div>
 
     <div class="section-label">SEURANTA</div>
@@ -665,11 +670,6 @@ body[data-role="laakari"] .app{padding-bottom:34px}
       <p class="sub" style="margin:6px 0 14px">Natrium, kalium ja kreatiniini. Kirjaa arvot sellaisenaan — sovellus ei analysoi niitä.</p>
       <div id="labList" style="margin-bottom:14px"></div>
       <button class="btn sec sm" id="addLabBtn">Lisää verikokeet</button>
-    </div>
-
-    <div class="section-label">JAA LÄÄKÄRILLE</div>
-    <div class="card" id="shareCard">
-      <p class="sub" style="margin:0">Ladataan…</p>
     </div>
 
     <div class="section-label">TILI</div>
@@ -718,7 +718,7 @@ body[data-role="laakari"] .app{padding-bottom:34px}
     <button class="backlink" onclick="go('koti')">‹ Takaisin</button>
     <div class="pagehead" style="padding-top:12px">
       <h1>Oirekysely</h1>
-      <div class="sub">Kirjaa oireet heti kun huomaat ne. Lääkärisi näkee ne ennen seuraavaa käyntiä.</div>
+      <div class="sub">Kirjaa oireet heti kun huomaat ne. Lääkärisi näkee ne, kun jaat koodin.</div>
     </div>
 
     <div class="card">
@@ -770,7 +770,7 @@ body[data-role="laakari"] .app{padding-bottom:34px}
     <div class="section-label">AVAA POTILAS</div>
     <div class="card">
       <h3 style="margin-bottom:8px">Syötä potilaan jakokoodi</h3>
-      <p class="sub" style="margin:0 0 14px">Potilas luo koodin ennen etävastaanottoa. Varaa aika erikseen — koodi antaa pääsyn potilaan tietoihin 24 tunniksi.</p>
+      <p class="sub" style="margin:0 0 14px">Demo: potilas luo koodin Seuranta → Jaa lääkärille. Koodi avaa tilannekuvan 24 tunniksi.</p>
       <div class="field">
         <label for="docAccessCode">Jakokoodi</label>
         <input type="text" id="docAccessCode" placeholder="XXXX-XXXX" autocapitalize="characters" autocomplete="off" spellcheck="false" style="font-size:20px;font-weight:600;letter-spacing:.12em;text-transform:uppercase">
@@ -965,7 +965,7 @@ function renderTimeline(){
   tl.innerHTML='';
   const sub=document.getElementById('pathSub');
   if(!TIMELINE.length){
-    tl.innerHTML='<p class="sub" style="margin:0">Kirjaa verenpainemittauksia, lääkityksiä ja oireita. Lääkärisi näkee ne SmartGraphissa.</p>';
+    tl.innerHTML='<p class="sub" style="margin:0">Kirjaa mittauksia, lääkityksiä ja oireita. Lääkärisi näkee ne SmartGraphissa, kun jaat koodin.</p>';
     if(sub)sub.textContent='Verenpaineen hoitopolku: mittaukset, lääkitys ja oireet.';
     return;
   }
@@ -2848,7 +2848,7 @@ async function lataaPotilaslista(){
   lista.innerHTML='';
   if(!idt.length){
     document.getElementById('docSub').textContent='Syötä potilaan jakokoodi avataksesi potilaan tiedot';
-    lista.innerHTML='<p class="sub" style="margin:0">Ei avoimia istuntoja. Potilas luo koodin Seuranta-näkymässä ennen vastaanottoa.</p>';
+    lista.innerHTML='<p class="sub" style="margin:0">Ei avoimia istuntoja. Potilas: Seuranta → Jaa lääkärille → Luo jakokoodi.</p>';
     return null;
   }
 
@@ -3151,6 +3151,7 @@ document.querySelectorAll('.demo-cred').forEach(b=>{
     document.getElementById('li_email').value=b.dataset.email||'';
     document.getElementById('li_pw').value=b.dataset.pw||'';
     huomio(loginNote,'','');
+    loginForm.requestSubmit();
   });
 });
 loginForm.addEventListener('submit',async e=>{
