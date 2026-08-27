@@ -140,7 +140,7 @@ begin
     raise exception 'Vain laakari voi lunastaa koodin';
   end if;
 
-  v_normalized := upper(regexp_replace(trim(coalesce(p_code, '')), '[^A-Z0-9]', '', 'g'));
+  v_normalized := regexp_replace(upper(trim(coalesce(p_code, ''))), '[^A-Z0-9]', '', 'g');
   if length(v_normalized) <> 8 then
     raise exception 'Koodi on virheellinen';
   end if;
