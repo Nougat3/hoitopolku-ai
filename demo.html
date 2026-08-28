@@ -129,6 +129,34 @@ p{margin:0 0 14px}
 .tile .tgt{display:block;font-size:12.5px;color:var(--muted-2)}
 .tile .spark{margin-top:12px;display:block;width:100%;height:auto}
 .tile .pill{display:inline-block}
+/* etusivun mittarikortit: arvo vasemmalla, trendiviiva oikealla */
+.hm{display:grid;gap:10px}
+.hm-row{
+  display:flex;align-items:center;gap:14px;width:100%;text-align:left;
+  background:#fff;border:1px solid var(--hair);border-radius:18px;
+  padding:14px 16px;font:inherit;color:inherit;cursor:pointer;
+  box-shadow:0 1px 2px rgba(24,22,20,.03);transition:transform .18s,box-shadow .18s;
+}
+.hm-row:active{transform:scale(.99)}
+.hm-row:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.hm-txt{flex:1;min-width:0}
+.hm-row .l{display:flex;align-items:center;gap:7px;font-size:12.5px;font-weight:500;color:var(--muted)}
+.hm-row .l i{width:7px;height:7px;border-radius:50%;flex:none}
+.hm-row .v{display:block;font-size:27px;font-weight:600;letter-spacing:-.04em;line-height:1.1;margin:7px 0 3px;color:var(--ink)}
+.hm-row .v .u{font-size:13px;font-weight:500;color:var(--muted);margin-left:4px;letter-spacing:0}
+.hm-row .s{display:block;font-size:12px;color:var(--muted-2);line-height:1.4}
+.hm-vis{flex:none;width:104px;display:flex;flex-direction:column;align-items:flex-end}
+.hm-vis .spark{display:block;width:104px;height:auto}
+.hm-d{font-size:12px;font-weight:600;margin-top:5px;font-variant-numeric:tabular-nums}
+.hm-d.down{color:var(--green)}
+.hm-d.up{color:var(--red)}
+.hm-d.flat{color:var(--muted-2)}
+@media(min-width:620px){
+  .hm{grid-template-columns:repeat(3,1fr)}
+  .hm-vis{width:88px}
+  .hm-vis .spark{width:88px}
+}
+
 .pill{display:inline-block;font-size:11.5px;font-weight:600;padding:3px 9px;border-radius:980px;margin-top:10px}
 .pill.ok{background:var(--green-tint);color:var(--green)}
 .pill.mid{background:var(--amber-tint);color:var(--amber)}
@@ -561,7 +589,7 @@ body[data-role="laakari"] .app{padding-bottom:34px}
     </div>
 
     <div class="section-label">VIIMEISIMMÄT ARVOT</div>
-    <div class="card tight" id="homeMetrics"></div>
+    <div id="homeMetrics"></div>
 
     <div class="section-label">HOITOPOLUN TEHTÄVÄT</div>
     <div class="card">
@@ -2098,7 +2126,8 @@ function openMetric(i,backTo){
   const m=SG[i];
   chartTarget='graph';
   graphBackTo=backTo||(me&&me.role!=='potilas'?'potilas':'seuranta');
-  if(graphBackBtn)graphBackBtn.textContent=graphBackTo==='potilas'?'‹ Potilas':'‹ Seuranta';
+  if(graphBackBtn)graphBackBtn.textContent=
+    graphBackTo==='potilas'?'‹ Potilas':(graphBackTo==='koti'?'‹ Etusivu':'‹ Seuranta');
   document.getElementById('gTitle').textContent=m.name;
   document.getElementById('gSub').textContent=
     'Trendi ja lääkemuutosten vaikutus samassa kuvassa.';
@@ -2322,25 +2351,64 @@ function renderEtusivu(){
     : rivi('Ei suunniteltuja tapahtumia','');
 }
 
+/* Suunta lasketaan samasta sarjasta kuin trendiviiva, jotta luku ja
+   kuva kertovat saman asian. Näissä mittareissa lasku on hyvä suunta. */
+function trendiSuunta(vals,m){
+  if(vals.length<3)return {cls:'flat',txt:'vakaa'};
+  const muutos=vals[vals.length-1]-vals[0];
+  const kynnys=m.dec?0.2:2;
+  if(Math.abs(muutos)<kynnys)return {cls:'flat',txt:'vakaa'};
+  return muutos<0
+    ? {cls:'down',txt:'↓ '+fmtv(Math.abs(muutos),m.dec)}
+    : {cls:'up',txt:'↑ '+fmtv(muutos,m.dec)};
+}
+
 function renderHomeMetrics(){
   const box=document.getElementById('homeMetrics');
   if(!box)return;
-  const bpKa=rolling(BP);
-  const bpV=bpKa.length?bpKa[bpKa.length-1].v:null;
-  const gKa=rolling(GLU);
-  const gV=gKa.length?gKa[gKa.length-1].v:(GLU.length?GLU[GLU.length-1].v:null);
-  const w=WT.length?WT[WT.length-1]:null;
-  box.innerHTML='<div class="snap-grid">'+
-    '<button type="button" class="snap" data-mi="0"><span class="l">Verenpaine</span><span class="v">'+(bpV!=null?Math.round(bpV):'—')+
-      (bpV!=null?'<span class="u">mmHg</span>':'')+'</span><span class="s">7 vrk ka · avaa käyrä</span></button>'+
-    '<button type="button" class="snap" data-mi="1"><span class="l">Verensokeri</span><span class="v">'+(gV!=null?fmt(gV,1):'—')+
-      (gV!=null?'<span class="u">mmol/l</span>':'')+'</span><span class="s">7 vrk ka · avaa käyrä</span></button>'+
-    '<button type="button" class="snap" data-mi="2"><span class="l">Paino</span><span class="v">'+(w?fmt(w.v,1):'—')+
-      (w?'<span class="u">kg</span>':'')+'</span><span class="s">'+(w?dayLabel(w.at)+' · avaa käyrä':'Kirjaa Mittaa-valikosta')+'</span></button>'+
-    '</div>';
-  box.querySelectorAll('[data-mi]').forEach(btn=>{
-    btn.addEventListener('click',()=>openMetric(+btn.dataset.mi));
+  box.innerHTML='';
+  const wrap=document.createElement('div');
+  wrap.className='hm';
+
+  SG.forEach((m,i)=>{
+    const vals=tileSeries(m);
+    const arvo=vals.length?vals[vals.length-1]:null;
+    const viimeisin=m.data.length?m.data[m.data.length-1]:null;
+    const ajankohta=m.dense
+      ? '7 vrk keskiarvo'
+      : (viimeisin&&viimeisin.at?dayLabel(viimeisin.at):'');
+
+    const b=document.createElement('button');
+    b.className='hm-row';
+    b.type='button';
+
+    const txt=document.createElement('span');
+    txt.className='hm-txt';
+    txt.innerHTML='<span class="l"><i style="background:'+m.color+'"></i>'+esc(m.name)+'</span>'+
+      '<span class="v">'+(arvo!=null?esc(fmtv(arvo,m.dec)):'—')+
+        '<span class="u">'+esc(m.unit)+'</span></span>'+
+      '<span class="s">'+(arvo!=null
+        ? esc((ajankohta?ajankohta+' · ':'')+'tavoite alle '+fmtv(m.target,m.dec))
+        : 'Kirjaa ensimmäinen mittaus Mittaa-valikosta')+'</span>';
+    b.appendChild(txt);
+
+    if(vals.length>1){
+      const vis=document.createElement('span');
+      vis.className='hm-vis';
+      vis.appendChild(sparkline(vals,m.color,200,64,m.target));
+      const s=trendiSuunta(vals,m);
+      const d=document.createElement('span');
+      d.className='hm-d '+s.cls;
+      d.textContent=s.txt;
+      vis.appendChild(d);
+      b.appendChild(vis);
+    }
+
+    b.addEventListener('click',()=>openMetric(i,'koti'));
+    wrap.appendChild(b);
   });
+
+  box.appendChild(wrap);
 }
 
 function renderTavoitteet(){
@@ -3313,7 +3381,7 @@ sb.auth.onAuthStateChange((event,session)=>{
 /* ══════════ SERVICE WORKER ══════════ */
 if('serviceWorker' in navigator){
   window.addEventListener('load',()=>{
-    navigator.serviceWorker.register('sw.js?v=19')
+    navigator.serviceWorker.register('sw.js?v=20')
       .then(reg=>{
         reg.update();
         console.log('SW registered');
