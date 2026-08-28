@@ -544,7 +544,7 @@ body[data-role="laakari"] .app{padding-bottom:34px}
         </button>
       </div>
     </div>
-    <p class="foot">Tämä on demosovellus. Demotunnukset yllä.<br>Hätätilanteessa soita 112.</p>
+    <p class="foot">Tämä on oman terveyden seurannan työkalu — ei lääkinnällinen laite eikä diagnoosi.<br>Hätätilanteessa soita 112.</p>
   </div>
 </div>
 
@@ -667,7 +667,7 @@ body[data-role="laakari"] .app{padding-bottom:34px}
   <div class="view" id="v-seuranta">
     <div class="pagehead">
       <h1>Seuranta</h1>
-      <div class="sub">Mittaukset, lääkitys, oireet ja verikokeet. Jaa koodi lääkärille etävastaanottoa varten.</div>
+      <div class="sub">Oma terveysseuranta: mittaukset, lääkitys, oireet ja labrat. Jaa koodi lääkärille tarvittaessa — sovellus ei diagnosoi eikä hoida.</div>
     </div>
 
     <div class="section-label">JAA LÄÄKÄRILLE</div>
@@ -684,7 +684,7 @@ body[data-role="laakari"] .app{padding-bottom:34px}
     <div class="section-label">LÄÄKITYS</div>
     <div class="card">
       <h3>Käytössä olevat lääkkeet</h3>
-      <p class="sub" style="margin:6px 0 14px">Aloitus ja annosmuutos merkitään SmartGraphiin, jotta vaikutus näkyy trendissä.</p>
+      <p class="sub" style="margin:6px 0 14px">Kirjaa käyttämäsi lääkkeet. Aloitus näkyy SmartGraphissa, jotta voit itse nähdä trendin merkin jälkeen.</p>
       <div id="medList" style="margin-bottom:14px"></div>
       <button class="btn sec sm" id="addMedBtn">Lisää lääkitys</button>
     </div>
@@ -742,7 +742,7 @@ body[data-role="laakari"] .app{padding-bottom:34px}
       <div class="stat" id="stats"></div>
     </div>
 
-    <div class="section-label">TRENDI JA LÄÄKITYKSEN VAIKUTUS</div>
+    <div class="section-label">TRENDI JA LÄÄKEMERKINNÄT</div>
     <div class="card tight" id="insights"></div>
   </div>
 
@@ -834,8 +834,9 @@ body[data-role="laakari"] .app{padding-bottom:34px}
       <div class="sub" id="pSub">—</div>
     </div>
 
-    <div class="section-label">MITÄ SEURAAVAKSI?</div>
+    <div class="section-label">SEURANNAN HUOMIOT</div>
     <div class="card tight" id="pNextStep"></div>
+    <p class="sub" style="margin:-4px 4px 18px">Havaintoja kirjatuista arvoista. Ei hoitosuositus — kliiniset päätökset tekee lääkäri.</p>
 
     <div class="section-label">TILANNEKUVA</div>
     <div class="card tight" id="pSnapshot"></div>
@@ -1971,8 +1972,8 @@ function updateSummary(m,line,pts,proj,projEnd){
       medImpact.label+': '+vt.txt+' 14 vrk ikkunassa aloituksen jälkeen.';
   }else{
     $c('rSub').textContent = m.note ? m.note
-      : (ok?'Tavoite saavutettu. Seuraavaksi ylläpitoseuranta.'
-          :(wk?'Tällä vauhdilla tavoitteessa noin '+wk:'Nykyinen suunta ei riitä tavoitteeseen.'));
+      : (ok?'Oma tavoite saavutettu seurannan perusteella.'
+          :(wk?'Jos suunta jatkuu, oma tavoite noin '+wk+'.':'Suunta ei juuri nyt lähene omaa tavoitetta.'));
   }
 
   const lg=$c('legend');
@@ -1990,7 +1991,7 @@ function updateSummary(m,line,pts,proj,projEnd){
   const add=(b,t)=>{const d=document.createElement('div');d.innerHTML='<b>'+b+'</b>'+t;st.appendChild(d);};
   if(medImpact&&medImpact.impact.delta!==null){
     const dlt=medImpact.impact.delta;
-    add((dlt>0?'−':(dlt<0?'+':'±'))+fmtv(Math.abs(dlt),m.dec)+' '+m.unit,'vaikutus lääkkeestä');
+    add((dlt>0?'−':(dlt<0?'+':'±'))+fmtv(Math.abs(dlt),m.dec)+' '+m.unit,'muutos lääkemerkinnän jälkeen');
   }
   /* Merkki luetaan muutoksen suunnasta. Kiinteä miinusmerkki näyttäisi
      nousevan arvon laskuna. */
@@ -2044,7 +2045,7 @@ function renderInsights(m,line,pts,proj,projEnd){
       }
     }else if(v&&v.tila==='wait'){
       items.push({k:'info',t:e.label+' aloitettu',
-        d:'Vaikutus näkyy SmartGraphissa, kun mittauksia on kertynyt noin viikon ajan aloituksesta.'});
+        d:'Vertailu ennen/jälkeen tarkentuu, kun mittauksia on kertynyt noin viikon ajan merkin jälkeen.'});
     }else{
       items.push({k:'info',t:e.label+' merkitty käyrälle',
         d:'Aloitus '+calLabel(e.day)+'. Vertaa käyrän suuntaa merkin vasemmalla ja oikealla.'});
@@ -2052,21 +2053,21 @@ function renderInsights(m,line,pts,proj,projEnd){
   });
 
   if(m.dense){
-    if(change>kynnys)items.push({k:'good',t:'Kokonaissunta on oikea',
+    if(change>kynnys)items.push({k:'good',t:'Keskiarvo on laskenut',
       d:'Keskiarvo on laskenut '+fmtv(change,m.dec)+' '+m.unit+' seurannan alusta.'});
-    else if(change<-kynnys)items.push({k:'warn',t:'Kokonaissunta on nousussa',
+    else if(change<-kynnys)items.push({k:'warn',t:'Keskiarvo on noussut',
       d:'Keskiarvo on noussut '+fmtv(Math.abs(change),m.dec)+' '+m.unit+' seurannan alusta.'});
     else if(!medEvs.length)items.push({k:'info',t:'Taso on pysynyt samana',
       d:'Keskiarvo ei ole muuttunut merkittävästi seurannan alusta.'});
 
-    if(projEnd)items.push({k:'info',t:'Arvio tavoitteesta',
-      d:'Tällä vauhdilla olet tavoitteessa noin '+calLabel(projEnd)+'. Arvio tarkentuu mittausten myötä.'});
+    if(projEnd)items.push({k:'info',t:'Suunta suhteessa omaan tavoitteeseen',
+      d:'Jos nykyinen suunta jatkuu, oma tavoite noin '+calLabel(projEnd)+'. Tämä on seurannan arvio, ei diagnoosi.'});
 
     const katko=pisinKatko(pts);
     if(katko&&katko.pituus>=4){
       items.push({k:'warn',
         t:'Mittauskatko '+calLabel(katko.alku)+(katko.alku!==katko.loppu?'–'+calLabel(katko.loppu):''),
-        d:'Mittaukset puuttuvat '+katko.pituus+' päivältä. Katkoksen ajalta ei lasketa keskiarvoa eikä lääkkeen vaikutusta.'});
+        d:'Mittaukset puuttuvat '+katko.pituus+' päivältä. Katkoksen ajalta ei lasketa keskiarvoa eikä lääkemerkinnän jälkeistä muutosta.'});
     }
   }else{
     const muutos=fmtv(first,m.dec)+' → '+fmtv(last,m.dec)+' '+m.unit;
@@ -2077,7 +2078,7 @@ function renderInsights(m,line,pts,proj,projEnd){
 
   if(!items.length){
     items.push({k:'info',t:'SmartGraph odottaa dataa',
-      d:'Kirjaa mittauksia ja lääkityksen aloitus, niin trendi ja vaikutus näkyvät tässä.'});
+      d:'Kirjaa mittauksia ja tarvittaessa lääkitys, niin trendi näkyy tässä.'});
   }
 
   items.forEach(i=>{
@@ -2132,7 +2133,7 @@ function openMetric(i,backTo){
     graphBackTo==='potilas'?'‹ Potilas':(graphBackTo==='koti'?'‹ Etusivu':'‹ Seuranta');
   document.getElementById('gTitle').textContent=m.name;
   document.getElementById('gSub').textContent=
-    'Trendi ja lääkemuutosten vaikutus samassa kuvassa.';
+    'Oma seuranta: trendi ja kirjattu lääkemuutos samassa kuvassa.';
   document.getElementById('segRange').style.display=m.dense?'':'none';
   go('graph');
   drawChart(i);
@@ -2772,6 +2773,7 @@ function onAceEstaja(nimi){
   return /ramipril|enalapril|perindopril|lisinopril|kaptopril|trandolapril|kinapril/i.test(nimi||'');
 }
 function triagePotilas(patientId,{ka,tavoite,bpRows,meds,symptom}){
+  /* Vain seurannan havaintoja — ei hoitosuosituksia (ei lääkinnällinen laite). */
   const pisteet=potilasBpPisteet(patientId,bpRows);
   const katko=viimeMittausPaiva(pisteet);
   const aktiiviset=(meds||[]).filter(m=>!m.ended_on);
@@ -2796,8 +2798,8 @@ function triagePotilas(patientId,{ka,tavoite,bpRows,meds,symptom}){
       flags.push('Oire '+oireIkaleima(pv));
       if(priority<2){cls='warn';label='Uudet oireet';priority=2;}
       if(onAceEstaja(aktiiviset[0]?.name)&&/kuiva yskä|yskä/i.test(oire)){
-        flags.push('Kuiva yskä + ACE');
-        cls='warn';label='Harkitse vaihtoa';priority=2;
+        flags.push('Kuiva yskä + ACE kirjattu');
+        if(priority<2){cls='warn';label='Oire + lääkitys';priority=2;}
       }
     }
   }
@@ -2811,15 +2813,15 @@ function triagePotilas(patientId,{ka,tavoite,bpRows,meds,symptom}){
         const e=ennen.reduce((s,v)=>s+v,0)/ennen.length;
         const j=jalkeen.reduce((s,v)=>s+v,0)/jalkeen.length;
         if(e-j<3){
-          flags.push('Vaste heikko');
-          if(priority<2){cls='warn';label='Vaste heikko';priority=2;}
+          flags.push('Trendi ei laskenut lääkityksen jälkeen');
+          if(priority<2){cls='warn';label='Trendi ennallaan';priority=2;}
         }
       }
     }
   }
   if(!aktiiviset.length&&ka>tavoite+5){
-    flags.push('Ei lääkitystä');
-    cls='bad';label='Aloitus?';priority=3;
+    flags.push('Ei kirjattua lääkitystä');
+    if(priority<3){cls='bad';label='Korkea';priority=3;}
   }
   return {cls,label,priority,flags,ka,meds:aktiiviset};
 }
@@ -2853,6 +2855,7 @@ async function ilmoitaLaakemuutoksesta(patientId,kind,details){
 }
 
 function laskeSeuraavaEhdotus(){
+  /* Havaintoja kirjauksista — ei diagnoosia, ei hoitosuositusta. */
   const tavoite=targets?targets.bp_sys:135;
   const ka=rolling(BP);
   const viimeKa=ka.length?ka[ka.length-1].v:null;
@@ -2862,27 +2865,27 @@ function laskeSeuraavaEhdotus(){
   const kynnys=3;
 
   if(katko!==null&&katko>=5){
-    return {k:'warn',t:'Pyydä mittaamaan',
-      d:'Ei kotimittauksia '+katko+' päivään. Seuranta ei ole luotettava ilman tuoreita arvoja.'};
+    return {k:'warn',t:'Mittauskatko seurannassa',
+      d:'Ei kotimittauksia '+katko+' päivään. Trendilaskenta kaipaa tuoreempia kirjauksia.'};
   }
   if(viimeOire&&viimeOire.at&&oirePaiviaSitten(viimeOire.at)<=14){
     const ace=aktiiviset.some(m=>onAceEstaja(m.name));
     if(ace&&/kuiva yskä|yskä/i.test(viimeOire.s)){
-      return {k:'warn',t:'Harkitse lääkkeen vaihtoa',
-        d:'Potilas kirjasi "'+viimeOire.s+'" '+viimeOire.when+'. ACE-estäjä voi aiheuttaa kuivan yskän — harkitse toista lääkeryhmää.'};
+      return {k:'warn',t:'Oire ja lääkitys samassa ikkunassa',
+        d:'Kirjattu "'+viimeOire.s+'" '+viimeOire.when+'. Listalla ACE-estäjä. Näytä SmartGraphissa yhdessä — päätökset tekee lääkäri.'};
     }
     if(viimeOire.l>=4){
-      return {k:'warn',t:'Oireet vaativat huomiota',
-        d:'Viimeisin oirekirjaus ('+viimeOire.s+') haittaa arkea '+viimeOire.l+'/5. Keskustele potilaan kanssa ennen lääkityksen muutosta.'};
+      return {k:'warn',t:'Oire haittaa arkea',
+        d:'Viimeisin oirekirjaus ('+viimeOire.s+') haitta '+viimeOire.l+'/5. Näkyy tilannekuvassa vastaanottoa varten.'};
     }
   }
   if(viimeKa!==null&&viimeKa<=tavoite){
-    return {k:'good',t:'Ylläpitohoidossa',
-      d:'7 vrk keskiarvo '+Math.round(viimeKa)+' mmHg on tavoitteessa (alle '+tavoite+'). Jatka nykyistä seurantaa.'};
+    return {k:'good',t:'Verenpaine tavoitetasolla',
+      d:'7 vrk keskiarvo '+Math.round(viimeKa)+' mmHg (tavoite alle '+tavoite+').'};
   }
   if(!aktiiviset.length&&viimeKa!==null&&viimeKa>tavoite){
-    return {k:'warn',t:'Aloita verenpainelääkitys',
-      d:'Keskiarvo '+Math.round(viimeKa)+' mmHg ilman lääkitystä. Harkitse aloitusta hoitopolun mukaisesti.'};
+    return {k:'info',t:'Keskiarvo yli tavoitteen',
+      d:'7 vrk keskiarvo '+Math.round(viimeKa)+' mmHg. Lääkitystä ei ole kirjattu tähän seurantaan.'};
   }
   const m=SG[0];
   const medEv=graphEvents(m).filter(e=>e.kind==='med'&&e.impact&&e.impact.tila==='ok')
@@ -2890,25 +2893,26 @@ function laskeSeuraavaEhdotus(){
   if(medEv&&viimeKa!==null&&viimeKa>tavoite){
     const v=medEv.impact;
     if(v.delta>=kynnys){
-      return {k:'info',t:'Vaste osittainen',
-        d:medEv.label+': '+fmtv(v.ennen,m.dec)+' → '+fmtv(v.jalkeen,m.dec)+' mmHg (−'+fmtv(v.delta,m.dec)+'). Keskiarvo yhä '+Math.round(viimeKa)+' — harkitse annoksen nostoa tai toista lääkettä.'};
+      return {k:'info',t:'Trendi laski lääkityksen jälkeen',
+        d:medEv.label+': '+fmtv(v.ennen,m.dec)+' → '+fmtv(v.jalkeen,m.dec)+' mmHg (−'+fmtv(v.delta,m.dec)+'). Nykyinen 7 vrk ka '+Math.round(viimeKa)+' mmHg.'};
     }
-    return {k:'warn',t:'Vaste riittämätön',
-      d:medEv.label+' aloitettu, mutta keskiarvo '+Math.round(viimeKa)+' mmHg yhä tavoitteen yläpuolella. Harkitse annoksen muutosta tai lisälääkettä.'};
+    return {k:'warn',t:'Trendi ei laskenut lääkityksen jälkeen',
+      d:medEv.label+' merkitty SmartGraphiin. 7 vrk keskiarvo edelleen '+Math.round(viimeKa)+' mmHg (tavoite alle '+tavoite+').'};
   }
   const uusinMed=aktiiviset[0];
   if(uusinMed&&viimeKa!==null&&viimeKa>tavoite){
     const paivia=TODAY-dayIndex(uusinMed.started_on+'T12:00:00');
     if(paivia>=0&&paivia<14){
-      return {k:'info',t:'Seuraa vasteen kehittymistä',
-        d:uusinMed.name+' aloitettu '+paivia+' pv sitten. Arvioi vaikutus uudelleen, kun mittauksia on kertynyt kaksi viikkoa aloituksesta.'};
+      return {k:'info',t:'Lääkitys merkitty hiljattain',
+        d:uusinMed.name+' aloitettu '+paivia+' pv sitten. Vertailu ennen/jälkeen tarkentuu, kun mittauksia kertyy lisää.'};
     }
   }
   if(viimeKa!==null&&viimeKa>tavoite){
-    return {k:'info',t:'Arvioi hoitoa',
-      d:'Keskiarvo '+Math.round(viimeKa)+' mmHg on tavoitteen yläpuolella. Käy läpi mittaukset, oireet ja lääkitys ennen seuraavaa kontaktia.'};
+    return {k:'info',t:'Keskiarvo yli tavoitteen',
+      d:'7 vrk keskiarvo '+Math.round(viimeKa)+' mmHg. Katso mittaukset, oireet ja lääkitys tilannekuvasta.'};
   }
-  return {k:'info',t:'Jatka seurantaa',d:'Tarkista SmartGraph ja viimeisimmät mittaukset ennen päätöstä.'};
+  return {k:'info',t:'Seuranta ajan tasalla',
+    d:'SmartGraph ja viimeisimmät kirjaukset ovat tilannekuvassa.'};
 }
 
 function renderSeuraavaEhdotus(){
@@ -3381,7 +3385,7 @@ sb.auth.onAuthStateChange((event,session)=>{
 /* ══════════ SERVICE WORKER ══════════ */
 if('serviceWorker' in navigator){
   window.addEventListener('load',()=>{
-    navigator.serviceWorker.register('sw.js?v=21')
+    navigator.serviceWorker.register('sw.js?v=22')
       .then(reg=>{
         reg.update();
         console.log('SW registered');
