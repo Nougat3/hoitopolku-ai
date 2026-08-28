@@ -700,7 +700,7 @@ body[data-role="laakari"] .app{padding-bottom:34px}
     <div class="section-label">VERIKOKEET</div>
     <div class="card">
       <h3>Kirjatut tulokset</h3>
-      <p class="sub" style="margin:6px 0 14px">Natrium, kalium ja kreatiniini. Kirjaa arvot sellaisenaan — sovellus ei analysoi niitä.</p>
+      <p class="sub" style="margin:6px 0 14px">LDL riittää seurantaan (usein kerran vuodessa). Voit kirjata myös Na, K ja krea. Arvot näytetään sellaisenaan — ei analyysiä eikä SmartGraph-käyrää.</p>
       <div id="labList" style="margin-bottom:14px"></div>
       <button class="btn sec sm" id="addLabBtn">Lisää verikokeet</button>
     </div>
@@ -1100,7 +1100,7 @@ const ENTRY=[
  {key:'glu',i:1, name:'Verensokeri', d:'Kotimittaus mmol/l, aamu tai ilta', color:'#2F6690', tint:'#EAF1F7'},
  {key:'wt', i:2, name:'Paino', d:'Punnitus ja vyötärönympärys', color:'#6B5B95', tint:'#F0EDF7'},
  {key:'med',i:0, name:'Lääkitys', d:'Aloitus tai annosmuutos', color:'#A67C2E', tint:'var(--gold-tint)'},
- {key:'lab',i:0, name:'Verikokeet', d:'Natrium, kalium, kreatiniini', color:'#3D6B8C', tint:'#E8F0F5'}
+ {key:'lab',i:0, name:'Verikokeet', d:'LDL, natrium, kalium, kreatiniini', color:'#3D6B8C', tint:'#E8F0F5'}
 ];
 const sheetOpts=document.getElementById('sheetOpts');
 ENTRY.forEach(e=>{
@@ -1137,7 +1137,7 @@ const FIELDS={
  glu:[{id:'e_glu',l:'Verensokeri (mmol/l)',ph:'esim. 6,8'}],
  wt:[{id:'e_wt',l:'Paino (kg)',ph:'paino'},{id:'e_waist',l:'Vyötärönympärys (cm), valinnainen',ph:'vyötärönympärys'}],
  med:[{id:'e_med_name',l:'Lääkkeen nimi',ph:'esim. Ramipril'},{id:'e_med_dose',l:'Annos',ph:'esim. 5 mg'}],
- lab:[{id:'e_lab_na',l:'Natrium Na (mmol/l)',ph:'esim. 140'},{id:'e_lab_k',l:'Kalium K (mmol/l)',ph:'esim. 4.2'},{id:'e_lab_krea',l:'Kreatiniini (µmol/l)',ph:'esim. 78'}]
+ lab:[{id:'e_lab_ldl',l:'LDL-kolesteroli (mmol/l)',ph:'esim. 3,1'},{id:'e_lab_na',l:'Natrium Na (mmol/l), valinnainen',ph:'esim. 140'},{id:'e_lab_k',l:'Kalium K (mmol/l), valinnainen',ph:'esim. 4.2'},{id:'e_lab_krea',l:'Kreatiniini (µmol/l), valinnainen',ph:'esim. 78'}]
 };
 function openEntry(e,forPatient){
   docMedPatient=forPatient||null;
@@ -1358,9 +1358,10 @@ entrySaveBtn.addEventListener('click',async()=>{
     setTimeout(closeEntry,1300);
     return;
   }else if(k==='lab'){
-    const na=num('e_lab_na'), kVal=num('e_lab_k'), krea=num('e_lab_krea');
+    const ldl=num('e_lab_ldl'), na=num('e_lab_na'), kVal=num('e_lab_k'), krea=num('e_lab_krea');
     const pvm=document.getElementById('e_lab_date')?.value||'';
-    if(na===null&&kVal===null&&krea===null){msg('Anna vähintään yksi labra-arvo.','warn');return;}
+    if(ldl===null&&na===null&&kVal===null&&krea===null){msg('Anna vähintään yksi labra-arvo.','warn');return;}
+    if(ldl!==null&&(ldl<0.5||ldl>12)){msg('Tarkista LDL (tyypillisesti 0,5–12).','warn');return;}
     if(na!==null&&(na<100||na>180)){msg('Tarkista natrium (tyypillisesti 100–180).','warn');return;}
     if(kVal!==null&&(kVal<2||kVal>8)){msg('Tarkista kalium (tyypillisesti 2–8).','warn');return;}
     if(krea!==null&&(krea<20||krea>1000)){msg('Tarkista kreatiniini (tyypillisesti 20–1000).','warn');return;}
@@ -1368,6 +1369,7 @@ entrySaveBtn.addEventListener('click',async()=>{
     const tanaan=new Date();
     const ymd=tanaan.getFullYear()+'-'+String(tanaan.getMonth()+1).padStart(2,'0')+'-'+String(tanaan.getDate()).padStart(2,'0');
     const hetki=pvm===ymd?new Date().toISOString():(pvm+'T12:00:00');
+    if(ldl!==null)rivit.push({taulu:'metric_measurements',data:{patient_id:me.id,metric:'ldl',value:Math.round(ldl*10)/10,source:'patient',measured_at:hetki}});
     if(na!==null)rivit.push({taulu:'metric_measurements',data:{patient_id:me.id,metric:'sodium',value:na,source:'patient',measured_at:hetki}});
     if(kVal!==null)rivit.push({taulu:'metric_measurements',data:{patient_id:me.id,metric:'potassium',value:kVal,source:'patient',measured_at:hetki}});
     if(krea!==null)rivit.push({taulu:'metric_measurements',data:{patient_id:me.id,metric:'creatinine',value:Math.round(krea),source:'patient',measured_at:hetki}});
@@ -1407,7 +1409,7 @@ entrySaveBtn.addEventListener('click',async()=>{
   if(virhe){msg(virhe,'warn');return;}
 
   if(k==='lab'){
-    const latausvirhe=await lataaLabrat();
+    const latausvirhe=await lataaLabrat()||await lataaMittaukset();
     if(latausvirhe)console.error('Labralistan päivitys:',latausvirhe);
     renderLabs();
     msg('Verikokeet tallennettu. Lääkäri näkee ne, kun jaat koodin.','ok');
@@ -2529,18 +2531,19 @@ async function lataaOireet(potilas){
   return null;
 }
 
-const LAB_NIMET={sodium:'Natrium (Na)',potassium:'Kalium (K)',creatinine:'Kreatiniini'};
-const LAB_YKSIKOT={sodium:'mmol/l',potassium:'mmol/l',creatinine:'µmol/l'};
-const LAB_DEC={sodium:0,potassium:1,creatinine:0};
+const LAB_NIMET={ldl:'LDL',sodium:'Natrium (Na)',potassium:'Kalium (K)',creatinine:'Kreatiniini'};
+const LAB_YKSIKOT={ldl:'mmol/l',sodium:'mmol/l',potassium:'mmol/l',creatinine:'µmol/l'};
+const LAB_DEC={ldl:1,sodium:0,potassium:1,creatinine:0};
+const LAB_JARJESTYS=['ldl','sodium','potassium','creatinine'];
 
 async function lataaLabrat(potilas){
   const id=potilas||me.id;
   const {data,error}=await sb.from('metric_measurements')
     .select('metric,value,measured_at')
     .eq('patient_id',id)
-    .in('metric',['sodium','potassium','creatinine'])
+    .in('metric',LAB_JARJESTYS)
     .order('measured_at',{ascending:false})
-    .limit(60);
+    .limit(80);
   if(error)return virheteksti(error);
 
   /* Ryhmittele saman päivän arvot yhdeksi kirjaukseksi. */
@@ -2555,7 +2558,7 @@ async function lataaLabrat(potilas){
 }
 
 function labRiviTeksti(values){
-  return ['sodium','potassium','creatinine']
+  return LAB_JARJESTYS
     .filter(k=>values[k]!=null)
     .map(k=>{
       const dec=LAB_DEC[k];
@@ -3169,17 +3172,14 @@ function renderDocMittaukset(){
     : rivi('Ei mittauksia','');
 }
 function renderDocLabsHtml(){
+  /* LDL yms. tulevat state.labs-listasta (ei SmartGraph). HbA1c vain jos kirjattu. */
   const rows=[];
   if(HBA.length){
     const h=HBA[HBA.length-1];
     rows.push(rivi('HbA1c '+fmtv(h.v,0)+' mmol/mol',h.at?dayLabel(h.at):''));
   }
-  if(LDL.length){
-    const l=LDL[LDL.length-1];
-    rows.push(rivi('LDL '+fmtv(l.v,1)+' mmol/l',l.at?dayLabel(l.at):''));
-  }
   if(state.labs.length){
-    state.labs.slice(0,6).forEach(l=>rows.push(rivi(labRiviTeksti(l.values),dayLabel(l.at))));
+    state.labs.slice(0,8).forEach(l=>rows.push(rivi(labRiviTeksti(l.values),dayLabel(l.at))));
   }
   return rows.length?rows.join(''):rivi('Ei verikokeita','');
 }
@@ -3381,7 +3381,7 @@ sb.auth.onAuthStateChange((event,session)=>{
 /* ══════════ SERVICE WORKER ══════════ */
 if('serviceWorker' in navigator){
   window.addEventListener('load',()=>{
-    navigator.serviceWorker.register('sw.js?v=20')
+    navigator.serviceWorker.register('sw.js?v=21')
       .then(reg=>{
         reg.update();
         console.log('SW registered');
