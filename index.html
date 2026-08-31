@@ -2,823 +2,1829 @@
 <html lang="fi">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#FFFFFF">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hoitopolku — kroonisten sairauksien hallinta</title>
+<meta name="description" content="Verenpaine, kolesteroli, verensokeri ja paino — yksi hoitopolku, oma lääkäri, rakenteinen seuranta.">
+<meta name="theme-color" content="#FBFAF7">
 <link rel="icon" type="image/svg+xml" href="icon.svg">
 <link rel="apple-touch-icon" href="icon-192.png">
-<title>Hoitopolku — ilmainen seuranta, lääkärin arvio edullisesti</title>
-<meta name="description" content="Seuraa verenpainetta, verensokeria ja painoa SmartGraphissa. Kirjaa LDL ja muut labrat tarvittaessa. Jaa koodi lääkärille.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
+/* ── tokens ─────────────────────────────────────────────────────────── */
 :root{
-  --ink:#1D1D1F;--ink-2:#333336;--muted:#6E6E73;--muted-2:#86868B;--hair:#D2D2D7;
-  --bg:#FFFFFF;--bg-alt:#F5F5F7;--bg-dark:#161617;
-  --gold:#A67C2E;--gold-tint:#F7F1E6;
-  --green:#4E7D3C;--green-tint:#EDF3E9;
-  --red:#B3452C;--red-tint:#FAEDE9;
-  --amber:#A67C2E;--amber-tint:#F7F1E6;
-  --blue:#2F6690;--violet:#6B5B95;
-  --font:"Inter",-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",sans-serif;
-  --r:18px;--wrap:1040px;
+  --w:   #FBFAF7;
+  --k:   #111110;
+  --g:   #A67C2E;
+  --g2:  #C9A35C;
+  --g0:  #F4EFE5;
+  --line:#E4DFD6;
+  --mid: #6B6860;
+  --f:   "Inter",-apple-system,sans-serif;
+  --rad: 16px;
 }
-*{box-sizing:border-box;min-width:0}
-html,body{max-width:100%;overflow-x:hidden}
-html{scroll-behavior:smooth;-webkit-text-size-adjust:100%;text-size-adjust:100%}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:17px;line-height:1.55;letter-spacing:-.01em;-webkit-font-smoothing:antialiased;overflow-wrap:break-word}
-img,svg{max-width:100%}
+*{box-sizing:border-box;margin:0;padding:0;min-width:0}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{
+  background:var(--w);
+  background-image:radial-gradient(ellipse 100% 60% at 50% 0%,rgba(166,124,46,.045),transparent 62%);
+  background-repeat:no-repeat;background-attachment:fixed;
+  color:var(--k);font-family:var(--f);
+  font-size:17px;line-height:1.55;letter-spacing:-.01em;
+  -webkit-font-smoothing:antialiased;overflow-x:hidden;
+}
 a{color:inherit;text-decoration:none}
-.wrap{max-width:var(--wrap);margin:0 auto;padding:0 22px;width:100%}
-.wrap-wide{max-width:1180px;margin:0 auto;padding:0 22px;width:100%}
-h1,h2,h3{margin:0;font-weight:600;letter-spacing:-.03em;line-height:1.07}
-h1{font-size:clamp(34px,6.2vw,62px)}
-h2{font-size:clamp(30px,5.4vw,48px)}
-h3{font-size:clamp(19px,2.6vw,22px);letter-spacing:-.02em;line-height:1.25}
-p{margin:0 0 18px}
-.eyebrow{font-size:clamp(13px,2vw,15px);font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--gold);margin:0 0 14px}
-.lead{font-size:clamp(17px,2.6vw,21px);color:var(--muted);line-height:1.5;letter-spacing:-.015em}
-.center{text-align:center}
-.center .lead{margin-left:auto;margin-right:auto;max-width:36em}
-header{position:sticky;top:0;z-index:80;height:52px;background:rgba(255,255,255,.82);backdrop-filter:saturate(180%) blur(20px);border-bottom:1px solid rgba(0,0,0,.08)}
-.nav{display:flex;align-items:center;height:52px;gap:26px}
-.brand{display:flex;align-items:center;gap:9px;flex:0 1 auto;overflow:hidden}
-.brand span{font-size:15px;font-weight:600;white-space:nowrap}
-nav.links{display:flex;gap:26px;margin-left:auto;align-items:center}
-nav.links a{font-size:13px;color:var(--ink-2);opacity:.9;transition:opacity .2s}
-nav.links a:hover{opacity:.55}
-.nav-cta{font-size:13px;font-weight:500;color:var(--gold)}
-.menu-btn{display:none;margin-left:auto;background:none;border:none;padding:6px;cursor:pointer;font-size:13px;font-weight:500;color:var(--ink);font-family:var(--font)}
-.btn{display:inline-flex;align-items:center;justify-content:center;font-size:16px;font-weight:500;padding:12px 24px;border-radius:980px;background:var(--gold);color:#fff;transition:opacity .2s}
-.btn:hover{opacity:.85}
-.btn.ghost{background:transparent;color:var(--gold);padding:12px 8px}
-.btn.ghost::after{content:" →";margin-left:4px}
-.btn::after{content:""}
-.btn.arrow::after{content:" →";margin-left:6px}
-.cta-row{display:flex;flex-wrap:wrap;gap:14px;align-items:center}
-.center .cta-row{justify-content:center}
-section{padding:clamp(72px,11vw,128px) 0}
-.alt{background:var(--bg-alt)}
-.dark{background:var(--bg-dark);color:#F5F5F7}
-.dark h2,.dark h3{color:#fff}
-.dark .lead{color:#A1A1A6}
-.dark .eyebrow{color:#D9B778}
-.sec-head{max-width:36em;margin:0 auto clamp(44px,6vw,72px)}
-.hero{padding:clamp(56px,9vw,96px) 0 clamp(48px,7vw,72px)}
-.hero-brand{
-  font-size:clamp(28px,5vw,42px);font-weight:600;letter-spacing:-.03em;line-height:1.1;
-  color:var(--ink);margin:0 0 14px;
+img,svg{max-width:100%;display:block}
+
+/* ── layout ─────────────────────────────────────────────────────────── */
+.wrap{max-width:1100px;margin:0 auto;padding:0 24px}
+.wrap-lg{max-width:1260px;margin:0 auto;padding:0 24px}
+section{padding:clamp(80px,10vw,140px) 0}
+.section-rule{width:32px;height:2px;background:var(--g);margin-bottom:28px}
+
+/* ── nav ─────────────────────────────────────────────────────────────── */
+header{
+  position:sticky;top:0;z-index:60;
+  background:rgba(251,250,247,.72);
+  backdrop-filter:blur(22px) saturate(180%);-webkit-backdrop-filter:blur(22px) saturate(180%);
+  border-bottom:1px solid transparent;
+  transition:background .3s,border-color .3s,box-shadow .3s;
 }
-.metricline{
-  display:flex;flex-wrap:wrap;gap:8px 20px;justify-content:center;align-items:center;
-  margin-top:22px;font-size:14px;font-weight:500;color:var(--muted);
+header.scrolled{
+  background:rgba(251,250,247,.92);
+  border-bottom-color:var(--line);
+  box-shadow:0 1px 20px rgba(30,24,12,.05);
 }
-.metricline span{display:inline-flex;align-items:center;gap:8px}
-.metricline i{width:7px;height:7px;border-radius:50%;display:inline-block}
-.monitor{background:var(--bg-alt);border-radius:var(--r);overflow:hidden;max-width:820px;margin:clamp(40px,6vw,60px) auto 0;text-align:left}
-.mon-top{padding:22px 24px 0;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center}
-.mon-label{font-size:13px;color:var(--muted);font-weight:500}
-.mon-badge{font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;padding:5px 10px;border-radius:980px;background:var(--gold-tint);color:var(--gold)}
-.mon-body{padding:8px 20px 8px}
-.seg{display:flex;gap:4px;background:rgba(0,0,0,.05);padding:3px;border-radius:980px;width:fit-content;margin:8px 0 14px}
-.seg button{font-family:var(--font);font-size:12.5px;font-weight:500;padding:6px 12px;border:none;background:transparent;color:var(--muted);border-radius:980px;cursor:pointer;transition:.2s}
-.seg button[aria-selected="true"]{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.1)}
-.readout{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;row-gap:6px}
-.readout .v{font-size:clamp(38px,6.6vw,52px);font-weight:600;letter-spacing:-.04em;line-height:1}
-.readout .u{font-size:15px;color:var(--muted)}
-.pill{font-size:12px;font-weight:600;padding:4px 11px;border-radius:980px;background:var(--green-tint);color:var(--green)}
-.pill.ok{background:var(--green-tint);color:var(--green)}
-.pill.mid{background:var(--amber-tint);color:var(--amber)}
-.pill.off{background:var(--red-tint);color:var(--red)}
-.subline{font-size:14px;color:var(--muted);margin:6px 0 10px;min-height:1.4em}
-.chartwrap{position:relative}
-.chart{display:block;width:100%;height:auto;touch-action:none}
-.tip{
-  position:absolute;pointer-events:none;opacity:0;transition:opacity .15s;
-  background:#1D1D1F;color:#fff;font-size:12.5px;padding:8px 10px;border-radius:10px;
-  transform:translate(-50%,-120%);white-space:nowrap;z-index:2;
+.nav{display:flex;align-items:center;height:66px;gap:36px}
+.logo{
+  display:flex;align-items:center;gap:11px;
+  font-size:16px;font-weight:700;letter-spacing:-.03em;color:var(--k);
 }
-.tip.on{opacity:1}
-.tip b{font-weight:600}
-.tip span{color:#A1A1A6;display:block;font-size:11.5px;margin-top:2px}
-.legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px solid var(--hair);font-size:12px;color:var(--muted)}
-.legend span{display:flex;align-items:center;gap:6px}
-.lg-dot{width:7px;height:7px;border-radius:50%;background:#C9CDD2;flex:none}
-.lg-line{width:15px;height:2.5px;border-radius:2px;background:var(--ink);flex:none}
-.lg-dash{width:15px;height:0;border-top:2px dashed var(--gold);flex:none}
-.lg-band{width:13px;height:9px;border-radius:3px;background:var(--green-tint);border:1px solid #cfe0c6;flex:none}
-.stat{display:flex;gap:18px;flex-wrap:wrap;margin-top:14px;padding-bottom:6px}
-.stat div{font-size:12.5px;color:var(--muted)}
-.stat b{display:block;font-size:18px;font-weight:600;color:var(--ink);letter-spacing:-.02em}
-.insights{padding:4px 20px 22px;border-top:1px solid rgba(0,0,0,.06)}
-.insights .section-label{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted-2);margin:16px 0 4px}
-.alert{display:flex;gap:13px;padding:14px 0;border-bottom:1px solid var(--hair);opacity:0;transform:translateY(8px);transition:opacity .55s cubic-bezier(.16,1,.3,1),transform .55s cubic-bezier(.16,1,.3,1)}
-.alert.in{opacity:1;transform:none}
-.alert:last-child{border-bottom:none}
-.alert .ic{width:30px;height:30px;border-radius:10px;flex:none;display:flex;align-items:center;justify-content:center}
-.alert.good .ic{background:var(--green-tint);color:var(--green)}
-.alert.warn .ic{background:var(--amber-tint);color:var(--amber)}
-.alert.info .ic{background:#fff;color:var(--muted)}
-.alert .t{display:block;font-size:14.5px;font-weight:500}
-.alert .d{display:block;font-size:13px;color:var(--muted);margin-top:2px}
-.mon-cta{padding:0 20px 22px}
-.mon-cta .btn{width:100%}
-@media (min-width:640px){.mon-cta .btn{width:auto}}
-.tabs{display:none}
-.idea{max-width:22em;margin:0 auto;text-align:center}
-.idea h2{font-size:clamp(32px,6.2vw,60px);line-height:1.05}
-.idea .sub{margin-top:26px}
-.sixgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--hair);border-radius:var(--r);overflow:hidden}
-.sixgrid > div{background:var(--bg);padding:34px 30px 38px}
-.alt .sixgrid > div{background:var(--bg-alt)}
-.sixgrid .no{font-size:13px;font-weight:600;color:var(--gold);margin-bottom:14px;letter-spacing:0}
-.sixgrid h3{margin-bottom:8px}
-.sixgrid p{font-size:15px;color:var(--muted);margin:0}
-.chips{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:8px}
-.chip{
-  font-size:14px;font-weight:500;padding:9px 16px;border-radius:980px;
-  border:1px solid var(--hair);color:var(--muted);background:var(--bg);
+.logo svg{flex:none}
+nav.links{margin-left:auto;display:flex;gap:6px;align-items:center}
+nav.links a{
+  position:relative;font-size:14px;font-weight:500;color:var(--mid);
+  padding:8px 14px;border-radius:8px;transition:color .2s,background .2s;letter-spacing:-.01em;
 }
-.chip.on{background:var(--ink);border-color:var(--ink);color:#fff}
-.dark .chip{border-color:rgba(255,255,255,.2);color:#A1A1A6;background:transparent}
-.dark .chip.on{background:#fff;border-color:#fff;color:var(--ink)}
-.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
-.card{background:var(--bg-alt);border-radius:var(--r);padding:32px 28px}
-.dark .card{background:#1F1F21}
-.card.white{background:#fff;border:1px solid var(--hair)}
-.card h3{margin-bottom:10px}
-.card p{font-size:15px;color:var(--muted);margin:0}
-.dark .card p{color:#A1A1A6}
-.prices{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:stretch}
-.price{border-radius:var(--r);padding:32px 28px;display:flex;flex-direction:column;background:var(--bg-alt)}
-.price.hi{background:var(--ink);color:#F5F5F7}
-.price .tier{font-size:13px;font-weight:600;color:var(--gold);margin-bottom:10px}
-.price.hi .tier{color:#D9B778}
-.price .amt{font-size:clamp(38px,6vw,50px);font-weight:600;letter-spacing:-.04em;line-height:1;margin-bottom:6px}
-.price .per{font-size:14px;color:var(--muted);margin-bottom:22px}
-.price.hi .per{color:#A1A1A6}
-.price ul{list-style:none;margin:0 0 24px;padding:0}
-.price li{font-size:15px;padding:9px 0 9px 26px;position:relative;color:var(--muted);border-bottom:1px solid var(--hair)}
-.price.hi li{color:#C7C7CC;border-bottom-color:rgba(255,255,255,.14)}
-.price li:last-child{border-bottom:none}
-.price li::before{content:"";position:absolute;left:2px;top:17px;width:12px;height:2px;border-radius:2px;background:var(--gold)}
-.price .btn{margin-top:auto}
-.pnote{font-size:14px;color:var(--muted);max-width:44em;margin:26px auto 0;text-align:center}
-.crit{display:grid;grid-template-columns:1fr 1fr;gap:20px}
-.crit ul{list-style:none;margin:0;padding:0}
-.crit li{font-size:15px;color:var(--muted);padding:9px 0 9px 26px;position:relative;border-bottom:1px solid var(--hair)}
-.crit li:last-child{border-bottom:none}
-.crit li::before{content:"";position:absolute;left:0;top:16px;width:14px;height:2px;border-radius:2px;background:var(--green)}
-.crit .out li::before{background:var(--red)}
-.tagline{display:inline-block;font-size:12px;font-weight:600;padding:5px 11px;border-radius:980px;margin-bottom:16px}
-.tagline.in{background:var(--green-tint);color:var(--green)}
-.tagline.out{background:var(--red-tint);color:var(--red)}
-details{border-bottom:1px solid var(--hair);padding:2px 0}
-details summary{cursor:pointer;list-style:none;padding:22px 40px 22px 0;font-size:18px;font-weight:500;position:relative;letter-spacing:-.02em}
-details summary::-webkit-details-marker{display:none}
-details summary::after{content:"+";position:absolute;right:6px;top:20px;font-size:22px;font-weight:400;color:var(--gold)}
-details[open] summary::after{content:"–"}
-details p{font-size:16px;color:var(--muted);max-width:42em;padding-bottom:14px}
-.note{background:var(--bg-alt);border-radius:var(--r);padding:24px 26px;font-size:14.5px;color:var(--muted);max-width:44em;margin:36px auto 0}
-.note b{color:var(--ink);display:block;margin-bottom:5px;font-weight:600}
-.dark .note{background:#1F1F21}
-.dark .note b{color:#fff}
-footer{background:var(--bg-alt);padding:44px 0 36px;font-size:12.5px;color:var(--muted)}
-.fcols{display:grid;grid-template-columns:1.6fr 1fr 1fr;gap:28px;padding-bottom:26px;border-bottom:1px solid var(--hair)}
-footer h4{font-size:12.5px;font-weight:600;color:var(--ink);margin:0 0 10px}
-footer a{display:block;padding:5px 0;color:var(--muted);overflow-wrap:anywhere}
-footer a:hover{color:var(--ink)}
-.fine{padding-top:22px;line-height:1.5;color:var(--muted-2)}
-.rev{opacity:0;transform:translateY(16px);transition:opacity .8s cubic-bezier(.16,1,.3,1),transform .8s cubic-bezier(.16,1,.3,1)}
-.rev.in{opacity:1;transform:none}
-@media (max-width:860px){
-  .sixgrid{grid-template-columns:repeat(2,1fr)}
-  .grid-3{grid-template-columns:1fr;gap:20px}
-  .prices,.crit,.fcols{grid-template-columns:1fr}
+nav.links a:hover{color:var(--k);background:rgba(166,124,46,.07)}
+.nav-btn{
+  font-size:14px;font-weight:600;padding:10px 22px!important;border-radius:980px!important;
+  background:var(--k);color:#FBFAF7!important;margin-left:14px;
+  transition:transform .18s,box-shadow .18s,background .2s;letter-spacing:-.015em;
+  box-shadow:0 1px 2px rgba(30,24,12,.12);
+}
+.nav-btn:hover{background:#2A2822;transform:translateY(-1px);box-shadow:0 4px 14px rgba(30,24,12,.18)}
+.mob-menu{
+  display:none;background:none;border:1px solid var(--line);cursor:pointer;
+  padding:8px 16px;border-radius:980px;color:var(--k);font-family:var(--f);
+  font-size:13.5px;font-weight:600;margin-left:auto;transition:background .2s;
+}
+.mob-menu:hover{background:var(--g0)}
+
+/* ── buttons ─────────────────────────────────────────────────────────── */
+.btn{
+  display:inline-flex;align-items:center;gap:8px;
+  font-size:16px;font-weight:600;letter-spacing:-.02em;padding:14px 28px;
+  border-radius:980px;border:none;cursor:pointer;font-family:var(--f);
+  transition:opacity .2s,transform .15s;
+}
+.btn:hover{opacity:.86;transform:translateY(-1px)}
+.btn-k{background:var(--k);color:var(--w)}
+.btn-g{background:var(--g);color:#fff}
+.btn-o{background:transparent;color:var(--k);padding:14px 0;font-weight:500}
+.btn-o::after{content:" →";color:var(--g)}
+.cta-row{display:flex;flex-wrap:wrap;gap:16px;align-items:center}
+
+/* ── hero ─────────────────────────────────────────────────────────────── */
+.hero{
+  position:relative;overflow:hidden;
+  background:var(--w);
+  padding:clamp(88px,12vw,140px) 0 clamp(72px,9vw,110px);
+  border-bottom:1px solid var(--line);
+}
+.hero-bg{display:none}
+
+
+.hero-inner{
+  position:relative;z-index:2;
+  display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:center;
+}
+.hero-kicker{
+  font-size:11.5px;font-weight:700;letter-spacing:.12em;color:var(--g);
+  text-transform:uppercase;margin-bottom:20px;
+}
+h1{
+  font-size:clamp(42px,6.8vw,78px);font-weight:800;
+  letter-spacing:-.045em;line-height:.97;margin-bottom:26px;color:var(--k);
+}
+h1 em{font-style:normal;color:var(--g)}
+.hero-lead{
+  font-size:clamp(16px,2vw,18px);color:var(--mid);line-height:1.55;
+  max-width:36em;margin-bottom:34px;
+}
+.hero-note{font-size:12.5px;color:var(--mid);margin-top:14px}
+.hero-right{display:flex;flex-direction:column;gap:14px}
+.hero-tabs{display:flex;flex-wrap:wrap;gap:7px}
+.btn-w{background:var(--k);color:var(--w)}
+.btn-ghost{
+  font-size:15px;font-weight:500;padding:14px 0;color:var(--mid);
+  background:none;border:none;cursor:pointer;font-family:var(--f);
+  transition:color .2s;letter-spacing:-.01em;
+}
+.btn-ghost:hover{color:var(--k)}
+
+
+/* demo card */
+
+
+
+/* modern demo card */
+.gauge-shell{
+  background:#fff;border-radius:20px;
+  padding:24px 22px 20px;
+  box-shadow:0 2px 32px rgba(0,0,0,.08),0 0 0 1px rgba(0,0,0,.05);
+  max-width:420px;width:100%;
+}
+.demo-panel{display:none}
+.demo-panel.active{display:block}
+.dp-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px}
+.dp-name{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--mid);letter-spacing:.02em;text-transform:uppercase;margin-bottom:4px}
+.dp-dot{width:7px;height:7px;border-radius:50%;flex:none}
+.dp-sub{font-size:12.5px;color:var(--mid);padding-left:15px}
+.dp-val{font-size:clamp(32px,5vw,42px);font-weight:800;letter-spacing:-.04em;line-height:1;white-space:nowrap;color:var(--k);text-align:right}
+.dp-unit{font-size:14px;font-weight:400;color:var(--mid);letter-spacing:0}
+.dp-graph{display:block;width:100%;height:auto;margin-bottom:14px}
+.dp-footer{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.dp-status{font-size:12px;font-weight:700;padding:4px 11px;border-radius:980px;white-space:nowrap;flex:none}
+.dp-status.ok{background:#EDF3E9;color:#4E7D3C}
+.dp-status.mid{background:#FBF2E0;color:#946A16}
+.dp-status.off{background:#FAEDE9;color:#B3452C}
+.dp-note{font-size:12.5px;color:var(--mid);line-height:1.4}
+
+/* condition tabs */
+.hero-conditions{display:flex;flex-wrap:wrap;gap:8px;margin-top:28px}
+.hc{
+  display:flex;align-items:center;gap:7px;font-size:13px;font-weight:500;
+  padding:7px 13px;border-radius:980px;border:1.5px solid var(--line);
+  cursor:pointer;transition:all .2s;color:var(--mid);background:#fff;
+  font-family:var(--f);
+}
+.hc.active{border-color:var(--k);color:var(--k)}
+.hc-dot{width:6px;height:6px;border-radius:50%;flex:none}
+
+/* ── section: ongelma ──────────────────────────────────────────────── */
+.prob-grid{display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:start}
+.prob-text h2{
+  font-size:clamp(32px,4.8vw,52px);font-weight:700;letter-spacing:-.04em;
+  line-height:1.05;margin-bottom:20px;
+}
+.prob-text p{font-size:17px;color:var(--mid);line-height:1.6;max-width:34em;margin-bottom:16px}
+.stat-col{display:flex;flex-direction:column;gap:18px}
+.stat-card{background:var(--g0);border-radius:var(--rad);padding:24px 22px}
+.stat-card .n{font-size:44px;font-weight:800;letter-spacing:-.05em;line-height:1}
+.stat-card .d{font-size:14px;color:var(--mid);margin-top:8px;line-height:1.4}
+.stat-card .src{font-size:11.5px;color:#9A9590;margin-top:12px}
+.stat-card.hi .n{color:var(--g)}
+
+/* ── section: miten ─────────────────────────────────────────────────── */
+.steps-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:2px;
+  background:var(--line);border-radius:var(--rad);overflow:hidden;
+}
+.step-cell{background:var(--w);padding:32px 28px}
+.step-cell .idx{
+  font-size:clamp(40px,5vw,56px);font-weight:800;letter-spacing:-.05em;
+  color:var(--g);opacity:.28;line-height:1;margin-bottom:14px;
+  font-variant-numeric:tabular-nums;
+}
+.step-cell h3{font-size:20px;font-weight:700;letter-spacing:-.03em;margin-bottom:10px;line-height:1.2}
+.step-cell p{font-size:15px;color:var(--mid);line-height:1.55}
+
+/* ── section: laajennuskartta ──────────────────────────────────────── */
+.road-wrap{max-width:780px;margin:0 auto}
+.phase{border-top:1px solid var(--line);padding:28px 0;display:grid;grid-template-columns:1fr 3fr;gap:32px;align-items:baseline}
+.phase:last-child{border-bottom:1px solid var(--line)}
+.phase .tag{font-size:11.5px;font-weight:700;letter-spacing:.08em;color:var(--g);text-transform:uppercase;padding-top:4px}
+.phase h4{font-size:18px;font-weight:700;letter-spacing:-.025em;margin-bottom:6px}
+.phase p{font-size:15px;color:var(--mid);line-height:1.5}
+.phase ul{list-style:none;display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.phase li{font-size:13px;font-weight:500;padding:5px 13px;border-radius:980px;background:var(--g0);color:var(--k)}
+
+/* ── section: lääkäreille ──────────────────────────────────────────── */
+.doc-grid{display:grid;grid-template-columns:5fr 4fr;gap:80px;align-items:center}
+.doc-left h2{font-size:clamp(30px,4.2vw,48px);font-weight:700;letter-spacing:-.04em;margin-bottom:18px;line-height:1.07}
+.doc-left p{font-size:17px;color:var(--mid);line-height:1.6;margin-bottom:14px}
+.doc-nums{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:30px}
+.doc-num{background:var(--g0);border-radius:var(--rad);padding:20px}
+.doc-num .n{font-size:36px;font-weight:800;letter-spacing:-.05em;color:var(--g)}
+.doc-num .d{font-size:13.5px;color:var(--mid);margin-top:6px;line-height:1.4}
+.doc-card{
+  background:var(--k);color:#F5F5F0;border-radius:var(--rad);
+  padding:32px 28px;display:flex;flex-direction:column;gap:18px;
+}
+.doc-card h3{font-size:20px;font-weight:700;letter-spacing:-.03em}
+.doc-card ul{list-style:none;display:flex;flex-direction:column;gap:10px}
+.doc-card li{font-size:15px;color:#A8A49E;display:flex;gap:10px;align-items:flex-start}
+.doc-card li::before{content:"✓";color:var(--g);font-weight:700;flex:none;margin-top:1px}
+.doc-card .doc-btn{margin-top:4px}
+.doc-card .doc-btn a{
+  display:inline-block;font-size:14px;font-weight:600;padding:11px 22px;
+  border-radius:980px;background:var(--g);color:#fff;transition:opacity .2s;
+}
+.doc-card .doc-btn a:hover{opacity:.86}
+
+/* ── section: organisaatioille ─────────────────────────────────────── */
+.org-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;background:var(--line);border-radius:var(--rad);overflow:hidden}
+.org-cell{background:var(--w);padding:28px 24px}
+.org-cell .icon{width:36px;height:36px;border-radius:10px;background:var(--g0);display:flex;align-items:center;justify-content:center;margin-bottom:14px}
+.org-cell h3{font-size:17px;font-weight:700;letter-spacing:-.02em;margin-bottom:8px}
+.org-cell p{font-size:14.5px;color:var(--mid);line-height:1.55}
+
+/* ── cta band ────────────────────────────────────────────────────────── */
+.cta-band{
+  background:var(--k);color:var(--w);
+  padding:clamp(64px,9vw,108px) 0;
+}
+.cta-band h2{font-size:clamp(32px,5.4vw,60px);font-weight:800;letter-spacing:-.05em;margin-bottom:18px;line-height:1}
+.cta-band p{font-size:17px;color:#A8A49E;line-height:1.5;margin-bottom:34px;max-width:40em}
+.cta-band .sub{font-size:13.5px;color:#6B6760;margin-top:14px}
+
+/* ── hinnasto ────────────────────────────────────────────────────────── */
+.price-card{
+  max-width:540px;background:var(--g0);border-radius:20px;
+  padding:36px 32px;
+}
+.price-card .tier{font-size:12px;font-weight:700;letter-spacing:.1em;color:var(--g);margin-bottom:10px;text-transform:uppercase}
+.price-card .amt{font-size:56px;font-weight:800;letter-spacing:-.05em;line-height:1;margin-bottom:4px}
+.price-card .per{font-size:14px;color:var(--mid);margin-bottom:22px}
+.price-card ul{list-style:none;display:flex;flex-direction:column;gap:0}
+.price-card li{font-size:15px;padding:12px 0 12px 26px;position:relative;border-bottom:1px solid var(--line)}
+.price-card li:last-child{border-bottom:none}
+.price-card li::before{content:"";position:absolute;left:2px;top:20px;width:12px;height:2px;border-radius:2px;background:var(--g)}
+.price-card .fnote{font-size:13px;color:var(--mid);margin-top:20px;line-height:1.5}
+
+/* ── footer ─────────────────────────────────────────────────────────── */
+footer{padding:44px 0 36px;border-top:1px solid var(--line)}
+.footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr;gap:32px;padding-bottom:28px;border-bottom:1px solid var(--line);margin-bottom:24px}
+footer h4{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--mid);margin-bottom:14px}
+footer a{display:block;font-size:14px;color:var(--mid);padding:4px 0;transition:color .2s}
+footer a:hover{color:var(--k)}
+.footer-fine{font-size:12.5px;color:#9A9590;line-height:1.6}
+
+/* ── reveals ─────────────────────────────────────────────────────────── */
+.reveal{opacity:0;transform:translateY(20px);transition:opacity .75s cubic-bezier(.16,1,.3,1),transform .75s cubic-bezier(.16,1,.3,1)}
+.reveal.in{opacity:1;transform:none}
+
+/* ── responsive ─────────────────────────────────────────────────────── */
+@media(max-width:920px){
+  .hero-inner,.prob-grid,.doc-grid{grid-template-columns:1fr;gap:48px}
+  .steps-grid,.org-grid{grid-template-columns:1fr;gap:2px}
+  .doc-nums{grid-template-columns:1fr 1fr}
+  .phase{grid-template-columns:1fr;gap:6px}
+  .gauge-shell{width:min(380px,90vw)}
   nav.links{display:none}
-  nav.links.open{display:flex;position:absolute;top:52px;left:0;right:0;background:rgba(255,255,255,.97);backdrop-filter:blur(20px);flex-direction:column;align-items:stretch;gap:0;padding:6px 22px 18px;border-bottom:1px solid var(--hair);margin:0}
-  nav.links.open a{padding:13px 0;border-bottom:1px solid var(--hair);font-size:15px}
-  nav.links.open .nav-cta{border-bottom:none;padding-top:16px}
-  .menu-btn{display:block}
+  nav.links.open{
+    display:flex;position:absolute;top:66px;left:0;right:0;
+    background:rgba(250,250,248,.97);backdrop-filter:blur(20px);
+    flex-direction:column;align-items:stretch;gap:0;
+    padding:8px 24px 20px;border-bottom:1px solid var(--line);
+  }
+  nav.links.open a{padding:15px 4px;border-bottom:1px solid var(--line);font-size:15.5px;border-radius:0;background:none}
+  nav.links.open .nav-btn{margin:14px 0 4px;text-align:center;display:block;border:none;padding:14px 22px!important}
+  .mob-menu{display:block}
+  .footer-grid{grid-template-columns:1fr}
 }
-@media (max-width:520px){
-  .sixgrid{grid-template-columns:1fr}
-}
-@media (max-width:420px){
+@media(max-width:520px){
   body{font-size:16px}
-  .wrap,.wrap-wide{padding:0 18px}
-  .card,.price,.sixgrid > div{padding:26px 22px}
-  .btn{width:100%}
-  .mon-top,.readout,.mon-foot{padding-left:20px;padding-right:20px}
+  .wrap,.wrap-lg{padding:0 18px}
+  .btn{font-size:15px;padding:13px 22px}
+  h1{font-size:clamp(38px,10vw,54px)}
+  .gauge-val{font-size:clamp(38px,9vw,52px)}
+  .doc-nums{grid-template-columns:1fr}
+  .price-card{padding:28px 22px}
 }
-@media (prefers-reduced-motion:reduce){
+@media(prefers-reduced-motion:reduce){
   *{animation:none!important;transition:none!important}
-  .rev{opacity:1;transform:none}
+  .reveal{opacity:1;transform:none}
   html{scroll-behavior:auto}
 }
+
+/* pricing row */
+.price-row{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;background:var(--line);border-radius:var(--rad);overflow:hidden;margin-bottom:20px}
+.price-item{background:var(--w);padding:24px 20px}
+.pi-top{font-size:12px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--mid);margin-bottom:10px}
+.pi-val{font-size:28px;font-weight:800;letter-spacing:-.04em;color:var(--k);margin-bottom:4px}
+.pi-note{font-size:13px;color:var(--mid)}
+
+/* stat feature — one big number per tab */
+.stat-feature{background:var(--g0);border-radius:var(--rad);padding:32px 28px 24px}
+.sf-big{font-size:clamp(38px,6vw,64px);font-weight:800;letter-spacing:-.05em;line-height:1;margin-bottom:8px}
+.sf-label{font-size:16px;color:var(--mid);margin-bottom:20px;max-width:28em}
+
+
+
+
+
+.sf-src{font-size:11.5px;color:#9A9590;margin:0}
+
+@media(max-width:600px){
+  .price-row{grid-template-columns:1fr}
+  
+}
+
+/* condition grid */
+.cond-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:2px;background:var(--line);border-radius:var(--rad);overflow:hidden}
+.cond-card{background:var(--w);padding:26px 22px;position:relative}
+.cond-dot{display:block;width:9px;height:9px;border-radius:50%;margin-bottom:14px}
+.cond-card h3{font-size:17px;font-weight:700;letter-spacing:-.02em;margin-bottom:8px}
+.cond-card p{font-size:14px;color:var(--mid);line-height:1.55;margin-bottom:14px}
+.cond-tag{font-size:11.5px;font-weight:600;color:var(--mid);letter-spacing:.03em}
+@media(max-width:800px){.cond-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:480px){.cond-grid{grid-template-columns:1fr}}
+
+/* modern underline tabs */
+.prob-tabs{
+  display:flex;gap:0;margin-bottom:0;border-bottom:1px solid var(--line);
+  overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;
+}
+.prob-tabs::-webkit-scrollbar{display:none}
+.ptab{
+  position:relative;flex:none;
+  font-size:15px;font-weight:600;letter-spacing:-.01em;
+  padding:14px 22px 16px;border:none;background:none;cursor:pointer;
+  color:var(--mid);font-family:var(--f);transition:color .2s;white-space:nowrap;
+}
+.ptab::after{
+  content:"";position:absolute;left:22px;right:22px;bottom:-1px;height:2px;
+  background:var(--k);border-radius:2px;transform:scaleX(0);transition:transform .25s cubic-bezier(.4,0,.2,1);
+}
+.ptab:hover{color:var(--k)}
+.ptab.active{color:var(--k)}
+.ptab.active::after{transform:scaleX(1)}
+.prob-panels{padding-top:32px}
+.prob-panel{display:none;animation:fadeIn .3s ease}
+.prob-panel.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.stat-feature{background:none;border-radius:0;padding:0}
+.sf-big{font-size:clamp(44px,7vw,72px);font-weight:800;letter-spacing:-.05em;line-height:1;margin-bottom:10px}
+.sf-label{font-size:17px;color:var(--mid);margin-bottom:26px;max-width:30em;line-height:1.5}
+
+
+
+
+
+/* smart graph feature */
+.sg-section{padding:clamp(80px,10vw,130px) 0}
+.sg-grid{display:grid;grid-template-columns:5fr 6fr;gap:64px;align-items:center}
+.sg-left h2{font-size:clamp(30px,4.6vw,50px);font-weight:800;letter-spacing:-.045em;line-height:1.02;margin-bottom:18px}
+.sg-left>p{font-size:17px;color:var(--mid);line-height:1.6;margin-bottom:28px;max-width:32em}
+.sg-feats{display:flex;flex-direction:column;gap:0}
+.sg-feat{padding:16px 0;border-top:1px solid var(--line);display:flex;gap:14px}
+.sg-feat:last-child{border-bottom:1px solid var(--line)}
+.sg-feat .num{font-size:12px;font-weight:700;color:var(--g);flex:none;padding-top:3px;letter-spacing:.05em}
+.sg-feat h4{font-size:16px;font-weight:700;letter-spacing:-.02em;margin-bottom:3px}
+.sg-feat p{font-size:14px;color:var(--mid);line-height:1.5;margin:0}
+.sg-card{
+  background:#fff;border-radius:20px;padding:28px 26px 22px;
+  box-shadow:0 2px 40px rgba(0,0,0,.09),0 0 0 1px rgba(0,0,0,.05);
+}
+.sg-card-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px}
+.sg-card-title{font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--mid)}
+.sg-card-val{font-size:34px;font-weight:800;letter-spacing:-.04em;line-height:1}
+.sg-card-val span{font-size:14px;font-weight:400;color:var(--mid)}
+.sg-card-sub{font-size:13px;color:var(--mid);margin-bottom:18px}
+#bigGraph{display:block;width:100%;height:auto;margin-bottom:16px}
+.sg-legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--mid);padding-top:14px;border-top:1px solid var(--line)}
+.sg-legend span{display:flex;align-items:center;gap:6px}
+.sgl-line{width:14px;height:2.5px;border-radius:2px;background:#B3452C;flex:none}
+.sgl-dash{width:14px;height:0;border-top:2px dashed #4E7D3C;flex:none}
+.sgl-dot{width:6px;height:6px;border-radius:50%;background:#C9CDD2;flex:none}
+
+/* code share */
+.code-band{background:var(--g0);padding:clamp(64px,8vw,100px) 0}
+.code-grid{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center}
+.code-box{
+  background:#fff;border-radius:18px;padding:32px 28px;text-align:center;
+  box-shadow:0 2px 24px rgba(0,0,0,.07);
+}
+.code-label{font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--mid);margin-bottom:14px}
+.code-val{
+  font-size:clamp(30px,5vw,42px);font-weight:800;letter-spacing:.08em;
+  color:var(--k);font-variant-numeric:tabular-nums;margin-bottom:12px;
+}
+.code-exp{font-size:13px;color:var(--mid)}
+.code-left h2{font-size:clamp(28px,4.2vw,44px);font-weight:800;letter-spacing:-.04em;line-height:1.05;margin-bottom:16px}
+.code-left p{font-size:16.5px;color:var(--mid);line-height:1.6;margin-bottom:14px}
+
+@media(max-width:900px){
+  .sg-grid,.code-grid{grid-template-columns:1fr;gap:40px}
+}
+
+/* demo card arrows */
+.dp-nav{display:flex;align-items:center;justify-content:flex-end;gap:12px;margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
+.dp-arrow{
+  width:34px;height:34px;border-radius:980px;border:1px solid var(--line);
+  background:#fff;color:var(--k);cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:background .18s,border-color .18s;font-family:var(--f);
+}
+.dp-arrow:hover{background:var(--g0);border-color:var(--mid)}
+.dp-arrow:active{transform:scale(.94)}
+.dp-count{font-size:12.5px;font-weight:600;color:var(--mid);font-variant-numeric:tabular-nums;margin-right:auto}
+
+/* lab value strip — ei käyrää, harvoin mitattu */
+.lab-strip{
+  display:flex;align-items:flex-start;gap:11px;
+  margin-top:18px;padding-top:16px;border-top:1px solid var(--line);
+}
+.lab-dot{width:7px;height:7px;border-radius:50%;flex:none;margin-top:5px}
+.lab-txt strong{display:block;font-size:14.5px;font-weight:600;letter-spacing:-.01em;margin-bottom:2px}
+.lab-txt span{display:block;font-size:12.5px;color:var(--mid);line-height:1.45}
+
+.group-label{font-size:11.5px;font-weight:700;letter-spacing:.09em;color:var(--mid);margin-bottom:12px}
+.cond-grid.three{grid-template-columns:repeat(3,1fr)}
+.lab-card{
+  background:var(--w);border-radius:var(--rad);padding:26px 24px;
+  display:flex;gap:14px;align-items:flex-start;max-width:640px;
+}
+.lab-card h3{font-size:17px;font-weight:700;letter-spacing:-.02em;margin-bottom:8px}
+.lab-card p{font-size:14.5px;color:var(--mid);line-height:1.55;margin-bottom:12px}
+.lab-card .cond-dot{margin-top:6px}
+@media(max-width:800px){.cond-grid.three{grid-template-columns:1fr}}
+
+/* info grid inside problem panels */
+.info-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;background:var(--line);border-radius:var(--rad);overflow:hidden;margin:26px 0 16px;max-width:860px}
+.info-item{background:var(--w);padding:22px 20px}
+.info-item h4{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--g);margin-bottom:8px}
+.info-item p{font-size:14.5px;color:var(--mid);line-height:1.55;margin:0}
+@media(max-width:800px){.info-grid{grid-template-columns:1fr}}
+
+/* ── four tools ── */
+.tools-section{padding:clamp(80px,10vw,130px) 0;background:var(--g0)}
+.tool-row{display:grid;grid-template-columns:5fr 6fr;gap:56px;align-items:center;padding:44px 0;border-top:1px solid var(--line)}
+.tool-row.rev .tool-txt{order:2}
+.tool-row.rev .tool-vis{order:1}
+.tool-num{font-size:12px;font-weight:800;letter-spacing:.1em;color:var(--g);display:block;margin-bottom:10px}
+.tool-txt h3{font-size:clamp(22px,3vw,30px);font-weight:800;letter-spacing:-.035em;margin-bottom:12px}
+.tool-txt>p{font-size:16px;color:var(--mid);line-height:1.6;margin-bottom:18px;max-width:30em}
+.tool-list{list-style:none;display:flex;flex-direction:column;gap:8px}
+.tool-list li{font-size:14px;color:var(--mid);padding-left:18px;position:relative;line-height:1.5}
+.tool-list li::before{content:"";position:absolute;left:0;top:9px;width:6px;height:1.5px;background:var(--g);border-radius:2px}
+.tool-vis{background:#fff;border-radius:18px;padding:26px 24px;box-shadow:0 2px 28px rgba(0,0,0,.07),0 0 0 1px rgba(0,0,0,.04)}
+
+/* lab viz */
+.lab-viz{display:flex;flex-direction:column;gap:26px}
+.lv-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px}
+.lv-name{font-size:14px;font-weight:600;letter-spacing:-.01em}
+.lv-delta{font-size:12.5px;font-weight:700;padding:3px 9px;border-radius:980px}
+.lv-delta.down{background:#EDF3E9;color:#4E7D3C}
+.lv-delta.ok{background:#F5F5F7;color:var(--mid);font-weight:600}
+.lv-track{position:relative;height:32px;background:var(--bg-alt,#F5F5F7);border-radius:8px;margin-bottom:8px}
+.lv-zone{position:absolute;top:0;bottom:0;background:#4E7D3C;opacity:.12;border-radius:8px 0 0 8px}
+.lv-zone.safe{border-radius:8px}
+.lv-line{position:absolute;top:15px;height:2px;background:var(--line)}
+.lv-from,.lv-to{position:absolute;top:6px;transform:translateX(-50%)}
+.lv-from span,.lv-to span{
+  display:block;font-size:11.5px;font-weight:700;padding:2px 8px;border-radius:980px;white-space:nowrap;
+}
+.lv-from span{background:#F5F5F7;color:var(--mid)}
+.lv-to span{background:var(--k);color:#fff}
+.lv-to.solo span{background:#4E7D3C}
+.lv-scale{display:flex;justify-content:space-between;font-size:11px;color:var(--mid)}
+.lv-target{font-weight:600;color:#4E7D3C}
+
+/* med viz */
+.med-viz{display:flex;flex-direction:column;gap:2px;background:var(--line);border-radius:12px;overflow:hidden}
+.med-item{background:#fff;padding:16px 16px 14px}
+.med-top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:8px;flex-wrap:wrap}
+.med-name{font-size:15px;font-weight:600;letter-spacing:-.01em;margin-right:8px}
+.med-dose{font-size:13px;color:var(--mid)}
+.med-when{display:flex;gap:5px}
+.chip{font-size:11px;font-weight:600;padding:3px 10px;border-radius:980px;background:#F5F5F7;color:#B8B4AE}
+.chip.on{background:var(--gold-tint,#F7F1E6);color:var(--g)}
+.med-hist{font-size:12.5px;color:var(--mid);display:flex;align-items:center;gap:7px}
+.mh-dot{width:5px;height:5px;border-radius:50%;background:var(--g);flex:none}
+.mh-dot.new{background:#4E7D3C}
+.mh-arrow{color:var(--g);font-weight:700}
+
+/* symptom viz */
+.sym-legend{display:flex;justify-content:space-between;align-items:center;font-size:11.5px;color:var(--mid);margin-bottom:14px}
+.sym-scale{display:flex;align-items:center;gap:3px}
+.sym-scale i{width:11px;height:11px;border-radius:3px;display:block}
+.sym-scale i.s1{background:rgba(179,69,44,.15)}
+.sym-scale i.s2{background:rgba(179,69,44,.32)}
+.sym-scale i.s3{background:rgba(179,69,44,.5)}
+.sym-scale i.s4{background:rgba(179,69,44,.72)}
+.sym-scale i.s5{background:rgba(179,69,44,.92);margin-right:5px}
+.sym-grid{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.sym-line{display:grid;grid-template-columns:88px 1fr;align-items:center;gap:10px}
+.sym-lbl{font-size:12px;color:var(--mid);text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sym-cells{display:grid;grid-template-columns:repeat(14,1fr);gap:3px}
+.sym-cells i{aspect-ratio:1;border-radius:3px;background:#F0F0F2;display:block}
+.sym-event{font-size:12px;color:var(--mid);display:flex;align-items:center;gap:7px;padding-top:12px;border-top:1px solid var(--line)}
+.se-mark{width:2px;height:12px;background:var(--g);border-radius:2px;flex:none}
+
+@media(max-width:900px){
+  .tool-row{grid-template-columns:1fr;gap:32px;padding:36px 0}
+  .tool-row.rev .tool-txt{order:1}
+  .tool-row.rev .tool-vis{order:2}
+}
+
+::selection{background:rgba(166,124,46,.22)}
+a,button{-webkit-tap-highlight-color:transparent}
+:focus-visible{outline:2px solid var(--g);outline-offset:3px;border-radius:6px}
+.section-rule{width:34px;height:2px;background:var(--g);margin-bottom:26px;border-radius:2px}
+
+h2{color:var(--k)}
+section h2{text-wrap:balance}
+.wrap,.wrap-lg{width:100%}
+@media(min-width:1400px){.wrap{max-width:1160px}.wrap-lg{max-width:1320px}}
+
+/* ══════════ MOBIILI ══════════ */
+@media(max-width:760px){
+  body{font-size:16px}
+  section{padding:56px 0}
+  .wrap,.wrap-lg{padding:0 20px}
+
+  /* nav */
+  .nav{height:60px;gap:12px}
+  .logo{font-size:15.5px;gap:9px}
+  .logo svg{width:22px;height:22px}
+  nav.links.open{top:60px;padding:10px 20px 22px}
+
+  /* hero */
+  .hero{padding:44px 0 52px}
+  .hero-inner{gap:34px}
+  h1{font-size:clamp(34px,9.5vw,46px);line-height:1.02;margin-bottom:18px}
+  .hero-kicker{font-size:10.5px;letter-spacing:.1em;margin-bottom:14px}
+  .hero-lead{font-size:16px;margin-bottom:26px}
+  .hero-note{font-size:12px;line-height:1.6}
+  .cta-row{gap:8px;flex-direction:column;align-items:stretch}
+  .cta-row .btn{width:100%;justify-content:center}
+  .btn-ghost{width:100%;text-align:center;padding:12px 0}
+
+  /* demo card */
+  .gauge-shell{padding:20px 18px 16px;border-radius:16px}
+  .dp-header{gap:10px}
+  .dp-val{font-size:30px}
+  .dp-name{font-size:12px}
+  .dp-sub{font-size:12px;padding-left:0}
+  .dp-graph{height:64px}
+  .dp-footer{gap:8px}
+  .dp-note{font-size:12px}
+  .hero-tabs{gap:6px}
+  .hc{font-size:12.5px;padding:7px 12px}
+
+  /* problem tabs */
+  .prob-tabs{margin:0 -20px;padding:0 20px}
+  .ptab{font-size:14px;padding:12px 16px 14px}
+  .ptab::after{left:16px;right:16px}
+  .prob-panels{padding-top:24px}
+  .sf-big{font-size:clamp(38px,11vw,52px)}
+  .sf-label{font-size:15.5px;margin-bottom:20px}
+  .info-grid{margin:20px 0 14px;border-radius:14px}
+  .info-item{padding:18px 16px}
+  .info-item p{font-size:14px}
+
+  /* steps */
+  .steps-grid{border-radius:14px}
+  .step-cell{padding:24px 20px}
+  .step-cell .idx{font-size:42px;margin-bottom:10px}
+  .step-cell h3{font-size:18px}
+  .step-cell p{font-size:14.5px}
+
+  /* tools */
+  .tools-section{padding:56px 0}
+  .tool-row{padding:32px 0;gap:24px}
+  .tool-txt h3{font-size:22px}
+  .tool-txt>p{font-size:15.5px}
+  .tool-list li{font-size:13.5px}
+  .tool-vis{padding:18px 16px;border-radius:14px}
+
+  /* smart graph card */
+  .sg-card-val{font-size:28px}
+  /* #bigGraph skaalautuu viewBoxin mukaan */
+  .sg-legend{gap:10px;font-size:11px}
+
+  /* lab viz */
+  .lab-viz{gap:22px}
+  .lv-name{font-size:13.5px}
+  .lv-track{height:30px}
+  .lv-from span,.lv-to span{font-size:11px;padding:2px 7px}
+  .lv-scale{font-size:10.5px}
+
+  /* med viz */
+  .med-item{padding:14px}
+  .med-name{font-size:14.5px}
+  .med-top{gap:8px}
+  .med-hist{font-size:12px}
+
+  /* symptom viz */
+  .sym-line{grid-template-columns:70px 1fr;gap:8px}
+  .sym-lbl{font-size:11px}
+  .sym-cells{gap:2px}
+  .sym-legend{font-size:11px}
+
+  /* code */
+  .code-grid{gap:28px}
+  .code-box{padding:26px 20px}
+  .code-val{font-size:clamp(28px,9vw,36px)}
+
+  /* conditions */
+  .cond-card{padding:22px 18px}
+  .lab-card{padding:22px 18px;gap:12px}
+
+  /* pricing */
+  .price-item{padding:20px 18px}
+  .pi-val{font-size:26px}
+
+  /* org */
+  .org-cell{padding:22px 18px}
+
+  /* cta band */
+  .cta-band{padding:56px 0}
+  .cta-band h2{font-size:clamp(30px,9vw,42px)}
+  .cta-band p{font-size:16px}
+
+  /* footer */
+  footer{padding:34px 0 28px}
+  .footer-grid{gap:24px;padding-bottom:22px}
+}
+
+@media(max-width:400px){
+  .wrap,.wrap-lg{padding:0 16px}
+  h1{font-size:32px}
+  .dp-val{font-size:26px}
+  .sf-big{font-size:36px}
+  .ptab{padding:11px 13px 13px;font-size:13.5px}
+  .ptab::after{left:13px;right:13px}
+  .sym-line{grid-template-columns:60px 1fr}
+}
+
+/* touch targets */
+@media(hover:none){
+  .dp-arrow{width:40px;height:40px}
+  .hc{padding:9px 14px}
+  nav.links a{padding:10px 14px}
+}
+
+/* mobiili: estä vaakavieritys kaikissa tapauksissa */
+@media(max-width:760px){
+  html,body{overflow-x:hidden;max-width:100vw}
+  .info-grid,.steps-grid,.cond-grid,.price-row,.org-grid,.med-viz{max-width:100%}
+  .sg-card,.tool-vis,.gauge-shell,.code-box{max-width:100%}
+  svg{max-width:100%;height:auto}
+  #bigGraph,.dp-graph{width:100%;height:auto}
+  .sym-cells{min-width:0}
+  .sym-cells i{min-width:0}
+  .lv-track{min-width:0}
+  .dp-val,.sg-card-val{white-space:normal;word-break:keep-all}
+  .footer-grid a{word-break:break-word}
+}
+
+/* interaktiivinen käyrä */
+.bg-wrap{position:relative}
+#bigGraph{cursor:crosshair;touch-action:pan-y}
+.bg-tip{
+  position:absolute;pointer-events:none;opacity:0;transition:opacity .12s;
+  background:var(--k);color:#FBFAF7;border-radius:10px;padding:9px 12px;
+  font-size:12.5px;line-height:1.4;white-space:nowrap;z-index:6;
+  transform:translate(-50%,-115%);box-shadow:0 4px 18px rgba(30,24,12,.22);
+}
+.bg-tip.on{opacity:1}
+.bg-tip b{font-weight:700;font-size:14px;display:block;margin-bottom:1px}
+.bg-tip span{color:#A8A49E;font-size:11.5px}
+
+/* ── efektit ── */
+.dp-val{font-variant-numeric:tabular-nums}
+.sf-big{font-variant-numeric:tabular-nums}
+.lv-to{transition:left 1.15s cubic-bezier(.4,0,.2,1)}
+.lv-line{transition:left 1.15s cubic-bezier(.4,0,.2,1),width 1.15s cubic-bezier(.4,0,.2,1)}
+.sym-cells i{opacity:0;transform:scale(.6);transition:opacity .35s ease,transform .35s cubic-bezier(.34,1.4,.5,1)}
+.sym-cells i.lit{opacity:1;transform:none}
+.dp-trend{
+  display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;
+  padding:3px 9px;border-radius:980px;background:var(--green-t,#EDF3E9);color:#4E7D3C;
+  margin-left:8px;opacity:0;transform:translateY(-3px);transition:opacity .4s,transform .4s;
+}
+.dp-trend.on{opacity:1;transform:none}
+#logoRing{transition:stroke-dasharray .18s linear}
+
+/* piiloutuva yläpalkki */
+header{will-change:transform;transition:transform .32s cubic-bezier(.4,0,.2,1),background .3s,border-color .3s,box-shadow .3s}
+header.hidden{transform:translateY(-100%)}
+@media(prefers-reduced-motion:reduce){header.hidden{transform:none}}
+
+/* ── lääkkeen annosmuutos ── */
+.med-item.pulse{animation:medPulse 1.5s ease}
+@keyframes medPulse{0%{background:#fff}22%{background:var(--g0)}100%{background:#fff}}
+.med-dose{
+  display:inline-block;transition:transform .3s cubic-bezier(.34,1.4,.5,1),color .3s;
+  font-variant-numeric:tabular-nums;
+}
+.med-dose.up{color:var(--g);font-weight:700;transform:scale(1.14)}
+.med-badge{
+  display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:700;
+  padding:2px 8px;border-radius:980px;background:var(--g);color:#fff;margin-left:8px;
+  opacity:0;transform:translateY(-3px);transition:opacity .35s,transform .35s;
+}
+.med-badge.on{opacity:1;transform:none}
+
+/* ── oirejana ── */
+.sym-top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+.sym-title{font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--mid)}
+.sym-key{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--mid)}
+.sym-key i{display:inline-block;width:9px;height:9px;border-radius:50%;flex:none}
+.sym-key .k-none{border:1.5px solid #CFCAC2;background:none}
+.sym-key .k-miss{width:9px;height:1.5px;border-radius:2px;background:#DFDAD2}
+.sym-row{display:grid;grid-template-columns:76px 1fr;align-items:end;gap:10px;margin-bottom:9px}
+.sym-name{font-size:12px;color:var(--mid);text-align:right;padding-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sym-bars{display:grid;grid-template-columns:repeat(14,1fr);gap:3px;align-items:end;height:34px}
+.sym-cell{position:relative;height:100%;display:flex;align-items:flex-end;justify-content:center}
+.sym-bar{
+  width:100%;border-radius:3px;background:var(--sc,#B3452C);
+  transform-origin:bottom;transform:scaleY(0);transition:transform .4s cubic-bezier(.34,1.3,.5,1);
+}
+.sym-bar.grown{transform:scaleY(1)}
+.sym-zero{width:7px;height:7px;border-radius:50%;border:1.5px solid #CFCAC2;background:none;margin-bottom:1px}
+.sym-miss{width:9px;height:1.5px;border-radius:2px;background:#DFDAD2;margin-bottom:3px}
+.sym-cell[data-tip]:hover::after{
+  content:attr(data-tip);position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);
+  background:var(--k);color:#FBFAF7;font-size:11px;font-weight:600;padding:5px 9px;border-radius:7px;
+  white-space:nowrap;z-index:5;pointer-events:none;
+}
+.sym-axis{display:grid;grid-template-columns:76px 1fr;gap:10px;margin-top:2px}
+.sym-days{grid-column:2;display:grid;grid-template-columns:repeat(14,1fr);gap:3px;font-size:9.5px;color:var(--mid2);text-align:center}
+.sym-days span{overflow:hidden}
+.sym-event{font-size:12px;color:var(--mid);display:flex;align-items:center;gap:8px;padding-top:13px;margin-top:11px;border-top:1px solid var(--line);line-height:1.45}
 </style>
 </head>
 <body>
+
+<!-- NAV -->
 <header>
-  <div class="wrap-wide nav">
-    <a class="brand" href="#top">
-      <svg width="22" height="22" viewBox="0 0 40 40" aria-hidden="true">
-        <circle cx="20" cy="20" r="15" fill="none" stroke="#A67C2E" stroke-width="5"/>
-        <circle cx="20" cy="20" r="15" fill="none" stroke="#EBDCC0" stroke-width="5" stroke-dasharray="20 100" stroke-linecap="round"/>
+  <div class="wrap-lg nav">
+    <a class="logo" href="#top">
+      <svg width="24" height="24" viewBox="0 0 40 40" aria-hidden="true">
+        <circle cx="20" cy="20" r="14.5" fill="none" stroke="#E2DDD5" stroke-width="4.5"/>
+        <circle id="logoRing" cx="20" cy="20" r="14.5" fill="none" stroke="#A67C2E" stroke-width="4.5"
+                stroke-dasharray="9 91" stroke-linecap="round" transform="rotate(-90 20 20)"/>
+        <circle cx="20" cy="5.5" r="3" fill="#A67C2E"/>
       </svg>
       <span>Hoitopolku</span>
     </a>
-    <button class="menu-btn" id="menuBtn" aria-expanded="false" aria-controls="navlinks">Valikko</button>
-    <nav class="links" id="navlinks">
-      <a href="#nain">Näin se toimii</a>
-      <a href="#ydin">Ydinajatus</a>
+    <button class="mob-menu" id="mobMenu">Valikko</button>
+    <nav class="links" id="navLinks">
+      <a href="#tyokalut">Työkalut</a>
+      <a href="#miten">Näin se toimii</a>
       <a href="#hinnasto">Hinnasto</a>
-      <a href="#kenelle">Kenelle sopii</a>
-      <a href="#nayttö">Miksi teemme tämän</a>
-      <a class="nav-cta" href="demo.html">Avaa demo →</a>
+      <a href="#organisaatioille">Organisaatioille</a>
+      <a class="nav-btn" href="demo.html">Aloita ilmaiseksi</a>
     </nav>
   </div>
 </header>
+
 <main id="top">
+
+<!-- HERO -->
 <section class="hero">
-  <div class="wrap center">
-    <p class="hero-brand">Hoitopolku</p>
-    <p class="eyebrow">Ilmainen seuranta · Lääkärin arvio edullisesti</p>
-    <h1>Älä hoida yksittäisiä arvoja.<br>Hoida kokonaisuutta.</h1>
-    <p class="lead" style="margin-top:22px;max-width:34em;margin-left:auto;margin-right:auto">SmartGraph seuraa sitä, mikä muuttuu usein — verenpainetta, verensokeria ja painoa. LDL ja muut labrat kirjataan tarvittaessa. Kun kokonaisuus on kasassa, jaat koodin lääkärille.</p>
-    <div class="cta-row" style="margin-top:30px">
-      <a class="btn" href="demo.html">Avaa demo</a>
-      <a class="btn ghost" href="#nain">Miten se toimii</a>
+  <!-- live background ticker -->
+  <div class="hero-bg" aria-hidden="true">
     </div>
-    <div class="monitor" id="smartGraph">
-      <div class="mon-top">
-        <span class="mon-label">Oma näkymä · verenpaineen SmartGraph</span>
-        <span class="mon-badge">Demo</span>
+
+  <div class="wrap hero-inner">
+    <div class="hero-left">
+      <p class="hero-kicker">Ilmainen seuranta &nbsp;·&nbsp; Lääkärin arvio edullisesti</p>
+      <h1>Tiedätkö,<br>mihin suuntaan<br>terveytesi <em>menee?</em></h1>
+      <p class="hero-lead">Seuraa neljää tärkeintä riskitekijää ilmaiseksi — verenpainetta, kolesterolia, verensokeria ja painoa. Kun arvo on koholla, etälääkärin arvio on helppo varata.</p>
+      <div class="cta-row">
+        <a class="btn btn-w" href="demo.html">Aloita ilmaiseksi</a>
+        <a class="btn btn-ghost" href="#miten">Miten se toimii →</a>
       </div>
-      <div class="mon-body">
-        <div class="seg" id="segRange" role="tablist" aria-label="Aikaväli">
-          <button type="button" aria-selected="false" data-r="14">14 pv</button>
-          <button type="button" aria-selected="false" data-r="42">42 pv</button>
-          <button type="button" aria-selected="true" data-r="999">3 kk</button>
+      <p class="hero-note">Rekisteröityminen ja seuranta ilmaisia &nbsp;·&nbsp; Lääkärin etäarvio Kela-korvattava</p>
+    </div>
+
+    <div class="hero-right reveal">
+      <div class="gauge-shell" id="demoCard">
+
+        <!-- verenpaine -->
+        <div class="demo-panel active" id="dp0">
+          <div class="dp-header">
+            <div>
+              <div class="dp-name"><span class="dp-dot" style="background:#B3452C"></span>Verenpaine</div>
+              <div class="dp-sub">Kotimittaus · 2× päivässä</div>
+            </div>
+            <div class="dp-val">138 <span class="dp-unit">mmHg</span></div>
+          </div>
+          <svg class="dp-graph" viewBox="0 0 300 74" id="g0"></svg>
+          <div class="dp-footer">
+            <span class="dp-status off">Koholla</span>
+            <span class="dp-note">Tavoite alle 135 · −14 mmHg aloituksesta</span>
+          </div>
         </div>
-        <div class="readout">
-          <span class="v" id="rVal">—</span>
-          <span class="u" id="rUnit">mmHg · 7 vrk keskiarvo</span>
-          <span class="pill mid" id="rPill">—</span>
+
+        <!-- verensokeri -->
+        <div class="demo-panel" id="dp1">
+          <div class="dp-header">
+            <div>
+              <div class="dp-name"><span class="dp-dot" style="background:#2F6690"></span>Verensokeri</div>
+              <div class="dp-sub">Sormimittaus · aamuisin</div>
+            </div>
+            <div class="dp-val">6,8 <span class="dp-unit">mmol/l</span></div>
+          </div>
+          <svg class="dp-graph" viewBox="0 0 300 74" id="g1"></svg>
+          <div class="dp-footer">
+            <span class="dp-status mid">Lähellä tavoitetta</span>
+            <span class="dp-note">Paastoarvo · tavoite alle 6,0</span>
+          </div>
         </div>
-        <div class="subline" id="rSub">—</div>
-        <div class="chartwrap">
-          <svg class="chart" id="chart" viewBox="0 0 560 250" role="img" aria-label="Esimerkki: verenpaineen kehitys hoitopolulla. Yksittäiset mittaukset, seitsemän vuorokauden keskiarvo, mittauskatko, ennuste ja tavoitealue."></svg>
-          <div class="tip" id="tip"></div>
+
+        <!-- paino -->
+        <div class="demo-panel" id="dp2">
+          <div class="dp-header">
+            <div>
+              <div class="dp-name"><span class="dp-dot" style="background:#6B5B95"></span>Paino</div>
+              <div class="dp-sub">Viikkopunnitus</div>
+            </div>
+            <div class="dp-val">88,0 <span class="dp-unit">kg</span></div>
+          </div>
+          <svg class="dp-graph" viewBox="0 0 300 74" id="g2"></svg>
+          <div class="dp-footer">
+            <span class="dp-status ok">Tavoitteessa</span>
+            <span class="dp-note">−6,2 kg · tavoite alle 89,5</span>
+          </div>
         </div>
-        <div class="legend" id="legend"></div>
-        <div class="stat" id="stats"></div>
-      </div>
-      <div class="insights">
-        <div class="section-label">Mitä käyrä kertoo</div>
-        <div id="insights"></div>
-      </div>
-      <div class="mon-cta">
-        <a class="btn arrow" href="demo.html">Avaa demo</a>
+
+        <div class="lab-strip">
+          <span class="lab-dot" style="background:#A67C2E"></span>
+          <div class="lab-txt">
+            <strong>LDL-kolesteroli 3,1 mmol/l</strong>
+            <span>Laboratorioarvo · mitattu 14.8. · seuraava n. vuoden päästä</span>
+          </div>
+        </div>
+
+
+        <div class="dp-nav">
+          <span class="dp-count"><span id="dpIdx">1</span> / 3</span>
+          <button class="dp-arrow" id="dpPrev" aria-label="Edellinen mittari">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+          </button>
+          <button class="dp-arrow" id="dpNext" aria-label="Seuraava mittari">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+          </button>
+        </div>
+      </div><!-- /gauge-shell -->
+
+      <div class="hero-tabs">
+        <button class="hc active"><span class="hc-dot" style="background:#B3452C"></span>Verenpaine</button>
+        <button class="hc"><span class="hc-dot" style="background:#2F6690"></span>Verensokeri</button>
+        <button class="hc"><span class="hc-dot" style="background:#6B5B95"></span>Paino</button>
       </div>
     </div>
+
   </div>
 </section>
-<section id="ydin" class="dark">
+
+<!-- ONGELMA -->
+<section style="padding-top:0">
   <div class="wrap">
-    <div class="idea">
-      <p class="eyebrow">Ydinajatus</p>
-      <h2>Älä hoida yksittäisiä arvoja.<br>Hoida kokonaisuutta.</h2>
-      <p class="lead sub">Verenpaine, verensokeri, paino ja LDL eivät ole neljä eri sairautta. Ne ovat saman kokonaisuuden osia. SmartGraph näyttää trendin siellä missä mittauksia kertyy usein — labra-arvo, kuten LDL, riittää harvemmin.</p>
+    <div class="prob-text reveal" style="max-width:640px;margin-bottom:36px">
+      <div class="section-rule"></div>
+      <h2>Miljoonat suomalaiset<br>saavat diagnoosin.<br>Harva pääsee tavoitteeseen.</h2>
+    </div>
+
+    <div class="prob-tabs reveal">
+      <button class="ptab active" data-p="0">Verenpaine</button>
+      <button class="ptab" data-p="1">Kolesteroli</button>
+      <button class="ptab" data-p="2">Verensokeri</button>
+      <button class="ptab" data-p="3">Paino</button>
+    </div>
+
+    <div class="prob-panels">
+
+      <div class="prob-panel active" id="pp0">
+        <div class="stat-feature">
+          <div class="sf-big" style="color:#B3452C">1 000 000</div>
+          <div class="sf-label">suomalaista käyttää verenpainelääkitystä — 60 % heistä ei ole hoitotavoitteessa.</div>
+          <div class="info-grid">
+            <div class="info-item">
+              <h4>Mistä on kyse</h4>
+              <p>Kohonnut verenpaine rasittaa verisuonia vuosia ilman oireita. Vaurio syntyy hiljaa, ei kohtauksena.</p>
+            </div>
+            <div class="info-item">
+              <h4>Tavoite</h4>
+              <p>Kotimittauksissa alle 135/85 mmHg. Vastaanotolla mitattu arvo on tyypillisesti hieman korkeampi.</p>
+            </div>
+            <div class="info-item">
+              <h4>Miksi seuranta ratkaisee</h4>
+              <p>Yksi mittaus vastaanotolla ei kerro todellista tasoa. Seitsemän vuorokauden kotisarja kertoo.</p>
+            </div>
+          </div>
+          <p class="sf-src">Käypä hoito 2020</p>
+        </div>
+      </div>
+
+      <div class="prob-panel" id="pp1">
+        <div class="stat-feature">
+          <div class="sf-big" style="color:#A67C2E">800 000</div>
+          <div class="sf-label">suomalaista käyttää kolesterolilääkitystä — puolet ei saavuta LDL-tavoitetta.</div>
+          <div class="info-grid">
+            <div class="info-item">
+              <h4>Mistä on kyse</h4>
+              <p>LDL-kolesteroli kertyy valtimoiden seinämiin. Mitä kauemmin taso on korkea, sitä suurempi kertymä.</p>
+            </div>
+            <div class="info-item">
+              <h4>Tavoite</h4>
+              <p>Riippuu kokonaisriskistä: alle 3,0 mmol/l matalassa riskissä, alle 1,8 jos sydäntapahtuma takana.</p>
+            </div>
+            <div class="info-item">
+              <h4>Miksi seuranta ratkaisee</h4>
+              <p>Statiinin vaste vaihtelee. Ilman kontrollimittausta ei tiedetä, riittikö aloitusannos.</p>
+            </div>
+          </div>
+          <p class="sf-src">EAS / ESC 2019</p>
+        </div>
+      </div>
+
+      <div class="prob-panel" id="pp2">
+        <div class="stat-feature">
+          <div class="sf-big" style="color:#2F6690">500 000</div>
+          <div class="sf-label">suomalaista sairastaa tyypin 2 diabetesta — lähes puolella HbA1c ei ole tavoitteessa.</div>
+          <div class="info-grid">
+            <div class="info-item">
+              <h4>Mistä on kyse</h4>
+              <p>Solut eivät reagoi insuliiniin normaalisti. Verensokeri nousee vähitellen vuosien kuluessa.</p>
+            </div>
+            <div class="info-item">
+              <h4>Tavoite</h4>
+              <p>HbA1c alle 53 mmol/mol useimmilla. Paastoglukoosi alle 7,0 mmol/l.</p>
+            </div>
+            <div class="info-item">
+              <h4>Miksi seuranta ratkaisee</h4>
+              <p>Sormimittaus näyttää vasteen viikoissa. HbA1c kertoo vasta kolmen kuukauden päästä.</p>
+            </div>
+          </div>
+          <p class="sf-src">Diabetesliitto 2023</p>
+        </div>
+      </div>
+
+      <div class="prob-panel" id="pp3">
+        <div class="stat-feature">
+          <div class="sf-big" style="color:#6B5B95">2 500 000</div>
+          <div class="sf-label">suomalaista on ylipainoisia — 70 % ei saa rakenteista ohjausta.</div>
+          <div class="info-grid">
+            <div class="info-item">
+              <h4>Mistä on kyse</h4>
+              <p>Vyötärölihavuus vaikuttaa verenpaineeseen, verensokeriin ja rasva-arvoihin samanaikaisesti.</p>
+            </div>
+            <div class="info-item">
+              <h4>Tavoite</h4>
+              <p>5–10 % lasku lähtöpainosta. Vyötärö alle 100 cm miehillä, alle 90 cm naisilla.</p>
+            </div>
+            <div class="info-item">
+              <h4>Miksi seuranta ratkaisee</h4>
+              <p>Paino heittelee kilon päivässä nesteen mukaan. Viikkotrendi kertoo todellisen suunnan.</p>
+            </div>
+          </div>
+          <p class="sf-src">FinTerveys 2017 · THL 2021</p>
+        </div>
+      </div>
+
     </div>
   </div>
 </section>
-<section id="nain">
+
+<!-- MITEN -->
+<section id="miten" style="background:var(--g0)">
   <div class="wrap">
-    <div class="sec-head center">
-      <p class="eyebrow">Näin se toimii</p>
-      <h2>Kuusi vaihetta,<br>kuusi kuukautta</h2>
-    </div>
-    <div class="sixgrid">
-      <div class="rev"><div class="no">01 — Mittaa</div><h3>Kerää tietosi</h3><p>Kerää tärkeimmät terveystietosi ja mittauksesi: verenpaine kotona seitsemän vuorokautta, paino, vyötärö ja yksi verikoe.</p></div>
-      <div class="rev"><div class="no">02 — Ymmärrä</div><h3>Kokonaiskuva</h3><p>Oma lääkäri arvioi kokonaisuutesi ja tunnistaa asiat, joihin kannattaa puuttua — ja ne, joihin ei tarvitse.</p></div>
-      <div class="rev"><div class="no">03 — Tavoita</div><h3>Omat tavoitteet</h3><p>Määritetään sinulle tärkeimmät tavoitteet. Numeroina, jotta tiedät milloin olet perillä.</p></div>
-      <div class="rev"><div class="no">04 — Hoida</div><h3>Konkreettinen suunnitelma</h3><p>Tehdään suunnitelma ja toteutetaan se. Lääkitys, elintavat tai molemmat — sen mukaan mitä tilanteesi vaatii.</p></div>
-      <div class="rev"><div class="no">05 — Seuraa</div><h3>Jatkuva seuranta</h3><p>Hoitopolku seuraa kehitystäsi ja kertoo, mihin kannattaa kiinnittää huomiota. Jos suunta ei ole oikea, sinuun otetaan yhteyttä.</p></div>
-      <div class="rev"><div class="no">06 — Arvioi</div><h3>Kuuden kuukauden kohdalla</h3><p>Katsotaan kokonaisuus uudelleen. Näet mustaa valkoisella, mikä muuttui ja mitä seuraavaksi tehdään.</p></div>
+    <div class="section-rule"></div>
+    <h2 style="font-size:clamp(28px,4.4vw,46px);font-weight:700;letter-spacing:-.04em;margin-bottom:48px">Kolme vaihetta.<br>Ilman jonottamista.</h2>
+    <div class="steps-grid">
+      <div class="step-cell reveal">
+        <p class="idx">01</p>
+        <h3>Rekisteröidy ja mittaa</h3>
+        <p>Kirjaat verenpaineen, painon ja laboratorioarvosi alustaan ilmaiseksi. Saat lähetteen verikokeiden tulkintaa varten.</p>
+      </div>
+      <div class="step-cell reveal">
+        <p class="idx">02</p>
+        <h3>Varaa etävastaanotto</h3>
+        <p>Lääkärillä on kaikki data valmiina ennen käyntiä. 20 minuuttia riittää arvioon, tavoitteisiin ja hoidon aloitukseen.</p>
+      </div>
+      <div class="step-cell reveal">
+        <p class="idx">03</p>
+        <h3>Seuranta jatkuu</h3>
+        <p>Alusta seuraa suuntaa automaattisesti. Varaat uuden ajan kun arvo ei laske tai tarvitset annosmuutoksen — ei muuten.</p>
+      </div>
     </div>
   </div>
 </section>
-<section class="alt">
-  <div class="wrap center">
-    <div class="sec-head center" style="margin-bottom:36px">
-      <p class="eyebrow">Neljä ensimmäistä</p>
-      <h2>Ei neljä viimeistä</h2>
-      <p class="lead" style="margin-top:16px">SmartGraph: verenpaine, verensokeri ja paino. Verikokeista LDL riittää seurantaan — se mitataan harvoin, joten sitä ei venytetä käyräksi. Lisäksi lääkelista, oireet ja muut labrat.</p>
+
+<!-- NELJÄ TYÖKALUA -->
+<section class="tools-section" id="tyokalut">
+  <div class="wrap">
+    <div class="section-rule"></div>
+    <h2 style="font-size:clamp(28px,4.4vw,48px);font-weight:800;letter-spacing:-.045em;line-height:1.03;margin-bottom:14px" class="reveal">Neljä työkalua.<br>Yksi kuva terveydestäsi.</h2>
+    <p style="font-size:17px;color:var(--mid);margin-bottom:56px;max-width:38em" class="reveal">Mittaukset, verikokeet, lääkkeet ja oireet samassa paikassa — ja yhdessä koodissa, jonka annat lääkärille.</p>
+
+        <!-- 01 SMART GRAPH -->
+    <div class="tool-row reveal" id="smartgraph" style="border-top:none;padding-top:0">
+      <div class="tool-txt">
+        <span class="tool-num">01</span>
+        <h3>Älykäs käyrä</h3>
+        <p>Verenpaine, verensokeri ja paino mitataan tiheästi — ja juuri siksi ne heittelevät. Älykäs käyrä erottaa satunnaisen vaihtelun todellisesta muutoksesta.</p>
+        <ul class="tool-list">
+          <li>Yksittäiset mittaukset haaleina, keskiarvo tummana</li>
+          <li>Lääkemuutokset merkittynä samalle janalle</li>
+          <li>Ennuste: milloin tavoite saavutetaan tällä vauhdilla</li>
+          <li>Mittauskatkot näkyvät, eivät katoa</li>
+        </ul>
+      </div>
+      <div class="tool-vis sg-card">
+        <div class="sg-card-head">
+          <div>
+            <div class="sg-card-title">Verenpaine</div>
+            <div class="sg-card-sub">7 vrk keskiarvo · 118 mittausta</div>
+          </div>
+          <div class="sg-card-val">138 <span>mmHg</span></div>
+        </div>
+        <div class="bg-wrap">
+          <svg id="bigGraph" viewBox="0 0 520 200"></svg>
+          <div class="bg-tip" id="bgTip"></div>
+        </div>
+        <div class="sg-legend">
+          <span><i class="sgl-dot"></i>Yksittäinen mittaus</span>
+          <span><i class="sgl-line"></i>7 vrk keskiarvo</span>
+          <span><i class="sgl-dash"></i>Tavoite</span>
+        </div>
+      </div>
     </div>
-    <div class="chips">
-      <span class="chip on">Verenpaine · SmartGraph</span>
-      <span class="chip on">Verensokeri · SmartGraph</span>
-      <span class="chip on">Paino · SmartGraph</span>
-      <span class="chip on">LDL · labra</span>
-      <span class="chip">Uni</span>
-      <span class="chip">Liikunta</span>
-      <span class="chip">Tupakointi</span>
-      <span class="chip">Alkoholi</span>
-      <span class="chip">Mieliala</span>
+
+<!-- 02 VERIKOKEET -->
+    <div class="tool-row reveal">
+      <div class="tool-txt">
+        <span class="tool-num">02</span>
+        <h3>Verikoegraafi</h3>
+        <p>Laboratorioarvoja mitataan kerran tai kaksi vuodessa. Käyrän sijaan alusta näyttää matkan: mistä lähdettiin, missä ollaan nyt ja kuinka kaukana tavoite on.</p>
+        <ul class="tool-list">
+          <li>LDL-kolesteroli, HbA1c, kreatiniini, kalium</li>
+          <li>Tavoitealue värillisenä vyöhykkeenä</li>
+          <li>Muutos edellisestä mittauksesta numerona</li>
+        </ul>
+      </div>
+      <div class="tool-vis">
+        <div class="lab-viz">
+          <div class="lv-row">
+            <div class="lv-head"><span class="lv-name">LDL-kolesteroli</span><span class="lv-delta down">−1,5</span></div>
+            <div class="lv-track">
+              <div class="lv-zone" style="left:0;width:42%"></div>
+              <div class="lv-from" style="left:78%"><span>4,6</span></div>
+              <div class="lv-line" style="left:42%;width:36%"></div>
+              <div class="lv-to" style="left:42%"><span>3,1</span></div>
+            </div>
+            <div class="lv-scale"><span>1,0</span><span class="lv-target">tavoite 3,0</span><span>6,0</span></div>
+          </div>
+          <div class="lv-row">
+            <div class="lv-head"><span class="lv-name">HbA1c</span><span class="lv-delta down">−2</span></div>
+            <div class="lv-track">
+              <div class="lv-zone" style="left:0;width:47%"></div>
+              <div class="lv-from" style="left:56%"><span>51</span></div>
+              <div class="lv-line" style="left:47%;width:9%"></div>
+              <div class="lv-to" style="left:47%"><span>49</span></div>
+            </div>
+            <div class="lv-scale"><span>30</span><span class="lv-target">tavoite 48</span><span>75</span></div>
+          </div>
+          <div class="lv-row">
+            <div class="lv-head"><span class="lv-name">Kalium</span><span class="lv-delta ok">Turvarajoissa</span></div>
+            <div class="lv-track">
+              <div class="lv-zone safe" style="left:22%;width:56%"></div>
+              <div class="lv-to solo" style="left:52%"><span>4,2</span></div>
+            </div>
+            <div class="lv-scale"><span>3,0</span><span class="lv-target">3,5–5,0</span><span>6,0</span></div>
+          </div>
+        </div>
+      </div>
     </div>
-    <p style="font-size:14px;color:var(--muted-2);margin-top:24px">Tummat ovat mukana nyt. SmartGraph seuraa tiheitä mittauksia; LDL kirjataan verikokeena. Vaaleat tulevat myöhemmin.</p>
+
+    <!-- 03 LÄÄKELISTA -->
+    <div class="tool-row rev reveal">
+      <div class="tool-txt">
+        <span class="tool-num">03</span>
+        <h3>Lääkelista</h3>
+        <p>Lista ei ole vain nimiä ja annoksia. Se näyttää milloin annos muuttui — ja se on juuri se tieto, jota lääkäri tarvitsee kun arvo ei laske odotetusti.</p>
+        <ul class="tool-list">
+          <li>Ottoajat aamu ja ilta erikseen</li>
+          <li>Annosmuutokset päivämäärineen</li>
+          <li>Näkyy samalla janalla mittausten kanssa</li>
+        </ul>
+      </div>
+      <div class="tool-vis">
+        <div class="med-viz">
+          <div class="med-item" id="medChange">
+            <div class="med-top">
+              <div><span class="med-name">Ramipriili</span><span class="med-dose" id="medDose">5 mg</span></div>
+              <div class="med-when"><span class="chip on">Aamu</span><span class="chip">Ilta</span></div>
+            </div>
+            <div class="med-hist">
+              <span class="mh-dot"></span><span id="medHist">Ennallaan 6 vk</span>
+            </div>
+          </div>
+          <div class="med-item">
+            <div class="med-top">
+              <div><span class="med-name">Atorvastatiini</span><span class="med-dose">20 mg</span></div>
+              <div class="med-when"><span class="chip">Aamu</span><span class="chip on">Ilta</span></div>
+            </div>
+            <div class="med-hist"><span class="mh-dot new"></span>Aloitettu 2.9.</div>
+          </div>
+          <div class="med-item">
+            <div class="med-top">
+              <div><span class="med-name">Metformiini</span><span class="med-dose">500 mg</span></div>
+              <div class="med-when"><span class="chip on">Aamu</span><span class="chip on">Ilta</span></div>
+            </div>
+            <div class="med-hist"><span class="mh-dot"></span>Ennallaan 8 kk</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 04 OIREPÄIVÄKIRJA -->
+    <div class="tool-row reveal">
+      <div class="tool-txt">
+        <span class="tool-num">04</span>
+        <h3>Oirepäiväkirja</h3>
+        <p>Haittavaikutus alkaa yleensä parin viikon sisällä annosmuutoksesta. Kun oireet ja lääkemuutokset ovat samalla janalla, yhteys näkyy — tai sen puuttuminen näkyy.</p>
+        <ul class="tool-list">
+          <li>Pylvään korkeus kertoo voimakkuuden 1–5</li>
+          <li>Tyhjä ympyrä = ei oiretta, viiva = ei kirjausta</li>
+          <li>Annosmuutos merkitty janalle päivämäärineen</li>
+        </ul>
+      </div>
+      <div class="tool-vis">
+        <div class="sym-viz">
+          <div class="sym-top">
+            <span class="sym-title">Oireet · 14 vrk</span>
+            <span class="sym-key"><i class="k-none"></i>ei oiretta &nbsp;<i class="k-miss"></i>ei kirjausta</span>
+          </div>
+          <div class="sym-grid" id="symGrid"></div>
+          <div class="sym-axis" id="symAxis"></div>
+          <div class="sym-event"><span class="se-mark"></span>Annos nostettu 14.10. — yskä alkoi 3 vrk myöhemmin</div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </section>
+
+<!-- KOODI -->
+<section class="code-band">
+  <div class="wrap">
+    <div class="code-grid">
+      <div class="code-left reveal">
+        <div class="section-rule"></div>
+        <h2>Jaa tietosi lääkärille yhdellä koodilla.</h2>
+        <p>Alusta tekee mittauksistasi koodin, jonka annat lääkärille — omalle terveysasemalle, työterveyteen tai meidän etälääkärillemme.</p>
+        <p>Lääkäri näkee kaikki arvot, lääkkeet ja oireet yhdellä sivulla. Ei kirjautumista, ei sovellusta, ei odottamista.</p>
+      </div>
+      <div class="code-box reveal">
+        <div class="code-label">Jaettava koodi</div>
+        <div class="code-val" id="shareCode">HP-4827</div>
+        <div class="code-exp">Voimassa 7 vrk · näyttää verenpaineen, verikokeet, lääkkeet ja oireet</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- NELJÄ ARVOA -->
+<section style="background:var(--g0)">
+  <div class="wrap">
+    <div class="section-rule"></div>
+    <h2 style="font-size:clamp(26px,3.8vw,42px);font-weight:700;letter-spacing:-.04em;margin-bottom:10px" class="reveal">Neljä arvoa. Kaksi mittaustapaa.</h2>
+    <p style="font-size:17px;color:var(--mid);margin-bottom:36px;max-width:38em" class="reveal">Osa arvoista mitataan kotona päivittäin, osa laboratoriossa kerran vuodessa. Alusta kohtelee niitä eri tavalla.</p>
+
+    <p class="group-label reveal">SEURATAAN KÄYRÄLLÄ · kotimittaus</p>
+    <div class="cond-grid three">
+      <div class="cond-card reveal">
+        <span class="cond-dot" style="background:#B3452C"></span>
+        <h3>Verenpaine</h3>
+        <p>Kaksi mittausta aamuin illoin. Älykäs käyrä näyttää seitsemän vuorokauden keskiarvon ja suunnan.</p>
+        <div class="cond-tag">2× päivässä · verenpainemittari</div>
+      </div>
+      <div class="cond-card reveal">
+        <span class="cond-dot" style="background:#2F6690"></span>
+        <h3>Verensokeri</h3>
+        <p>Sormimittaus aamuisin. Käyrä paljastaa nopeasti, vaikuttaako elintapamuutos tai lääkitys.</p>
+        <div class="cond-tag">Päivittäin · sormimittari</div>
+      </div>
+      <div class="cond-card reveal">
+        <span class="cond-dot" style="background:#6B5B95"></span>
+        <h3>Paino</h3>
+        <p>Viikkopunnitus samana aamuna. Trendi näkyy vaikka yksittäiset punnitukset heittelisivät.</p>
+        <div class="cond-tag">1× viikossa · vaaka</div>
+      </div>
+    </div>
+
+    <p class="group-label reveal" style="margin-top:36px">KIRJATAAN ARVONA · laboratorio</p>
+    <div class="lab-card reveal">
+      <span class="cond-dot" style="background:#A67C2E"></span>
+      <div>
+        <h3>LDL-kolesteroli</h3>
+        <p>Mitataan laboratoriossa noin kerran vuodessa. Alusta säilyttää arvot ja näyttää muutoksen mittausten välillä — ei käyrää, koska kahdesta pisteestä ei sellaista synny.</p>
+        <div class="cond-tag">1× vuodessa · verinäyte</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HINNASTO -->
 <section id="hinnasto">
   <div class="wrap">
-    <div class="sec-head center">
-      <p class="eyebrow">Hinnasto</p>
-      <h2>Hinta on tiedossa etukäteen</h2>
-      <p class="lead" style="margin-top:16px">Yksi hinta koko kuuden kuukauden hoitopolusta.</p>
-    </div>
-    <div class="prices" style="max-width:480px;margin:0 auto;grid-template-columns:1fr">
-      <div class="price hi rev">
-        <div class="tier">Hoitopolku</div>
-        <div class="amt">249 €</div>
-        <div class="per">koko 6 kuukauden hoitopolku</div>
-        <ul>
-          <li>Lääkärin etävastaanotto, aloitus</li>
-          <li>Kontrolli 9 viikon kohdalla</li>
-          <li>Loppuarvio 6 kuukauden kohdalla</li>
-          <li>Jatkuva seuranta ja huomautukset</li>
-          <li>Verenpainemittarin lainaus</li>
-          <li>Yksi lisäkäynti tarvittaessa</li>
-        </ul>
-        <a class="btn" href="demo.html">Avaa demo</a>
+    <div class="section-rule"></div>
+    <h2 style="font-size:clamp(28px,4.4vw,46px);font-weight:700;letter-spacing:-.04em;margin-bottom:12px" class="reveal">Seuranta on ilmaista.</h2>
+    <p style="font-size:19px;color:var(--mid);margin-bottom:40px;max-width:34em" class="reveal">Alusta, älykäs käyrä ja jaettava koodi eivät maksa mitään. Lääkärin etävastaanoton varaat vain jos haluat.</p>
+    <div class="price-row reveal">
+      <div class="price-item">
+        <div class="pi-top">Seuranta-alusta</div>
+        <div class="pi-val">0 €</div>
+        <div class="pi-note">Mittaukset, älykäs käyrä, jaettava koodi</div>
+      </div>
+      <div class="price-item">
+        <div class="pi-top">Etävastaanotto</div>
+        <div class="pi-val">49 €</div>
+        <div class="pi-note">20 min · Kela-korvattava · vain tarvittaessa</div>
+      </div>
+      <div class="price-item">
+        <div class="pi-top">Laboratoriolähete</div>
+        <div class="pi-val">Sisältyy</div>
+        <div class="pi-note">Laboratorio laskuttaa erikseen</div>
       </div>
     </div>
-    <p class="pnote">
-      Laboratoriotutkimukset laskuttaa laboratorio erikseen oman hinnastonsa mukaan. Kela-korvaus vähennetään suoraan maksun yhteydessä, jos korvauksen ehdot täyttyvät. Jos yksikään tavoitteistasi ei täyty kuuden kuukauden kohdalla, hyvitämme 30 €.
+    <p class="fnote reveal">Voit käyttää alustaa myös ilman meidän lääkäriämme — jaa koodi omalle terveysasemallesi tai työterveyteen.</p>
+  </div>
+</section>
+
+<!-- ORGANISAATIOILLE -->
+<section id="organisaatioille" style="background:var(--g0)">
+  <div class="wrap">
+    <div class="section-rule"></div>
+    <h2 style="font-size:clamp(26px,3.8vw,42px);font-weight:700;letter-spacing:-.04em;margin-bottom:10px" class="reveal">Sama hoitopolku.<br>Kokonaisina potilasryhminä.</h2>
+    <p style="font-size:17px;color:var(--mid);margin-bottom:40px;max-width:38em" class="reveal">Hyvinvointialueille, työterveyteen ja vakuutusyhtiöille. Korvaus perustuu vasteeseen — ei käyntimäärään.</p>
+    <div class="org-grid">
+      <div class="org-cell reveal">
+        <div class="icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--g)" stroke-width="2" stroke-linecap="round"><path d="M3 11l9-7 9 7v9a1 1 0 01-1 1H4a1 1 0 01-1-1z"/></svg>
+        </div>
+        <h3>Hyvinvointialueet</h3>
+        <p>Vakiintuneet pitkäaikaissairaat pois lääkärivastaanoton jonosta. Järjestämisvastuu säilyy alueella.</p>
+      </div>
+      <div class="org-cell reveal">
+        <div class="icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--g)" stroke-width="2" stroke-linecap="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
+        </div>
+        <h3>Työterveys</h3>
+        <p>Riskitekijät hoidetaan loppuun asti, ei vain kirjata terveystarkastukseen vuodeksi unohduksiin.</p>
+      </div>
+      <div class="org-cell reveal">
+        <div class="icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--g)" stroke-width="2" stroke-linecap="round"><path d="M12 3l1.9 5.8H20l-4.9 3.6 1.9 5.8L12 14.6l-5 3.6 1.9-5.8L4 8.8h6.1L12 3z"/></svg>
+        </div>
+        <h3>Vakuutusyhtiöt</h3>
+        <p>Pitkäaikaissairaille vakuutetuille rakenteinen seuranta — riski tunnistetaan ennen kalliita hoitojaksoja.</p>
+      </div>
+    </div>
+    <p style="font-size:14px;color:var(--mid);margin-top:18px;text-align:center">
+      Kohorttimyynti avautuu kun MVP-vaihe on tuottanut riittävän näytön. <a href="mailto:tilaajat@suomenomalaakarit.fi" style="color:var(--g);font-weight:500">Ota yhteyttä →</a>
     </p>
   </div>
 </section>
-<section id="kenelle" class="alt">
+
+<!-- CTA -->
+<section class="cta-band" id="aloita">
   <div class="wrap">
-    <div class="sec-head center">
-      <p class="eyebrow">Kenelle</p>
-      <h2>Kenelle hoitopolku sopii</h2>
-      <p class="lead" style="margin-top:16px">Rajaus on turvallisuuskysymys. Osa tilanteista vaatii lähivastaanottoa tai erikoislääkärin arviota — silloin ohjaamme sinut eteenpäin emmekä aloita polkua.</p>
+    <h2>Aloita seuranta.<br>Ilmaiseksi.</h2>
+    <p>Kirjaa mittaukset, näe suunta älykkäästä käyrästä ja jaa koodi lääkärillesi. Etävastaanotto 49 € vain jos haluat sen meiltä.</p>
+    <div class="cta-row">
+      <a class="btn btn-g" href="demo.html">Aloita ilmaiseksi</a>
     </div>
-    <div class="crit">
-      <div class="card white rev">
-        <span class="tagline in">Sopii sinulle jos</span>
-        <ul>
-          <li>Olet 18–79-vuotias</li>
-          <li>Vähintään yksi arvoistasi on koholla</li>
-          <li>Verenpaineesi on alle 180/110</li>
-          <li>Käytät 0–2 verenpainelääkettä</li>
-          <li>Mahdollinen tyypin 2 diabetes ilman insuliinihoitoa</li>
-          <li>Pystyt mittaamaan kotona itse tai avustettuna</li>
-        </ul>
-      </div>
-      <div class="card white rev out">
-        <span class="tagline out">Ei sovi jos</span>
-        <ul>
-          <li>Verenpaineesi on 180/110 tai yli</li>
-          <li>Käytät 3 tai useampaa verenpainelääkettä etkä ole tavoitteessa</li>
-          <li>Sinulla on tyypin 1 diabetes tai insuliinihoito</li>
-          <li>Olet raskaana tai suunnittelet raskautta</li>
-          <li>Munuaisten toiminta on merkittävästi alentunut</li>
-        </ul>
-      </div>
-    </div>
-    <div class="note">
-      <b>Hätätilanteessa soita 112</b>
-      Rintakipu, halvausoireet, vaikea hengenahdistus tai tajunnan häiriö vaativat välitöntä arviota. Hoitopolku ei ole päivystyspalvelu, eikä sen kautta hoideta äkillisiä sairastumisia.
-    </div>
+    <p class="sub">Seuranta on aina ilmaista. Lääkärin etävastaanotto laskutetaan käynnin yhteydessä, Kela-korvaus vähennetään suoraan. Hätätilanteessa soita 112.</p>
   </div>
 </section>
-<section id="nayttö">
-  <div class="wrap">
-    <div class="sec-head center">
-      <p class="eyebrow">Miksi teemme tämän</p>
-      <h2>Mittaamme tuloksen<br>ja kerromme sen</h2>
-      <p class="lead" style="margin-top:16px">Suomessa noin 40 % verenpainelääkitystä käyttävistä on hoitotavoitteessa. Uskomme, että selkeä hoitopolku ja nimetty lääkäri tekevät siitä paremman luvun. Aiomme myös todistaa sen.</p>
-    </div>
-    <div class="grid-3">
-      <div class="card rev">
-        <h3>Vaihe 1</h3>
-        <p style="margin-top:8px">Hoidamme yksittäisiä asiakkaita ja mittaamme jokaisen tuloksen: mikä oli lähtötaso, mikä tulos kuuden kuukauden kohdalla.</p>
-      </div>
-      <div class="card rev">
-        <h3>Vaihe 2</h3>
-        <p style="margin-top:8px">Julkaisemme kootut tulokset — kuinka moni saavutti tavoitteen ja missä ajassa. Nimettöminä ja tilastollisina, ei koskaan yksittäistä ihmistä tunnistaen.</p>
-      </div>
-      <div class="card rev">
-        <h3>Vaihe 3</h3>
-        <p style="margin-top:8px">Kun näyttö on olemassa, tarjoamme samaa hoitopolkua terveydenhuollon järjestäjille kokonaisina potilasryhminä.</p>
-      </div>
-    </div>
-    <div class="note">
-      <b>Mitä tämä tarkoittaa sinulle</b>
-      Hoitosi ei muutu miksikään sen takia, että mittaamme tuloksia — mittaaminen on joka tapauksessa osa hoitoa. Tuloksiasi käytetään koottuun tilastoon vain suostumuksellasi, ja voit peruuttaa suostumuksen milloin tahansa ilman että se vaikuttaa hoitoosi.
-    </div>
-  </div>
-</section>
-<section id="ukk" class="alt">
-  <div class="wrap" style="max-width:820px">
-    <div class="sec-head center">
-      <p class="eyebrow">Usein kysyttyä</p>
-      <h2>Ennen kuin aloitat</h2>
-    </div>
-    <details><summary>Miksi neljä asiaa yhdessä eikä yksi kerrallaan?</summary>
-      <p>Koska ne kasautuvat samoille ihmisille ja vaikuttavat terveyteen yhdessä. Sama verinäyte, sama käynti ja sama lääkäri kattavat kaikki neljä. Erillisinä ne tarkoittaisivat neljä kertaa enemmän käyntejä ilman lisähyötyä.</p></details>
-    <details><summary>Saanko Kela-korvausta?</summary>
-      <p>Lääkärin etävastaanotto on Kela-korvattava samoin perustein kuin lähivastaanotto. Korvaus vähennetään suoraan hinnasta maksuhetkellä, jos korvauksen ehdot täyttyvät. Tarkka määrä riippuu voimassa olevasta taksasta.</p></details>
-    <details><summary>Mitä verikokeet maksavat?</summary>
-      <p>Laboratorio laskuttaa ne erikseen oman hinnastonsa mukaan. Näet hinnan ennen kuin varaat ajan näytteenottoon, ja saat myös näistä Kela-korvauksen samoin perustein kuin muista lääkärin määräämistä tutkimuksista.</p></details>
-    <details><summary>Entä jos en pysty mittaamaan kotona?</summary>
-      <p>Lainaamme verenpainemittarin veloituksetta ja opastamme käytössä. Mittaaminen onnistuu myös läheisen avustamana. Jos kumpikaan ei ole mahdollista, tämä hoitopolku ei todennäköisesti ole sinulle oikea ratkaisu.</p></details>
-    <details><summary>Pysynkö saman lääkärin potilaana?</summary>
-      <p>Kyllä, se on koko idea. Valitset lääkärin aloittaessasi, ja hän vastaa hoidostasi koko kuuden kuukauden ajan. Jos hän on estynyt, sijainen näkee saman suunnitelman ja samat mittaustulokset.</p></details>
-    <details><summary>Mitä kuuden kuukauden jälkeen tapahtuu?</summary>
-      <p>Saat kirjallisen yhteenvedon ja suunnitelman jatkosta. Voit jatkaa kevyemmässä ylläpitoseurannassa, siirtyä takaisin oman terveysasemasi seurantaan tai lopettaa. Hoitopolku ei sido sinua mihinkään jatkoon.</p></details>
-    <details><summary>Näkyvätkö tiedot terveysasemallani?</summary>
-      <p>Kyllä. Käynnit, hoitosuunnitelma ja reseptit kirjataan Kanta-palveluun, joten ne näkyvät terveysasemalla ja päivystyksessä normaalisti.</p></details>
-  </div>
-</section>
-<section id="aloita">
-  <div class="wrap center">
-    <p class="eyebrow">Demo</p>
-    <h2>Kokeile nyt</h2>
-    <p class="lead" style="margin-top:18px">Avaa demosovellus demotunnuksilla. Potilas kirjaa mittaukset ja jakaa koodin — lääkäri avaa etäarvion samalla koodilla.</p>
-    <div class="cta-row" style="margin-top:30px">
-      <a class="btn arrow" href="demo.html">Avaa demo</a>
-      <a class="btn ghost" href="#hinnasto">Katso hinnasto</a>
-    </div>
-  </div>
-</section>
+
 </main>
+
+<!-- FOOTER -->
 <footer>
-  <div class="wrap-wide">
-    <div class="fcols">
+  <div class="wrap">
+    <div class="footer-grid">
       <div>
-        <a class="brand" href="#top" style="margin-bottom:12px">
+        <a class="logo" href="#top" style="margin-bottom:14px;display:flex;align-items:center;gap:10px;font-size:15px;font-weight:600">
           <svg width="20" height="20" viewBox="0 0 40 40" aria-hidden="true">
             <circle cx="20" cy="20" r="15" fill="none" stroke="#A67C2E" stroke-width="5"/>
-            <circle cx="20" cy="20" r="15" fill="none" stroke="#EBDCC0" stroke-width="5" stroke-dasharray="20 100" stroke-linecap="round"/>
+            <circle cx="20" cy="20" r="15" fill="none" stroke="#F2EDE3" stroke-width="5" stroke-dasharray="20 100" stroke-linecap="round"/>
           </svg>
-          <span>Hoitopolku</span>
+          Hoitopolku
         </a>
-        <p style="max-width:30em;margin:0">Hoitopolku on Suomen Omalääkäritin palvelu. Osa Herva Group Oy:tä.</p>
+        <p class="footer-fine">Hoitopolku on Suomen Omalääkärit Oy:n palvelu. Osa Herva Group Oy:tä, Oulu.<br>Valviran rekisteröimä yksityisen terveydenhuollon palveluntuottaja.</p>
       </div>
       <div>
         <h4>Palvelu</h4>
-        <a href="#nain">Näin se toimii</a>
+        <a href="#tyokalut">Työkalut</a>
+      <a href="#miten">Näin se toimii</a>
         <a href="#hinnasto">Hinnasto</a>
-        <a href="#kenelle">Kenelle sopii</a>
-        <a href="#ukk">Usein kysyttyä</a>
+          <a href="#organisaatioille">Organisaatioille</a>
       </div>
       <div>
         <h4>Yhteystiedot</h4>
-        <a href="mailto:asiakaspalvelu@suomenomalaakarit.fi">asiakaspalvelu@suomenomalaakarit.fi</a>
-        <a href="mailto:tilaajat@suomenomalaakarit.fi">Organisaatioille</a>
-        <a href="#top">Lääkärille: liity verkostoon</a>
-        <a href="#top">Tietosuojaseloste</a>
+        <a href="mailto:asiakaspalvelu@suomenomalaakarit.fi">asiakaspalvelu@<br>suomenomalaakarit.fi</a>
+        <a href="mailto:laakarit@suomenomalaakarit.fi" style="margin-top:8px">Lääkärille</a>
+        <a href="#" style="margin-top:8px">Tietosuojaseloste</a>
       </div>
     </div>
-    <div class="fine">
-      Suomen Omalääkärit · Oulu · Valviran rekisteröimä yksityisen terveydenhuollon palveluntuottaja. Sivuston sisältö on yleistä terveystietoa eikä korvaa henkilökohtaista lääkärin arviota. Kaaviot ovat esimerkkejä, eivät todellisia potilastuloksia.
-    </div>
+    <p class="footer-fine">Sivuston luvut ovat laskentaesimerkkejä, ellei toisin mainita. Sisältö ei korvaa henkilökohtaista lääkärin arviota.</p>
   </div>
 </footer>
-<script>
-/* Landingin SmartGraph on sama käyrä kuin sovelluksessa, mutta demodatalla.
-   Tarkoituksena on näyttää heti, miltä seuranta tuntuu — ilman kirjautumista. */
-const TARGET=135, DAYS=84, TODAY=DAYS-1;
-const NS="http://www.w3.org/2000/svg";
-const W=560,H=250,PL=40,PR=16,PT=36,PB=40;
-const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
-const fmtv=v=>String(Math.round(v));
-const svg=document.getElementById('chart');
-const tip=document.getElementById('tip');
-let range=999, hit=[], drawn=false;
 
-function midnight(d){const x=new Date(d);x.setHours(0,0,0,0);return x;}
-function dayToDate(day){
-  const d=midnight(new Date());
-  d.setDate(d.getDate()-(TODAY-day));
+<script>
+/* header elevation on scroll */
+(function(){
+  const h=document.querySelector('header');
+  if(!h)return;
+  const upd=()=>h.classList.toggle('scrolled',window.scrollY>8);
+  upd();window.addEventListener('scroll',upd,{passive:true});
+})();
+
+const reduce=matchMedia('(prefers-reduced-motion:reduce)').matches;
+
+/* ── sparklines ── */
+const NS='http://www.w3.org/2000/svg';
+function svgEl(n,a){const e=document.createElementNS(NS,n);for(const k in a)e.setAttribute(k,a[k]);return e;}
+
+function smoothPath(P){
+  if(P.length<2)return '';
+  if(P.length===2)return 'M'+P[0].x.toFixed(1)+' '+P[0].y.toFixed(1)+' L'+P[1].x.toFixed(1)+' '+P[1].y.toFixed(1);
+  let d='M'+P[0].x.toFixed(1)+' '+P[0].y.toFixed(1);
+  for(let i=0;i<P.length-1;i++){
+    const p0=P[i-1]||P[i],p1=P[i],p2=P[i+1],p3=P[i+2]||P[i+1];
+    const c1x=p1.x+(p2.x-p0.x)/6,c1y=p1.y+(p2.y-p0.y)/6;
+    const c2x=p2.x-(p3.x-p1.x)/6,c2y=p2.y-(p3.y-p1.y)/6;
+    d+=' C'+c1x.toFixed(1)+' '+c1y.toFixed(1)+','+c2x.toFixed(1)+' '+c2y.toFixed(1)+','+p2.x.toFixed(1)+' '+p2.y.toFixed(1);
+  }
   return d;
 }
-function calLabel(day){
-  const d=dayToDate(day);
-  return d.getDate()+'.'+(d.getMonth()+1)+'.';
-}
-function axisTickDays(dMin,dMax){
-  const span=Math.max(1,dMax-dMin);
-  const ticks=new Set([dMin,dMax]);
-  if(span<=16){
-    const step=span<=8?2:3;
-    for(let d=dMin;d<=dMax;d+=step)ticks.add(d);
-  }else if(span<=55){
-    for(let d=dMin;d<=dMax;d++){
-      const dom=dayToDate(d).getDate();
-      if(dom===1||dom===15)ticks.add(d);
-    }
-  }else{
-    for(let d=dMin;d<=dMax;d++){
-      if(dayToDate(d).getDate()===1)ticks.add(d);
-    }
-  }
-  return [...ticks].sort((a,b)=>a-b);
-}
 
-function el(n,a,t){
-  const e=document.createElementNS(NS,n);
-  for(const k in a)e.setAttribute(k,a[k]);
-  if(t!==undefined)e.textContent=t;
-  return e;
-}
+const DUR=1900;              // koko animaation kesto
+// tasainen eteneminen, pehmeä alku ja loppu — tuntuu ajan kulumiselta
+const easeTime=p=>-(Math.cos(Math.PI*p)-1)/2;
+const spAnim={};             // käynnissä olevat animaatiot per kaavio
 
-/* Deterministinen "satunnaisuus" — sama käyrä joka latauksella. */
-function rnd(seed){
-  let s=seed%2147483647; if(s<=0)s+=2147483646;
-  return ()=>{s=s*16807%2147483647;return (s-1)/2147483646;};
-}
+function drawSparkline(id,vals,color,target){
+  const svg=document.getElementById(id);
+  if(!svg)return;
+  if(spAnim[id])cancelAnimationFrame(spAnim[id]);
+  svg.innerHTML='';
+  const W=300,H=74,pad=8;
+  const all=target!==undefined?[...vals,target]:vals;
+  const mn=Math.min(...all),mx=Math.max(...all),rg=(mx-mn)||1;
+  const X=i=>pad+i*(W-pad*2)/(vals.length-1||1);
+  const Y=v=>pad+(1-(v-mn)/rg)*(H-pad*2);
+  const P=vals.map((v,i)=>({x:X(i),y:Y(v)}));
 
-function buildDemo(){
-  const r=rnd(20260825);
-  const pts=[], events=[{day:48,label:'Annoksen nosto',sub:calLabel(48)}];
-  for(let d=0;d<=TODAY;d++){
-    /* Katko viikoilla 5–6: mittaukset puuttuvat ~10 päivää. */
-    if(d>=32&&d<=41)continue;
-    /* Lasku alkaa ~156:sta ja jää vielä tavoitteen yläpuolelle (~139),
-       jotta ennuste ja "laskusuunnassa" näkyvät wau-efektinä. */
-    const trend=156-d*0.12-(d>48?(d-48)*0.22:0);
-    const noise=(r()-0.5)*8;
-    const am=Math.round(trend+noise);
-    const pm=Math.round(trend+noise+(r()-0.4)*5);
-    if(r()>0.12)pts.push({d:d,v:Math.max(128,Math.min(172,am)),t:'am'});
-    if(r()>0.18)pts.push({d:d,v:Math.max(128,Math.min(172,pm)),t:'pm'});
-  }
-  return {pts,events};
-}
+  const gid='gr'+id, cid='cl'+id;
+  const defs=svgEl('defs');
+  const lg=svgEl('linearGradient',{id:gid,x1:'0',y1:'0',x2:'0',y2:'1'});
+  lg.appendChild(svgEl('stop',{offset:'0%','stop-color':color,'stop-opacity':'.18'}));
+  lg.appendChild(svgEl('stop',{offset:'100%','stop-color':color,'stop-opacity':'0'}));
+  defs.appendChild(lg);
+  // pyyhkäisevä leikkaus: täyttö paljastuu käyrän edetessä
+  const clip=svgEl('clipPath',{id:cid});
+  const clipRect=svgEl('rect',{x:'0',y:'0',width:reduce?W:0,height:H});
+  clip.appendChild(clipRect);defs.appendChild(clip);
+  svg.appendChild(defs);
 
-const DEMO=buildDemo();
-
-function rolling(points){
-  const out=[];
-  for(let d=6;d<=TODAY;d++){
-    const w=points.filter(p=>p.d>d-7&&p.d<=d);
-    if(w.length>=5)out.push({d:d,v:w.reduce((s,p)=>s+p.v,0)/w.length});
-  }
-  return out;
-}
-function project(r,days){
-  const last=r.slice(-days);
-  if(last.length<5)return null;
-  const n=last.length,mx=last.reduce((s,p)=>s+p.d,0)/n,my=last.reduce((s,p)=>s+p.v,0)/n;
-  let num=0,den=0;
-  last.forEach(p=>{num+=(p.d-mx)*(p.v-my);den+=(p.d-mx)**2;});
-  if(!den)return null;
-  return {slope:num/den,at:d=>num/den*d+(my-num/den*mx)};
-}
-function pisinKatko(pts){
-  const paivat=[...new Set(pts.map(p=>p.d))].sort((a,b)=>a-b);
-  if(paivat.length<2)return null;
-  let paras=null;
-  for(let i=1;i<paivat.length;i++){
-    const pituus=paivat[i]-paivat[i-1]-1;
-    if(pituus>0&&(!paras||pituus>paras.pituus))
-      paras={pituus,alku:paivat[i-1]+1,loppu:paivat[i]-1};
-  }
-  return paras;
-}
-
-function drawChart(animate){
-  svg.textContent='';hit=[];
-  const dMin=Math.max(0,TODAY-range+1);
-  const pts=DEMO.pts.filter(p=>p.d>=dMin);
-  const line=rolling(DEMO.pts).filter(p=>p.d>=dMin);
-  const proj=project(rolling(DEMO.pts),28);
-
-  let projEnd=null;
-  const lastAvg=line.length?line[line.length-1].v:null;
-  if(proj&&proj.slope<-0.02&&lastAvg!==null&&lastAvg>TARGET)
-    for(let d=TODAY+1;d<=TODAY+56;d++){if(proj.at(d)<=TARGET){projEnd=d;break;}}
-  const xEnd=projEnd?Math.min(projEnd,TODAY+56):TODAY;
-
-  const vals=pts.map(p=>p.v);
-  const lo=Math.min(TARGET-5,...vals),hi=Math.max(TARGET,...vals);
-  const pad=(hi-lo)*0.14||1;
-  const vMin=lo-pad,vMax=hi+pad;
-  const x=d=>PL+(d-dMin)/((xEnd-dMin)||1)*(W-PL-PR);
-  const y=v=>PT+(vMax-v)/((vMax-vMin)||1)*(H-PT-PB);
-
-  svg.appendChild(el('rect',{x:PL,y:y(TARGET),width:W-PL-PR,height:(H-PB)-y(TARGET),fill:'#4E7D3C','fill-opacity':'.07'}));
-  svg.appendChild(el('line',{x1:PL,y1:y(TARGET),x2:W-PR,y2:y(TARGET),stroke:'#4E7D3C','stroke-width':1.2,'stroke-dasharray':'5 4','stroke-opacity':'.85'}));
-  svg.appendChild(el('text',{x:PL+4,y:y(TARGET)-6,'font-family':'Inter, sans-serif','font-size':10.5,'font-weight':600,fill:'#4E7D3C'},'tavoite alle '+TARGET));
-
-  [vMax,vMin].forEach(v=>svg.appendChild(el('text',{x:PL-8,y:y(v)+4,'text-anchor':'end','font-family':'Inter, sans-serif','font-size':10.5,fill:'#86868B'},fmtv(v))));
-  svg.appendChild(el('line',{x1:PL,y1:H-PB,x2:W-PR,y2:H-PB,stroke:'#D2D2D7','stroke-width':1}));
-  axisTickDays(dMin,TODAY).forEach(d=>{
-    svg.appendChild(el('text',{x:x(d),y:H-PB+17,'text-anchor':d===TODAY?'end':'middle','font-family':'Inter, sans-serif','font-size':10.5,fill:'#86868B'},calLabel(d)));
-  });
-
-  DEMO.events.filter(e=>e.day>=dMin&&e.day<=TODAY).forEach(e=>{
-    svg.appendChild(el('line',{x1:x(e.day),y1:PT-10,x2:x(e.day),y2:H-PB,stroke:'#A67C2E','stroke-width':1.1,'stroke-dasharray':'3 3','stroke-opacity':'.7'}));
-    svg.appendChild(el('circle',{cx:x(e.day),cy:PT-10,r:4,fill:'#A67C2E'}));
-    const an=x(e.day)>W-150?'end':'start',dx=an==='end'?-7:7;
-    svg.appendChild(el('text',{x:x(e.day)+dx,y:PT-15,'text-anchor':an,'font-family':'Inter, sans-serif','font-size':10.5,'font-weight':600,fill:'#A67C2E'},e.label));
-    svg.appendChild(el('text',{x:x(e.day)+dx,y:PT-4,'text-anchor':an,'font-family':'Inter, sans-serif','font-size':10,fill:'#86868B'},e.sub));
-  });
-
-  const dots=[];
-  pts.forEach(p=>{
-    const c=el('circle',{cx:x(p.d),cy:y(p.v),r:2.4,fill:p.t==='am'?'#C2C7CD':'#D5DAE0'});
-    if(animate&&!reduce){c.style.opacity='0';dots.push(c);}
-    svg.appendChild(c);
-    hit.push({px:x(p.d),py:y(p.v),p:p});
-  });
-
-  let seg=[],segs=[];
-  line.forEach((p,k)=>{
-    const prev=line[k-1];
-    if(prev&&p.d-prev.d>2){segs.push(seg);seg=[];}
-    seg.push(p);
-  });
-  if(seg.length)segs.push(seg);
-
-  const paths=[];
-  segs.forEach(sg=>{
-    if(sg.length<2)return;
-    const d=sg.map((p,k)=>(k?'L':'M')+x(p.d).toFixed(1)+' '+y(p.v).toFixed(1)).join(' ');
-    const path=el('path',{d:d,fill:'none',stroke:'#1D1D1F','stroke-width':2.4,'stroke-linecap':'round','stroke-linejoin':'round'});
-    svg.appendChild(path);
-    paths.push(path);
-  });
-
-  for(let k=1;k<line.length;k++){
-    if(line[k].d-line[k-1].d>2){
-      const xa=x(line[k-1].d),xb=x(line[k].d);
-      svg.appendChild(el('rect',{x:xa,y:PT,width:xb-xa,height:H-PB-PT,fill:'#86868B','fill-opacity':'.07'}));
-      svg.appendChild(el('text',{x:(xa+xb)/2,y:PT+13,'text-anchor':'middle','font-family':'Inter, sans-serif','font-size':10,fill:'#86868B'},'katko'));
-    }
+  if(target!==undefined){
+    const ty=Y(target);
+    svg.appendChild(svgEl('rect',{x:0,y:ty,width:W,height:Math.max(0,H-ty),fill:'#4E7D3C','fill-opacity':'.07'}));
+    svg.appendChild(svgEl('line',{x1:0,y1:ty,x2:W,y2:ty,stroke:'#4E7D3C','stroke-width':'1.5','stroke-dasharray':'5 4','stroke-opacity':'.6'}));
   }
 
-  let forecast=null;
-  if(proj&&proj.slope<-0.02&&line.length){
-    const lp=line[line.length-1],endD=projEnd||TODAY+21;
-    forecast=el('path',{d:'M'+x(lp.d)+' '+y(lp.v)+' L'+x(endD)+' '+y(Math.max(proj.at(endD),vMin)),
-      fill:'none',stroke:'#A67C2E','stroke-width':2,'stroke-dasharray':'6 5','stroke-linecap':'round'});
-    if(animate&&!reduce)forecast.style.opacity='0';
-    svg.appendChild(forecast);
-    if(projEnd){
-      const mark=el('circle',{cx:x(projEnd),cy:y(TARGET),r:4.5,fill:'#fff',stroke:'#A67C2E','stroke-width':2.2});
-      const lab=el('text',{x:x(projEnd),y:y(TARGET)+20,'text-anchor':'end','font-family':'Inter, sans-serif','font-size':10.5,'font-weight':600,fill:'#A67C2E'},'~'+calLabel(projEnd));
-      if(animate&&!reduce){mark.style.opacity='0';lab.style.opacity='0';}
-      svg.appendChild(mark);svg.appendChild(lab);
-      if(forecast){forecast._marks=[mark,lab];}
-    }
-  }
+  const d=smoothPath(P);
+  const area=svgEl('path',{d:d+' L'+P[P.length-1].x+' '+H+' L'+P[0].x+' '+H+' Z',fill:'url(#'+gid+')','clip-path':'url(#'+cid+')'});
+  svg.appendChild(area);
+  const line=svgEl('path',{d:d,fill:'none',stroke:color,'stroke-width':'2.5','stroke-linecap':'round','stroke-linejoin':'round'});
+  svg.appendChild(line);
+  const dot=svgEl('circle',{cx:P[0].x,cy:P[0].y,r:'4.5',fill:'#fff',stroke:color,'stroke-width':'2.5'});
+  svg.appendChild(dot);
 
-  if(line.length){
-    const l=line[line.length-1];
-    svg.appendChild(el('circle',{cx:x(l.d),cy:y(l.v),r:5,fill:'#1D1D1F',stroke:'#fff','stroke-width':2.2}));
+  const len=line.getTotalLength();
+  if(reduce){
+    dot.setAttribute('cx',P[P.length-1].x);dot.setAttribute('cy',P[P.length-1].y);
+    return;
   }
-
-  if(animate&&!reduce){
-    /* Pisteet → käyrä → ennuste. Kolme liikettä, ei melua. */
-    dots.forEach((c,i)=>{
-      setTimeout(()=>{c.style.transition='opacity .35s ease';c.style.opacity='1';},40+i*4);
-    });
-    paths.forEach((path,i)=>{
-      const len=path.getTotalLength();
-      path.style.strokeDasharray=len;path.style.strokeDashoffset=len;
-      path.style.transition='stroke-dashoffset .95s cubic-bezier(.16,1,.3,1)';
-      setTimeout(()=>path.style.strokeDashoffset=0,220+i*120);
-    });
-    if(forecast){
-      setTimeout(()=>{
-        forecast.style.transition='opacity .5s ease';forecast.style.opacity='1';
-        (forecast._marks||[]).forEach(m=>{m.style.transition='opacity .5s ease';m.style.opacity='1';});
-      },1100);
-    }
+  // käyrä etenee päivä päivältä, piste kulkee kärjessä
+  line.style.strokeDasharray=len;
+  line.style.strokeDashoffset=len;
+  const t0=performance.now();
+  function step(now){
+    const p=Math.min(1,(now-t0)/DUR);
+    const e=easeTime(p);
+    line.style.strokeDashoffset=len*(1-e);
+    const pt=line.getPointAtLength(len*e);
+    dot.setAttribute('cx',pt.x);dot.setAttribute('cy',pt.y);
+    clipRect.setAttribute('width',pt.x+1);
+    if(p<1)spAnim[id]=requestAnimationFrame(step);else spAnim[id]=null;
   }
-
-  updateSummary(line,pts,proj,projEnd,animate);
+  spAnim[id]=requestAnimationFrame(step);
 }
 
-function updateSummary(line,pts,proj,projEnd,animate){
-  if(!line.length)return;
-  const last=line[line.length-1].v,first=line[0].v,change=first-last;
-  const ok=last<=TARGET;
-  document.getElementById('rVal').textContent=fmtv(last);
-  document.getElementById('rUnit').textContent='mmHg · 7 vrk keskiarvo';
-  const pill=document.getElementById('rPill');
-  pill.textContent=ok?'Tavoitteessa':(change>3?'Laskusuunnassa':'Ei laskusuuntaa');
-  pill.className='pill '+(ok?'ok':(change>3?'mid':'off'));
+// data series — vain tiheästi mitattavat arvot
+const SERIES=[
+  {id:'g0',vals:[152,150,148,146,144,142,141,139,138,139,137,138],color:'#B3452C',target:135},
+  {id:'g1',vals:[8.1,7.9,7.8,7.6,7.4,7.3,7.1,7.0,6.9,7.0,6.8,6.8],color:'#2F6690',target:6.0},
+  {id:'g2',vals:[94.2,93.6,93.0,92.3,91.6,91.0,90.3,89.7,89.2,88.7,88.3,88.0],color:'#6B5B95',target:89.5}
+];
+SERIES.forEach(s=>drawSparkline(s.id,s.vals,s.color,s.target));
 
-  const wk=projEnd?calLabel(projEnd):null;
-  document.getElementById('rSub').textContent=ok
-    ?'Tavoite saavutettu. Seuraavaksi ylläpitoseuranta.'
-    :(wk?'Tällä vauhdilla tavoitteessa noin '+wk:'Nykyinen suunta ei riitä tavoitteeseen.');
+/* ── demo switcher (manual only) ── */
+const heroPanels=document.querySelectorAll('.demo-panel');
+const heroTabs=document.querySelectorAll('.hero-tabs .hc');
+const dpIdx=document.getElementById('dpIdx');
+let curDemo=0;
 
-  document.getElementById('legend').innerHTML=
-    '<span><i class="lg-dot"></i>Yksittäinen mittaus</span>'+
-    '<span><i class="lg-line"></i>7 vrk keskiarvo</span>'+
-    '<span><i class="lg-dash"></i>Ennuste</span>'+
-    '<span><i class="lg-band"></i>Tavoitealue</span>';
-
-  const st=document.getElementById('stats');
-  st.innerHTML='';
-  const add=(b,t)=>{const d=document.createElement('div');d.innerHTML='<b>'+b+'</b>'+t;st.appendChild(d);};
-  add((change>0?'−':'+')+fmtv(Math.abs(change))+' mmHg','muutos alusta');
-  if(proj){
-    const vk=proj.slope*7;
-    add((vk<0?'−':'+')+Math.abs(vk).toFixed(1)+' / vk','viikkovauhti');
-  }
-  const recent=pts.filter(p=>p.d>=TODAY-14).map(p=>p.v);
-  const mean=recent.reduce((s,v)=>s+v,0)/(recent.length||1);
-  const sd=Math.sqrt(recent.reduce((s,v)=>s+(v-mean)**2,0)/(recent.length||1));
-  add('±'+Math.round(sd)+' mmHg','vaihtelu');
-  add(pts.length,'mittausta');
-
-  const box=document.getElementById('insights');
-  box.innerHTML='';
-  const items=[];
-  if(change>3)items.push({k:'good',t:'Suunta on oikea',
-    d:'Keskiarvo on laskenut '+fmtv(change)+' mmHg seurannan alusta.'});
-  if(!ok&&projEnd)items.push({k:'info',t:'Arvio tavoitteesta',
-    d:'Tällä vauhdilla olet tavoitteessa noin '+calLabel(projEnd)+'. Arvio perustuu viimeisen neljän viikon kehitykseen.'});
-  const katko=pisinKatko(pts);
-  if(katko&&katko.pituus>=4){
-    items.push({k:'warn',t:'Mittauskatko '+calLabel(katko.alku)+(katko.alku!==katko.loppu?'–'+calLabel(katko.loppu):''),
-      d:'Mittaukset puuttuvat '+katko.pituus+' päivältä. Katkoksen ajalta ei lasketa keskiarvoa.'});
-  }
-  DEMO.events.filter(e=>e.day<=TODAY).slice(-1).forEach(e=>{
-    items.push({k:'info',t:e.label+' '+calLabel(e.day),
-      d:'Tapahtuma on merkitty käyrälle. Annoksen nosto taittoi käyrää alaspäin noin kahden viikon viiveellä.'});
-  });
-
-  items.forEach((i,idx)=>{
-    const d=document.createElement('div');
-    d.className='alert '+i.k;
-    const icon=i.k==='good'
-      ?'<path d="M5 13l4 4L19 7"/>'
-      :(i.k==='warn'
-        ?'<path d="M12 7v6M12 16.5v.5"/><circle cx="12" cy="12" r="9"/>'
-        :'<path d="M12 8h.01M11 12h1v4h1"/><circle cx="12" cy="12" r="9"/>');
-    d.innerHTML='<span class="ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">'+icon+'</svg></span>'+
-      '<span><span class="t">'+i.t+'</span><span class="d">'+i.d+'</span></span>';
-    box.appendChild(d);
-    if(animate&&!reduce)setTimeout(()=>d.classList.add('in'),900+idx*160);
-    else d.classList.add('in');
-  });
+function switchDemo(idx){
+  const n=heroPanels.length;
+  idx=(idx+n)%n;
+  heroTabs.forEach((b,j)=>b.classList.toggle('active',j===idx));
+  heroPanels.forEach((p,j)=>p.classList.toggle('active',j===idx));
+  curDemo=idx;
+  if(dpIdx)dpIdx.textContent=idx+1;
+  const s=SERIES[idx];
+  drawSparkline(s.id,s.vals,s.color,s.target);
 }
 
-function nearest(cx,cy){
-  let best=null,bd=1e9;
-  hit.forEach(h=>{const dx=h.px-cx,dy=h.py-cy,d=dx*dx+dy*dy;if(d<bd){bd=d;best=h;}});
-  return bd<700?best:null;
-}
-function showTip(e){
-  const r=svg.getBoundingClientRect();
-  const cx=(e.clientX-r.left)/r.width*W, cy=(e.clientY-r.top)/r.height*H;
-  const n=nearest(cx,cy);
-  if(!n){tip.classList.remove('on');return;}
-  tip.innerHTML='<b>'+fmtv(n.p.v)+' mmHg</b><span>'+calLabel(n.p.d)+' · '+(n.p.t==='am'?'aamu':'ilta')+'</span>';
-  tip.style.left=(n.px/W*100)+'%';
-  tip.style.top=(n.py/H*100)+'%';
-  tip.classList.add('on');
-}
-svg.addEventListener('pointermove',showTip);
-svg.addEventListener('pointerleave',()=>tip.classList.remove('on'));
+heroTabs.forEach((btn,i)=>btn.addEventListener('click',()=>switchDemo(i)));
+const dpPrev=document.getElementById('dpPrev'),dpNext=document.getElementById('dpNext');
+if(dpPrev)dpPrev.addEventListener('click',()=>switchDemo(curDemo-1));
+if(dpNext)dpNext.addEventListener('click',()=>switchDemo(curDemo+1));
 
-document.querySelectorAll('#segRange button').forEach(b=>{
-  b.addEventListener('click',()=>{
-    document.querySelectorAll('#segRange button').forEach(o=>o.setAttribute('aria-selected','false'));
-    b.setAttribute('aria-selected','true');
-    range=+b.dataset.r;
-    drawChart(false);
+/* ── problem tabs ── */
+document.querySelectorAll('.ptab').forEach((btn,i)=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.ptab').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.prob-panel').forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('pp'+i).classList.add('active');
   });
 });
 
-const mb=document.getElementById('menuBtn'),nl=document.getElementById('navlinks');
-mb.addEventListener('click',()=>{const o=nl.classList.toggle('open');mb.setAttribute('aria-expanded',String(o));});
-nl.addEventListener('click',e=>{if(e.target.tagName==='A'){nl.classList.remove('open');mb.setAttribute('aria-expanded','false');}});
-
+/* ── scroll reveals ── */
 if(!reduce&&'IntersectionObserver' in window){
-  const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}}),{threshold:.12});
-  document.querySelectorAll('.rev').forEach(n=>io.observe(n));
+  const io=new IntersectionObserver(es=>es.forEach(e=>{
+    if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}
+  }),{threshold:.1});
+  document.querySelectorAll('.reveal').forEach(n=>io.observe(n));
+}else{document.querySelectorAll('.reveal').forEach(n=>n.classList.add('in'));}
 
-  const graph=document.getElementById('smartGraph');
-  const gio=new IntersectionObserver(es=>{
-    es.forEach(e=>{
-      if(e.isIntersecting&&!drawn){drawn=true;drawChart(true);gio.disconnect();}
-    });
-  },{threshold:.25});
-  gio.observe(graph);
-}else{
-  document.querySelectorAll('.rev').forEach(n=>n.classList.add('in'));
-  drawChart(false);
+/* ── mobile nav ── */
+const mb=document.getElementById('mobMenu'),nl=document.getElementById('navLinks');
+mb.addEventListener('click',()=>{const o=nl.classList.toggle('open');mb.textContent=o?'Sulje':'Valikko';});
+nl.addEventListener('click',e=>{if(e.target.tagName==='A'){nl.classList.remove('open');mb.textContent='Valikko';}});
+
+
+/* ── big smart graph ── */
+let bgHits=[],bgGeom=null;
+function drawBigGraph(){
+  const svg=document.getElementById('bigGraph');
+  if(!svg)return;
+  svg.innerHTML='';bgHits=[];
+  const W=520,H=200,PL=8,PR=8,PT=16,PB=24;
+  const TARGET=135, DAYS=84;
+
+  // deterministic demo data
+  let sd=7;
+  const rnd=()=>{sd=(sd*1103515245+12345)&0x7fffffff;return sd/0x7fffffff;};
+  const base=d=>{let b=152;if(d>=14)b-=Math.min(8,(d-14)*0.5);if(d>=42)b-=Math.min(5,(d-42)*0.35);return b;};
+  const raw=[];
+  for(let d=0;d<DAYS;d++){
+    const gap=(d>=28&&d<=37);
+    if(!(gap?rnd()<0.95:rnd()<0.12))raw.push({d:d,v:Math.round(base(d)+3+(rnd()-0.5)*22)});
+    if(!(gap?rnd()<0.95:rnd()<0.16))raw.push({d:d,v:Math.round(base(d)-2+(rnd()-0.5)*22)});
+  }
+  const roll=[];
+  for(let d=6;d<DAYS;d++){
+    const w=raw.filter(p=>p.d>d-7&&p.d<=d);
+    if(w.length>=5)roll.push({d:d,v:w.reduce((a,p)=>a+p.v,0)/w.length});
+  }
+  const all=[...raw.map(p=>p.v),TARGET];
+  const mn=Math.min(...all)-4,mx=Math.max(...all)+4;
+  const X=d=>PL+(d/(DAYS-1))*(W-PL-PR);
+  const Y=v=>PT+(1-(v-mn)/(mx-mn))*(H-PT-PB);
+
+  // target band
+  const ty=Y(TARGET);
+  svg.appendChild(svgEl('rect',{x:0,y:ty,width:W,height:Math.max(0,H-PB-ty),fill:'#4E7D3C','fill-opacity':'.07'}));
+  svg.appendChild(svgEl('line',{x1:0,y1:ty,x2:W,y2:ty,stroke:'#4E7D3C','stroke-width':'1.5','stroke-dasharray':'6 5','stroke-opacity':'.7'}));
+
+  // events — ilmestyvät kun käyrä saavuttaa ne
+  const EV=[{d:14,l:'Lääkitys aloitettu'},{d:42,l:'Annos nostettu'}];
+  EV.forEach(e=>{
+    const g=svgEl('g',{opacity:reduce?'1':'0'});
+    g.style.transition='opacity .45s ease';
+    g.appendChild(svgEl('line',{x1:X(e.d),y1:PT-8,x2:X(e.d),y2:H-PB,stroke:'#A67C2E','stroke-width':'1','stroke-dasharray':'3 3','stroke-opacity':'.6'}));
+    g.appendChild(svgEl('circle',{cx:X(e.d),cy:PT-8,r:'3.5',fill:'#A67C2E'}));
+    const tx=svgEl('text',{x:X(e.d)+6,y:PT-13,'font-family':'Inter, sans-serif','font-size':'10.5','font-weight':'700',fill:'#A67C2E'});
+    tx.textContent=e.l;
+    g.appendChild(tx);
+    svg.appendChild(g);
+    if(!reduce)setTimeout(()=>g.setAttribute('opacity','1'),1900*(e.d/(DAYS-1))+120);
+  });
+
+  // raw dots
+  raw.forEach(p=>{
+    svg.appendChild(svgEl('circle',{cx:X(p.d),cy:Y(p.v),r:'1.8',fill:'#C9CDD2'}));
+    bgHits.push({x:X(p.d),y:Y(p.v),d:p.d,v:p.v,kind:'raw'});
+  });
+
+  // rolling line with gap
+  let segs=[],seg=[];
+  roll.forEach((p,i)=>{
+    if(i&&p.d-roll[i-1].d>2){segs.push(seg);seg=[];}
+    seg.push(p);
+  });
+  if(seg.length)segs.push(seg);
+  const lines=[];
+  segs.forEach(sg=>{
+    if(sg.length<2)return;
+    const P=sg.map(p=>({x:X(p.d),y:Y(p.v)}));
+    const line=svgEl('path',{d:smoothPath(P),fill:'none',stroke:'#B3452C','stroke-width':'2.6','stroke-linecap':'round','stroke-linejoin':'round'});
+    svg.appendChild(line);
+    lines.push(line);
+  });
+  if(!reduce&&lines.length){
+    const lens=lines.map(l=>l.getTotalLength());
+    const total=lens.reduce((a,b)=>a+b,0);
+    lines.forEach((l,i)=>{l.style.strokeDasharray=lens[i];l.style.strokeDashoffset=lens[i];});
+    const led=svgEl('circle',{r:'4.5',fill:'#fff',stroke:'#B3452C','stroke-width':'2.6',opacity:'0'});
+    svg.appendChild(led);
+    const T0=performance.now(),D=1900;
+    (function run(now){
+      const p=Math.min(1,(now-T0)/D), e=easeTime(p);
+      let drawn=e*total, tip=null;
+      lines.forEach((l,i)=>{
+        const take=Math.max(0,Math.min(lens[i],drawn));
+        l.style.strokeDashoffset=lens[i]-take;
+        drawn-=lens[i];
+        if(take>0&&take<=lens[i])tip=l.getPointAtLength(take);
+      });
+      if(tip){led.setAttribute('opacity','1');led.setAttribute('cx',tip.x);led.setAttribute('cy',tip.y);}
+      if(p<1)requestAnimationFrame(run);else led.setAttribute('opacity','0');
+    })(performance.now());
+  }
+
+  roll.forEach(p=>bgHits.push({x:X(p.d),y:Y(p.v),d:p.d,v:p.v,kind:'avg'}));
+  bgGeom={W:W,H:H,PT:PT,PB:PB};
+
+  // last dot
+  if(roll.length){
+    const l=roll[roll.length-1];
+    svg.appendChild(svgEl('circle',{cx:X(l.d),cy:Y(l.v),r:'5',fill:'#fff',stroke:'#B3452C','stroke-width':'2.6'}));
+  }
 }
+if('IntersectionObserver' in window){
+  const sgo=new IntersectionObserver(es=>es.forEach(e=>{
+    if(e.isIntersecting){drawBigGraph();sgo.unobserve(e.target);}
+  }),{threshold:.2});
+  const t=document.getElementById('bigGraph');
+  if(t)sgo.observe(t);
+}else{drawBigGraph();}
+
+
+/* ── oirejana: pylväät + päivät ── */
+// −1 = ei kirjausta, 0 = ei oiretta, 1–5 = voimakkuus
+const SYMDATA=[
+  {n:'Huimaus',   c:'#B3452C', v:[0,0,1,2,3,3,2,1,-1,0,0,0,0,0]},
+  {n:'Päänsärky', c:'#946A16', v:[1,0,0,1,2,2,1,0,0,1,-1,0,0,0]},
+  {n:'Väsymys',   c:'#6B5B95', v:[2,2,1,2,3,2,2,1,1,1,1,0,1,0]},
+  {n:'Yskä',      c:'#2F6690', v:[0,0,0,0,0,1,2,3,3,4,3,2,2,1]}
+];
+const SYMDAYS=['1.10','2.','3.','4.','5.','6.','7.','8.','9.','10.','11.','12.','13.','14.'];
+const DOSE_DAY=6; // annosmuutos 14.10. = indeksi 6
+
+function buildSymptoms(){
+  const grid=document.getElementById('symGrid');
+  const axis=document.getElementById('symAxis');
+  if(!grid)return;
+  grid.innerHTML='';
+  SYMDATA.forEach(sy=>{
+    const row=document.createElement('div');
+    row.className='sym-row';
+    const bars=sy.v.map((v,i)=>{
+      const day=SYMDAYS[i].replace(/\.$/,'')+'.10.';
+      if(v<0)return '<span class="sym-cell" data-tip="'+day+' ei kirjausta"><span class="sym-miss"></span></span>';
+      if(v===0)return '<span class="sym-cell" data-tip="'+day+' ei oiretta"><span class="sym-zero"></span></span>';
+      return '<span class="sym-cell" data-tip="'+day+' '+sy.n.toLowerCase()+' '+v+'/5">'+
+             '<span class="sym-bar" style="--sc:'+sy.c+';height:'+(v/5*100)+'%;opacity:'+(0.45+v*0.11)+'"></span></span>';
+    }).join('');
+    row.innerHTML='<span class="sym-name">'+sy.n+'</span><span class="sym-bars">'+bars+'</span>';
+    grid.appendChild(row);
+  });
+  if(axis)axis.innerHTML='<span class="sym-days">'+SYMDAYS.map((d,i)=>
+    '<span>'+(i===0||i===13||i===DOSE_DAY?d:'')+'</span>').join('')+'</span>';
+}
+buildSymptoms();
+
+function growSymptoms(){
+  const bars=document.querySelectorAll('.sym-bar');
+  bars.forEach((b,i)=>setTimeout(()=>b.classList.add('grown'),reduce?0:i*11));
+}
+
+/* ── lääkkeen annosmuutos ── */
+function animateMed(){
+  const item=document.getElementById('medChange');
+  const dose=document.getElementById('medDose');
+  const hist=document.getElementById('medHist');
+  if(!item||!dose||dose.dataset.done)return;
+  dose.dataset.done='1';
+  if(reduce){dose.textContent='10 mg';if(hist)hist.textContent='5 mg → 10 mg · muutettu 14.10.';return;}
+  setTimeout(()=>{
+    item.classList.add('pulse');
+    dose.textContent='10 mg';
+    dose.classList.add('up');
+    if(hist)hist.innerHTML='5 mg <span class="mh-arrow">→</span> 10 mg &nbsp;·&nbsp; muutettu 14.10.';
+    const badge=document.createElement('span');
+    badge.className='med-badge';
+    badge.innerHTML='<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M6 11l6-6 6 6"/></svg>Annos nostettu';
+    dose.after(badge);
+    setTimeout(()=>badge.classList.add('on'),120);
+    setTimeout(()=>dose.classList.remove('up'),900);
+  },520);
+}
+
+/* ══════════ EFEKTIT ══════════ *//* ══════════ EFEKTIT ══════════ */
+
+/* 1. numeroiden animointi */
+function easeOut(t){return 1-Math.pow(1-t,3);}
+function animNum(node,from,to,dec,dur,suffix){
+  if(reduce||from===to){node.textContent=fmtFi(to,dec)+(suffix||'');return;}
+  const t0=performance.now();
+  function step(now){
+    const p=Math.min(1,(now-t0)/dur);
+    node.textContent=fmtFi(from+(to-from)*easeOut(p),dec)+(suffix||'');
+    if(p<1)requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+function fmtFi(v,dec){
+  if(dec)return v.toFixed(dec).replace('.',',');
+  return Math.round(v).toLocaleString('fi-FI').replace(/[\u00A0\u202F]/g,' ');
+}
+
+/* 2. hero-kortin luku laskee käyrän mukana */
+const DPDEC=[0,1,1];
+function animateCard(idx){
+  const panel=document.getElementById('dp'+idx);
+  if(!panel)return;
+  const valEl=panel.querySelector('.dp-val');
+  if(!valEl)return;
+  let numEl=valEl.querySelector('.dp-num');
+  if(!numEl){
+    const unit=valEl.querySelector('.dp-unit');
+    valEl.innerHTML='<span class="dp-num"></span> ';
+    if(unit)valEl.appendChild(unit);
+    numEl=valEl.querySelector('.dp-num');
+    const tr=document.createElement('span');
+    tr.className='dp-trend';
+    valEl.appendChild(tr);
+  }
+  const s=SERIES[idx],first=s.vals[0],last=s.vals[s.vals.length-1];
+  animNumSeries(numEl,s.vals,DPDEC[idx],DUR);
+  const tr=valEl.querySelector('.dp-trend');
+  if(tr){
+    tr.classList.remove('on');
+    const d=first-last;
+    tr.innerHTML='<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M6 13l6 6 6-6"/></svg>'+fmtFi(d,DPDEC[idx]);
+    setTimeout(()=>tr.classList.add('on'),DUR-200);
+  }
+}
+
+/* 2b. luku seuraa käyrän kulkemaa päivää */
+function animNumSeries(node,vals,dec,dur){
+  if(reduce){node.textContent=fmtFi(vals[vals.length-1],dec);return;}
+  const t0=performance.now();
+  function step(now){
+    const p=Math.min(1,(now-t0)/dur);
+    const e=easeTime(p);
+    const pos=e*(vals.length-1);
+    const i=Math.floor(pos),f=pos-i;
+    const v=vals[i]+((vals[i+1]!==undefined?vals[i+1]:vals[i])-vals[i])*f;
+    node.textContent=fmtFi(v,dec);
+    if(p<1)requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
+/* 3. tilastoluvut laskevat ylös näkyviin tullessa */
+function countStat(node){
+  if(node.dataset.done)return;
+  const raw=node.textContent.replace(/\s/g,'');
+  const target=parseInt(raw,10);
+  if(isNaN(target))return;
+  node.dataset.done='1';
+  animNum(node,0,target,0,1300);
+}
+
+/* 4. laboratorioarvon matka tavoitteeseen */
+function animateLabs(root){
+  root.querySelectorAll('.lv-to').forEach(to=>{
+    if(to.dataset.done)return;
+    const track=to.closest('.lv-track');
+    const from=track?track.querySelector('.lv-from'):null;
+    const line=track?track.querySelector('.lv-line'):null;
+    const final=to.style.left;
+    if(from){
+      to.style.transition='none';
+      to.style.left=from.style.left;
+      if(line){const fl=line.style.left,fw=line.style.width;line.style.transition='none';line.style.left=from.style.left;line.style.width='0%';
+        requestAnimationFrame(()=>requestAnimationFrame(()=>{line.style.transition='';line.style.left=fl;line.style.width=fw;}));}
+      requestAnimationFrame(()=>requestAnimationFrame(()=>{to.style.transition='';to.style.left=final;}));
+    }
+    to.dataset.done='1';
+  });
+}
+
+
+/* 6. logon rengas seuraa vierityssyvyyttä */
+const ring=document.getElementById('logoRing');
+if(ring){
+  const C=2*Math.PI*14.5;
+  const upd=()=>{
+    const h=document.documentElement;
+    const max=h.scrollHeight-h.clientHeight;
+    const p=max>0?Math.min(1,h.scrollTop/max):0;
+    ring.setAttribute('stroke-dasharray',(Math.max(.09,p)*C).toFixed(1)+' '+C.toFixed(1));
+  };
+  upd();addEventListener('scroll',upd,{passive:true});
+}
+
+/* kytkennät */
+const _switchDemo=switchDemo;
+switchDemo=function(idx){_switchDemo(idx);animateCard(idx);};
+animateCard(0);
+
+document.querySelectorAll('.ptab').forEach((btn,i)=>{
+  btn.addEventListener('click',()=>{
+    const panel=document.getElementById('pp'+i);
+    if(panel){
+      const big=panel.querySelector('.sf-big');
+      if(big){delete big.dataset.done;countStat(big);}
+    }
+  });
+});
+
+if('IntersectionObserver' in window){
+  const io2=new IntersectionObserver(es=>es.forEach(e=>{
+    if(!e.isIntersecting)return;
+    const t=e.target;
+    if(t.classList.contains('sf-big'))countStat(t);
+    if(t.classList.contains('lab-viz'))animateLabs(t);
+    if(t.classList.contains('sym-viz'))growSymptoms();
+    if(t.classList.contains('med-viz'))animateMed();
+    io2.unobserve(t);
+  }),{threshold:.35});
+  const first=document.querySelector('.prob-panel.active .sf-big');
+  if(first)io2.observe(first);
+  document.querySelectorAll('.lab-viz,.sym-viz,.med-viz').forEach(n=>io2.observe(n));
+}else{
+  document.querySelectorAll('.sf-big').forEach(countStat);
+  growSymptoms();animateMed();
+}
+
+
+/* ── yläpalkki: piiloon alas, esiin ylös ── */
+(function(){
+  const h=document.querySelector('header');
+  if(!h||reduce)return;
+  let last=scrollY, ticking=false;
+  const TOP=90, DELTA=6;
+  function upd(){
+    const y=Math.max(0,scrollY);
+    const diff=y-last;
+    if(Math.abs(diff)>DELTA){
+      // ohita ylivieritys (iOS rubber band)
+      const max=document.documentElement.scrollHeight-innerHeight;
+      if(y<max-2){
+        if(diff>0&&y>TOP)h.classList.add('hidden');
+        else if(diff<0)h.classList.remove('hidden');
+      }
+      last=y;
+    }
+    if(y<=TOP)h.classList.remove('hidden');
+    ticking=false;
+  }
+  addEventListener('scroll',()=>{
+    if(!ticking){requestAnimationFrame(upd);ticking=true;}
+  },{passive:true});
+  // valikko auki → palkki pysyy näkyvissä
+  const nl=document.getElementById('navLinks');
+  if(nl)nl.addEventListener('click',()=>h.classList.remove('hidden'));
+})();
 </script>
 </body>
 </html>
