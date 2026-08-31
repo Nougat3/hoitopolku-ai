@@ -4,7 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Hoitopolku — seuranta</title>
+<meta name="description" content="Seuraa verenpainetta, verensokeria ja painoa. Jaa yhteenveto lääkärille koodilla. Seurantatyökalu — ei diagnoosia.">
 <meta name="theme-color" content="#FBFAF7">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Hoitopolku">
+<meta name="mobile-web-app-capable" content="yes">
 <link rel="icon" type="image/svg+xml" href="icon.svg">
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="manifest" href="manifest.json">
@@ -385,10 +390,33 @@ body.doctor-mode .doctor-bar{display:flex}
   text-align:center;padding:28px 16px;color:var(--mid);font-size:14px;line-height:1.5;
 }
 .empty h3{color:var(--k);font-size:17px;margin-bottom:6px}
+.offline-bar{
+  display:none;background:var(--amber-t);color:var(--amber);border-bottom:1px solid #EBD9A8;
+  padding:9px 18px;font-size:12.5px;font-weight:600;text-align:center;
+}
+body.is-offline .offline-bar{display:block}
+body.sheet-open{overflow:hidden}
+.file-btn{position:relative;overflow:hidden}
+.file-btn input[type=file]{
+  position:absolute;inset:0;opacity:0;cursor:pointer;font-size:0;
+}
+.med-del{
+  font-size:12px;font-weight:600;color:var(--mid2);padding:4px 8px;border-radius:8px;
+}
+.med-del:hover{color:var(--red);background:var(--red-t)}
+@media print{
+  .top,.tabbar,.fab,.banner,.toast,.sheet,.sheet-bg,.doctor-bar a,.code-btn,#acctBtn{display:none!important}
+  body{padding:0!important;background:#fff}
+  .app{max-width:none;padding:12px}
+  .card,.next,.code-hero{box-shadow:none;border:1px solid #ddd}
+  .view{display:block!important;page-break-inside:avoid}
+}
 
 </style>
 </head>
 <body>
+
+<div class="offline-bar" id="offlineBar" role="status">Olet offline — kirjaukset tallentuvat laitteelle, jakolinkki vaatii verkon.</div>
 
 <div class="top" id="topBar">
   <div class="top-in">
@@ -521,7 +549,7 @@ body.doctor-mode .doctor-bar{display:flex}
         </div>
         <div class="sym-grid" id="symGrid"></div>
         <div class="sym-axis" id="symAxis"></div>
-        <div class="sym-note"><span class="se-mark"></span>Annos nostettu 14.10. — yskä alkoi 3 vrk myöhemmin</div>
+        <div class="sym-note" id="symNote"><span class="se-mark"></span>Annos nostettu 14.10. — yskä alkoi 3 vrk myöhemmin</div>
       </div>
       <div class="sym-actions">
         <button class="btn sec sm" onclick="openSym()">Kirjaa tänään</button>
@@ -544,12 +572,12 @@ body.doctor-mode .doctor-bar{display:flex}
     </div>
 
     <div class="card">
-      <div class="row"><span class="k">Verenpaine</span><span class="v" id="cntBp">118 mittausta · 12 vk</span></div>
-      <div class="row"><span class="k">Verensokeri</span><span class="v" id="cntGlu">84 mittausta</span></div>
-      <div class="row"><span class="k">Paino</span><span class="v" id="cntWt">12 punnitusta</span></div>
-      <div class="row"><span class="k">Laboratorio</span><span class="v">LDL, HbA1c, K, krea</span></div>
-      <div class="row"><span class="k">Lääkkeet</span><span class="v">3 lääkettä + historia</span></div>
-      <div class="row"><span class="k">Oireet</span><span class="v">14 vrk kirjaukset</span></div>
+      <div class="row"><span class="k">Verenpaine</span><span class="v" id="cntBp">—</span></div>
+      <div class="row"><span class="k">Verensokeri</span><span class="v" id="cntGlu">—</span></div>
+      <div class="row"><span class="k">Paino</span><span class="v" id="cntWt">—</span></div>
+      <div class="row"><span class="k">Laboratorio</span><span class="v" id="cntLab">—</span></div>
+      <div class="row"><span class="k">Lääkkeet</span><span class="v" id="cntMed">—</span></div>
+      <div class="row"><span class="k">Oireet</span><span class="v" id="cntSym">—</span></div>
     </div>
 
     <button class="btn full" type="button" onclick="copyShareLink()" style="margin-top:4px">Kopioi jakolinkki</button>
@@ -588,7 +616,7 @@ body.doctor-mode .doctor-bar{display:flex}
 </div>
 
 <!-- SHEETS -->
-<div class="toast" id="toast"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <div class="sheet-bg" id="sheetBg"></div>
 <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-label="Kirjaa">
@@ -619,8 +647,11 @@ body.doctor-mode .doctor-bar{display:flex}
   <div class="field"><label for="profName">Näyttönimi</label><input id="profName" type="text" maxlength="24" placeholder="Esim. Matti" autocomplete="nickname"></div>
   <button class="btn full" type="button" onclick="saveProfile()">Tallenna nimi</button>
   <button class="btn sec full" type="button" style="margin-top:8px" onclick="exportData()">Lataa varmuuskopio (JSON)</button>
+  <label class="btn sec full file-btn" style="margin-top:8px">Palauta varmuuskopio
+    <input type="file" id="importFile" accept="application/json,.json" aria-label="Palauta varmuuskopio">
+  </label>
   <button class="btn sec full" type="button" style="margin-top:8px" onclick="clearToOwn()">Tyhjennä ja aloita alusta</button>
-  <p class="disc" style="margin:14px 2px 8px">Tiedot tallentuvat tämän selaimen localStorageen. Ei synkronointia pilveen tässä versiossa.</p>
+  <p class="disc" style="margin:14px 2px 8px">Tiedot tallentuvat tämän selaimen localStorageen. Ei synkronointia pilveen tässä versiossa. Varmuuskopioi JSON ennen selaimen tietojen tyhjennystä.</p>
   <button class="cancel" type="button" onclick="closeAccount()">Sulje</button>
 </div>
 
@@ -630,6 +661,16 @@ const NS='http://www.w3.org/2000/svg';
 const el=(n,a)=>{const e=document.createElementNS(NS,n);for(const k in a)e.setAttribute(k,a[k]);return e;};
 const $=id=>document.getElementById(id);
 const fmt=(v,d)=>d?v.toFixed(1).replace('.',','):String(Math.round(v));
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const symDayLabels=()=>{
+  const out=[];
+  const now=new Date();
+  for(let i=13;i>=0;i--){
+    const d=new Date(now);d.setDate(now.getDate()-i);
+    out.push(d.getDate()+'.');
+  }
+  return out;
+};
 
 /* ══ DATA + STORAGE (v1) ══ */
 const STORE_KEY='hoitopolku.v1';
@@ -689,6 +730,7 @@ function seedSyms(){
 
 let BP=[],GLU=[],WT=[],LABS=[],MEDS=[],SYMS=[],LOG=[];
 let profile={name:'',seeded:true,bannerDismissed:false,shareCode:'',shareExp:0};
+let doctorReadOnly=false;
 const SYM_SUGG=['Päänsärky','Huimaus','Väsymys','Yskä','Turvotus','Rintakipu','Hengenahdistus','Lihaskrampit','Unettomuus','Pahoinvointi'];
 
 const METRICS=[
@@ -723,13 +765,19 @@ function applySeed(){
   ensureShareCode(false);
 }
 function saveState(){
+  if(doctorReadOnly) return false;
   try{
     const payload={
-      v:1, profile, BP, GLU, WT, LABS, MEDS, SYMS, LOG, EVENTS
+      v:1, savedAt:Date.now(), profile, BP, GLU, WT, LABS, MEDS, SYMS, LOG, EVENTS
     };
     localStorage.setItem(STORE_KEY, JSON.stringify(payload));
     publishShareSnapshot();
-  }catch(e){ console.warn('save failed', e); }
+    return true;
+  }catch(e){
+    console.warn('save failed', e);
+    toast('Tallennus epäonnistui — selaimen tallennustila voi olla täynnä');
+    return false;
+  }
 }
 function loadState(){
   try{
@@ -943,41 +991,54 @@ function renderMeds(){
     $('medList').innerHTML='<div class="empty"><h3>Ei lääkkeitä</h3>Lisää käyttämäsi lääkkeet listalle.</div>';
     return;
   }
-  $('medList').innerHTML=MEDS.map(m=>
-    '<div class="med"><div class="med-top"><div><span class="med-name">'+m.n+'</span>'+
-    '<span class="med-dose">'+m.dose+'</span></div><div class="chips">'+
+  const ro=document.body.classList.contains('doctor-mode');
+  $('medList').innerHTML=MEDS.map((m,i)=>
+    '<div class="med"><div class="med-top"><div><span class="med-name">'+esc(m.n)+'</span>'+
+    '<span class="med-dose">'+esc(m.dose)+'</span></div><div class="chips">'+
     '<span class="chip'+(m.am?' on':'')+'">Aamu</span><span class="chip'+(m.pm?' on':'')+'">Ilta</span>'+
-    '</div></div><div class="med-hist"><span class="mh-dot'+(m.isNew?' new':'')+'"></span>'+m.hist+'</div></div>'
+    (ro?'':'<button type="button" class="med-del" onclick="removeMed('+i+')" aria-label="Poista '+esc(m.n)+'">Poista</button>')+
+    '</div></div><div class="med-hist"><span class="mh-dot'+(m.isNew?' new':'')+'"></span>'+esc(m.hist)+'</div></div>'
   ).join('');
 }
-const SYMDAYS=['1.10','2.','3.','4.','5.','6.','7.','8.','9.','10.','11.','12.','13.','14.'];
+function removeMed(i){
+  if(document.body.classList.contains('doctor-mode')) return;
+  if(!MEDS[i]) return;
+  if(!confirm('Poistetaanko '+MEDS[i].n+' listalta?')) return;
+  const n=MEDS[i].n;
+  MEDS.splice(i,1);
+  saveState(); renderMeds(); toast(n+' poistettu');
+}
+const SYMDAYS=symDayLabels();
 const SYMC=['#B3452C','#946A16','#6B5B95','#2F6690'];
 function renderSyms(){
   const grid=$('symGrid'),axis=$('symAxis');
   if(!grid)return;
   grid.innerHTML='';
+  const note=$('symNote');
+  if(note) note.hidden=!(profile.seeded && EVENTS.some(e=>/annos|lääkitys/i.test(e.l||'')));
   if(!SYMS.length){
     grid.innerHTML='<div class="sym-empty">Et seuraa vielä yhtään oiretta.<br>Lisää ensimmäinen alta.</div>';
     if(axis)axis.innerHTML='';
     return;
   }
+  const days=symDayLabels();
   SYMS.forEach((sy,si)=>{
     const c=SYMC[si%SYMC.length];
     const bars=sy.v.map((v,i)=>{
-      const day=SYMDAYS[i].replace(/\.$/,'')+'.10.';
-      if(v<0)return '<span class="sym-cell" title="'+day+' ei kirjausta"><span class="sym-miss"></span></span>';
-      if(v===0)return '<span class="sym-cell" title="'+day+' ei oiretta"><span class="sym-zero"></span></span>';
-      return '<span class="sym-cell" title="'+day+' '+sy.n.toLowerCase()+' '+v+'/5"><span class="sym-bar grown" style="--sc:'+c+';height:'+(v/5*100)+'%;opacity:'+(0.45+v*0.11)+'"></span></span>';
+      const day=days[i]||'';
+      if(v<0)return '<span class="sym-cell" title="'+esc(day)+' ei kirjausta"><span class="sym-miss"></span></span>';
+      if(v===0)return '<span class="sym-cell" title="'+esc(day)+' ei oiretta"><span class="sym-zero"></span></span>';
+      return '<span class="sym-cell" title="'+esc(day)+' '+esc(sy.n.toLowerCase())+' '+v+'/5"><span class="sym-bar grown" style="--sc:'+c+';height:'+(v/5*100)+'%;opacity:'+(0.45+v*0.11)+'"></span></span>';
     }).join('');
     const row=document.createElement('div');
     row.className='sym-row'+(sy.own?' editable':'');
-    row.innerHTML=(sy.own?'<button class="sym-del" onclick="removeSym('+si+')" aria-label="Poista '+sy.n+'">'+
+    row.innerHTML=(sy.own?'<button class="sym-del" onclick="removeSym('+si+')" aria-label="Poista '+esc(sy.n)+'">'+
       '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>':'')+
-      '<span class="sym-name">'+sy.n+'</span><span class="sym-bars">'+bars+'</span>';
+      '<span class="sym-name">'+esc(sy.n)+'</span><span class="sym-bars">'+bars+'</span>';
     grid.appendChild(row);
   });
-  if(axis)axis.innerHTML='<span class="sym-days">'+SYMDAYS.map((d,i)=>
-    '<span>'+(i===0||i===13||i===6?d:'')+'</span>').join('')+'</span>';
+  if(axis)axis.innerHTML='<span class="sym-days">'+days.map((d,i)=>
+    '<span>'+(i===0||i===13||i===6?esc(d):'')+'</span>').join('')+'</span>';
 }
 
 /* ══ BIG GRAPH ══ */
@@ -1204,9 +1265,13 @@ addEventListener('scroll',()=>{if(!tick){requestAnimationFrame(onScroll);tick=tr
 
 /* ══ SHEETS ══ */
 const sheet=$('sheet'),sheetBg=$('sheetBg'),entSheet=$('entSheet'),entBg=$('entBg');
-function openSheet(){sheet.classList.add('on');sheetBg.classList.add('on');}
-function closeSheet(){sheet.classList.remove('on');sheetBg.classList.remove('on');}
-function closeEnt(){entSheet.classList.remove('on');entBg.classList.remove('on');}
+function syncSheetLock(){
+  const open=sheet.classList.contains('on')||entSheet.classList.contains('on')||($('acctSheet')&&$('acctSheet').classList.contains('on'));
+  document.body.classList.toggle('sheet-open',!!open);
+}
+function openSheet(){sheet.classList.add('on');sheetBg.classList.add('on');syncSheetLock();}
+function closeSheet(){sheet.classList.remove('on');sheetBg.classList.remove('on');syncSheetLock();}
+function closeEnt(){entSheet.classList.remove('on');entBg.classList.remove('on');syncSheetLock();}
 sheetBg.onclick=closeSheet;entBg.onclick=closeEnt;
 addEventListener('keydown',e=>{if(e.key==='Escape'){closeSheet();closeEnt();}});
 
@@ -1252,6 +1317,7 @@ function openEntry(e){
     w.appendChild(d);
   });
   entSheet.classList.add('on');entBg.classList.add('on');
+  syncSheetLock();
   setTimeout(()=>{const i=w.querySelector('input');if(i)i.focus();},260);
 }
 function num(id){const v=($(id)||{}).value;if(!v)return null;const n=parseFloat(String(v).replace(',','.'));return isNaN(n)?null:n;}
@@ -1274,9 +1340,9 @@ function renderLog(){
   }
   box.innerHTML=LOG.map((e,i)=>
     '<div class="log-row'+(e.fresh&&i===0?' log-new':'')+'">'+
-    '<span class="log-dot" style="background:'+e.c+'"></span>'+
-    '<span><span class="log-n">'+e.name+'</span><span class="log-t">'+e.t+'</span></span>'+
-    '<span class="log-v">'+e.v+' <small>'+e.u+'</small></span></div>'
+    '<span class="log-dot" style="background:'+esc(e.c)+'"></span>'+
+    '<span><span class="log-n">'+esc(e.name)+'</span><span class="log-t">'+esc(e.t)+'</span></span>'+
+    '<span class="log-v">'+esc(e.v)+' <small>'+esc(e.u)+'</small></span></div>'
   ).join('');
   LOG.forEach(e=>e.fresh=false);
 }
@@ -1290,6 +1356,13 @@ function updateCounts(){
   const c=$('cntBp');if(c)c.textContent=BP.length? (BP.length+' mittausta') : 'Ei vielä';
   const g=$('cntGlu');if(g)g.textContent=GLU.length? (GLU.length+' mittausta') : 'Ei vielä';
   const w=$('cntWt');if(w)w.textContent=WT.length? (WT.length+' punnitusta') : 'Ei vielä';
+  const lab=$('cntLab');
+  if(lab){
+    const named=LABS.filter(l=>l.to!=null).map(l=>l.n.replace(/-kolesteroli/,'').replace('Kreatiniini','krea')).slice(0,4);
+    lab.textContent=named.length? named.join(', ') : 'Ei vielä tuloksia';
+  }
+  const med=$('cntMed'); if(med) med.textContent=MEDS.length? (MEDS.length+' lääkettä') : 'Ei lääkkeitä';
+  const sym=$('cntSym'); if(sym) sym.textContent=SYMS.length? (SYMS.length+' oiretta · 14 vrk') : 'Ei oireita';
   const h=$('kotiSub');
   if(h)h.textContent=total? (total+' mittausta kirjattu · tallennettu tähän selaimeen') : 'Ei vielä mittauksia — aloita kirjaamalla ensimmäinen arvo';
   updateGreeting();
@@ -1320,7 +1393,7 @@ $('entSave').onclick=()=>{
     if(sy===null||di===null)return msg('Täytä ylä- ja alapaine.','warn');
     if(sy<70||sy>260||di<40||di>160)return msg('Tarkista lukema — arvo vaikuttaa epätavalliselta.','warn');
     if(sy<=di)return msg('Yläpaineen tulee olla alapainetta suurempi.','warn');
-    BP.push({d:TODAY,t:entTime==='Aamu'?'am':'pm',v:Math.round(sy)});
+    BP.push({d:TODAY,t:entTime==='Aamu'?'am':'pm',v:Math.round(sy),dia:Math.round(di)});
     addLog('Verenpaine',Math.round(sy)+'/'+Math.round(di),'mmHg','#B3452C','tänään klo '+clock()+' · '+entTime.toLowerCase());
     if(sy>=180||di>=110){
       msg('Tallennettu. Lukema on korkea — lepää viisi minuuttia ja mittaa uudelleen. Jos arvo toistuu, ota yhteys hoitavaan tahoon. Rintakivun tai halvausoireiden yhteydessä soita 112.','warn');
@@ -1404,7 +1477,7 @@ function addSymptom(name){
 function removeSym(i){
   if(!SYMS[i]||!SYMS[i].own)return;
   const n=SYMS[i].n;
-  SYMS.splice(i,1);renderSyms();toast(n+' poistettu seurannasta');
+  SYMS.splice(i,1);saveState();renderSyms();toast(n+' poistettu seurannasta');
 }
 function openAddSym(){
   entCur={i:8};
@@ -1439,6 +1512,7 @@ function openAddSym(){
     w.appendChild(sg);
   }
   entSheet.classList.add('on');entBg.classList.add('on');
+  syncSheetLock();
   setTimeout(()=>{const i=$('e_symname');if(i)i.focus();},260);
 }
 
@@ -1487,9 +1561,8 @@ function openSym(){
   w.appendChild(sev);
 
   entSheet.classList.add('on');entBg.classList.add('on');
+  syncSheetLock();
 }
-
-/* uudelleenpiirto koon muuttuessa */
 let rzT=null;
 addEventListener('resize',()=>{
   clearTimeout(rzT);
@@ -1534,24 +1607,63 @@ function clearToOwn(){
 }
 function openAccount(){
   const n=$('profName'); if(n) n.value=profile.name||'';
-  $('acctSheet').classList.add('on'); $('acctBg').classList.add('on');
+  $('acctSheet').classList.add('on'); $('acctBg').classList.add('on'); syncSheetLock();
 }
 function closeAccount(){
-  $('acctSheet').classList.remove('on'); $('acctBg').classList.remove('on');
+  $('acctSheet').classList.remove('on'); $('acctBg').classList.remove('on'); syncSheetLock();
 }
 function saveProfile(){
   profile.name=(($('profName')||{}).value||'').trim().slice(0,24);
   saveState(); updateGreeting(); closeAccount(); toast('Nimi tallennettu');
 }
 function exportData(){
-  const blob=new Blob([JSON.stringify({v:1,profile,BP,GLU,WT,LABS,MEDS,SYMS,LOG,EVENTS},null,2)],{type:'application/json'});
+  const blob=new Blob([JSON.stringify({v:1,exportedAt:new Date().toISOString(),profile,BP,GLU,WT,LABS,MEDS,SYMS,LOG,EVENTS},null,2)],{type:'application/json'});
   const a=document.createElement('a');
   a.href=URL.createObjectURL(blob);
-  a.download='hoitopolku-varmuuskopio.json';
+  a.download='hoitopolku-varmuuskopio-'+new Date().toISOString().slice(0,10)+'.json';
   a.click();
   setTimeout(()=>URL.revokeObjectURL(a.href),500);
+  toast('Varmuuskopio ladattu');
+}
+function importDataFile(file){
+  if(!file) return;
+  const reader=new FileReader();
+  reader.onload=()=>{
+    try{
+      const p=JSON.parse(reader.result);
+      if(!p||typeof p!=='object') throw new Error('bad');
+      if(p.v && p.v!==1) throw new Error('version');
+      if(!confirm('Korvataanko nykyiset tiedot varmuuskopiolla?')) return;
+      profile=Object.assign({name:'',seeded:false,bannerDismissed:true,shareCode:'',shareExp:0}, p.profile||{});
+      profile.seeded=false; profile.bannerDismissed=true;
+      BP=Array.isArray(p.BP)?p.BP:[];
+      GLU=Array.isArray(p.GLU)?p.GLU:[];
+      WT=Array.isArray(p.WT)?p.WT:[];
+      LABS=Array.isArray(p.LABS)&&p.LABS.length?p.LABS:seedLabs().map(l=>({...l,from:null,to:null}));
+      MEDS=Array.isArray(p.MEDS)?p.MEDS:[];
+      SYMS=Array.isArray(p.SYMS)?p.SYMS:[];
+      LOG=Array.isArray(p.LOG)?p.LOG:[];
+      EVENTS=Array.isArray(p.EVENTS)?p.EVENTS:[];
+      if(!profile.shareCode) ensureShareCode(true);
+      saveState();
+      closeAccount();
+      bootUI();
+      go('koti');
+      toast('Varmuuskopio palautettu');
+    }catch(e){
+      toast('Tiedosto ei ole kelvollinen Hoitopolku-varmuuskopio');
+    }
+  };
+  reader.onerror=()=>toast('Tiedoston luku epäonnistui');
+  reader.readAsText(file);
 }
 $('acctBg').addEventListener('click', closeAccount);
+const importEl=$('importFile');
+if(importEl) importEl.addEventListener('change',e=>{
+  const f=e.target.files&&e.target.files[0];
+  e.target.value='';
+  if(f) importDataFile(f);
+});
 
 function applySnapshot(snap){
   if(!snap) return false;
@@ -1565,6 +1677,7 @@ function applySnapshot(snap){
   return true;
 }
 function enterDoctorMode(snap){
+  doctorReadOnly=true;
   document.body.classList.add('doctor-mode');
   applySnapshot(snap);
   const b=$('seedBanner'); if(b) b.hidden=true;
@@ -1578,6 +1691,9 @@ function enterDoctorMode(snap){
   window.openAddMed=()=>toast('Lukunäkymä — kirjaukset pois käytöstä');
   window.openSym=()=>toast('Lukunäkymä — kirjaukset pois käytöstä');
   window.openAddSym=()=>toast('Lukunäkymä — kirjaukset pois käytöstä');
+  window.openAccount=()=>toast('Lukunäkymä — tili pois käytöstä');
+  window.clearToOwn=()=>toast('Lukunäkymä — muutokset pois käytöstä');
+  window.newCode=()=>toast('Lukunäkymä — koodia ei voi vaihtaa');
   bootUI();
   go('koti');
   toast('Jaettu seurantanäkymä avattu');
@@ -1620,10 +1736,27 @@ document.addEventListener('keydown',e=>{
 $('sheetBg').addEventListener('click', closeSheet);
 $('entBg').addEventListener('click', closeEnt);
 
-/* PWA */
+/* PWA + offline */
 if('serviceWorker' in navigator){
   navigator.serviceWorker.register('sw.js').catch(()=>{});
 }
+function syncOnline(){
+  document.body.classList.toggle('is-offline', !navigator.onLine);
+}
+addEventListener('online', ()=>{ syncOnline(); toast('Yhteys palautui'); });
+addEventListener('offline', syncOnline);
+syncOnline();
+
+/* Enter tallentaa lomakkeen */
+addEventListener('keydown',e=>{
+  if(e.key!=='Enter') return;
+  if(!entSheet.classList.contains('on')) return;
+  const t=e.target;
+  if(t && t.tagName==='TEXTAREA') return;
+  if(t && t.tagName==='BUTTON') return;
+  e.preventDefault();
+  $('entSave').click();
+});
 
 /* lääkkeen lisäys */
 function openAddMed(){
@@ -1654,16 +1787,25 @@ function openAddMed(){
   w.appendChild(seg);
   medWhen='am';
   entSheet.classList.add('on');entBg.classList.add('on');
+  syncSheetLock();
   setTimeout(()=>{const i=$('e_medname');if(i)i.focus();},260);
 }
 let medWhen='am';
 
 /* ══ INIT ══ */
-loadState();
-if(!tryDoctorMode()){
+const _q=new URLSearchParams(location.search);
+const _isShare=!!(_q.get('koodi') || (location.hash||'').startsWith('#d='));
+if(_isShare){
+  // älä lataa/tallenna paikallista dataa — vain jaettu snapshot
+  doctorReadOnly=true;
+  if(!tryDoctorMode()){
+    doctorReadOnly=false;
+    loadState();
+    bootUI();
+  }
+}else{
+  loadState();
   bootUI();
-} else {
-  // doctor mode already booted
 }
 </script>
 </body>
