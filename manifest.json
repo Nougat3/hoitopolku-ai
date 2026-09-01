@@ -1,12 +1,13 @@
 {
   "name": "Hoitopolku",
   "short_name": "Hoitopolku",
-  "description": "Terveytesi tärkeimmät luvut, yksi selkeä suunnitelma oman lääkärisi kanssa",
-  "start_url": "demo.html",
+  "description": "Seuraa verenpainetta, verensokeria ja painoa. Jaa yhteenveto lääkärille. Seurantatyökalu — ei diagnoosia.",
+  "start_url": "./hoitopolku-demo.html",
+  "id": "./hoitopolku-demo.html",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#F5F5F7",
-  "theme_color": "#F5F5F7",
+  "background_color": "#FBFAF7",
+  "theme_color": "#FBFAF7",
   "orientation": "portrait-primary",
   "icons": [
     {
@@ -28,7 +29,11 @@
       "purpose": "maskable"
     }
   ],
-  "categories": ["health", "medical", "lifestyle"],
+  "categories": [
+    "health",
+    "medical",
+    "lifestyle"
+  ],
   "lang": "fi",
   "dir": "ltr"
 }

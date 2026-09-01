@@ -5,11 +5,10 @@ Suomen Omalääkärit.
 | Tiedosto | Rooli |
 |---|---|
 | `index.html` | Landing page |
-| `demo.html` | Itse sovellus (kirjautuminen, mittaukset, lääkärinäkymä) |
+| `hoitopolku-demo.html` | Itse sovellus (mittaukset, käyrä, koodi) |
+| `demo.html` | Ohjaus uuteen demoon |
 
-Demotunnukset:
-- Potilas: `p@demo.fi` / `demo12`
-- Lääkäri: `l@demo.fi` / `demo12`
+Uusi demo on paikallinen UI-demo (ei erillistä kirjautumista).
 
 Julkaisu:
 - **GitHub Pages** — `main`-haaran juuri → https://nougat3.github.io/hoitopolku-ai/
