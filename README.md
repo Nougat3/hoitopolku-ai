@@ -1,6 +1,6 @@
 # hoitopolku.ai
 
-Suomen Omalääkärit.
+Lääkäri Toni Kähkönen (toiminimi).
 
 | Tiedosto | Rooli |
 |---|---|
