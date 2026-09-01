@@ -933,6 +933,7 @@ function shareUrl(){
   const snap=buildShareSnapshot();
   publishShareSnapshot();
   const u=new URL(location.href);
+  u.pathname=u.pathname.replace(/[^/]*$/, 'laakaripro.html');
   u.searchParams.set('koodi', profile.shareCode);
   u.hash='d='+encodeShare(snap);
   return u.toString();
