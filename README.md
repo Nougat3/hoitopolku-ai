@@ -5,7 +5,8 @@ Suomen Omalääkärit.
 | Tiedosto | Rooli |
 |---|---|
 | `index.html` | Landing page |
-| `hoitopolku-demo.html` | Itse sovellus (mittaukset, käyrä, koodi) |
+| `hoitopolku-demo.html` | Potilaan seuranta (mittaukset, kalenteri, koodi) |
+| `laakaripro.html` | Lääkärin työpöytä (demo) — avaa potilas koodilla tai jakolinkillä |
 | `demo.html` | Ohjaus uuteen demoon |
 
 Uusi demo on paikallinen UI-demo (ei erillistä kirjautumista).
