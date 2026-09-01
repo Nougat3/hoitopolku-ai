@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Hoitopolku — kroonisten sairauksien hallinta</title>
-<meta name="description" content="Seuraa verenpainetta, kolesterolia, verensokeria ja painoa ilmaiseksi. Näe suunta, jaa koodi lääkärille — etäarvio vain tarvittaessa.">
+<meta name="description" content="Seuraa verenpainetta, kolesterolia, verensokeria ja painoa ilmaiseksi. Näe suunta, jaa koodi lääkärille — lääkärin arvio vain tarvittaessa.">
 <meta name="theme-color" content="#FBFAF7">
 <link rel="icon" type="image/svg+xml" href="icon.svg">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -840,16 +840,16 @@ header.hidden{transform:translateY(-100%)}
     <div class="hero-left">
       <p class="hero-kicker">Ilmainen seuranta &nbsp;·&nbsp; Lääkärin arvio tarvittaessa</p>
       <h1>Tiedätkö,<br>mihin suuntaan<br>terveytesi <em>menee?</em></h1>
-      <p class="hero-lead">Seuraa verenpainetta, kolesterolia, verensokeria ja painoa yhdessä paikassa. Näe suunta älykkäästä käyrästä ja jaa koodi lääkärillesi — etävastaanotto vain jos haluat.</p>
+      <p class="hero-lead">Seuraa verenpainetta, kolesterolia, verensokeria ja painoa yhdessä paikassa. Näe suunta älykkäästä käyrästä ja jaa koodi lääkärillesi — lääkärin arvio vain jos haluat.</p>
       <div class="cta-row">
         <a class="btn btn-w" href="hoitopolku-demo.html">Kokeile demoa</a>
         <a class="btn btn-ghost" href="#miten">Miten se toimii</a>
       </div>
       <p class="hero-note">Demo näyttää alustan ilman kirjautumispakkoa &nbsp;·&nbsp; Seuranta ilmaista &nbsp;·&nbsp; Ei korvaa lääkärin arviota</p>
       <div class="trust-row" aria-label="Luottamusmerkit">
-        <span><i></i>Valviran rekisteröimä palveluntuottaja</span>
-        <span><i></i>Kela-korvattava etäarvio</span>
         <span><i></i>Seurantatyökalu, ei diagnoosia</span>
+        <span><i></i>Mittaukset tallentuvat paikallisesti</span>
+        <span><i></i>Ei korvaa lääkärin arviota</span>
       </div>
     </div>
 
@@ -1058,7 +1058,7 @@ header.hidden{transform:translateY(-100%)}
       <div class="step-cell reveal">
         <p class="idx">02</p>
         <h3>Jaa koodi lääkärille</h3>
-        <p>Anna koodi omalle terveysasemalle, työterveyteen tai etälääkärillemme. Lääkäri näkee datan yhdellä sivulla ennen käyntiä.</p>
+        <p>Demo-jakotoiminto: alusta luo koodin mittauksistasi. Kokeile sitä demo-työpöydässä (LääkäriPRO). Jakaminen on kokeilu, ei virallinen potilastietojärjestelmäintegraatio.</p>
       </div>
       <div class="step-cell reveal">
         <p class="idx">03</p>
@@ -1231,13 +1231,13 @@ header.hidden{transform:translateY(-100%)}
       <div class="code-left reveal">
         <div class="section-rule"></div>
         <h2>Jaa tietosi lääkärille yhdellä koodilla.</h2>
-        <p>Alusta tekee mittauksistasi koodin, jonka annat lääkärille — omalle terveysasemalle, työterveyteen tai meidän etälääkärillemme.</p>
-        <p>Lääkäri näkee kaikki arvot, lääkkeet ja oireet yhdellä sivulla. Ei kirjautumista, ei sovellusta, ei odottamista.</p>
+        <p>Demo-ominaisuus: alusta luo koodin mittauksistasi. Kokeile demo-työpöydässä (LääkäriPRO) tai anna koodin omaan terveydenhuoltoon — ei virallinen integraatio.</p>
+        <p>Lääkäri voi avata datan selaimessa. Ei kirjautumista, ei sovellusta. Tämä on demo-jakamista, ei hoitotietojärjestelmäintegraatio.</p>
       </div>
       <div class="code-box reveal">
-        <div class="code-label">Jaettava koodi</div>
+        <div class="code-label">Demo-jakokoodi</div>
         <div class="code-val" id="shareCode">HP-4827</div>
-        <div class="code-exp">Voimassa 7 vrk · näyttää verenpaineen, verikokeet, lääkkeet ja oireet</div>
+        <div class="code-exp">Demo-toiminto · voimassa 7 vrk · näyttää verenpaineen, verikokeet, lääkkeet ja oireet</div>
       </div>
     </div>
   </div>
@@ -1271,25 +1271,25 @@ header.hidden{transform:translateY(-100%)}
   <div class="wrap">
     <div class="section-rule"></div>
     <h2 style="font-size:clamp(28px,4.4vw,46px);font-weight:700;letter-spacing:-.04em;margin-bottom:12px" class="reveal">Seuranta on ilmaista.</h2>
-    <p style="font-size:19px;color:var(--mid);margin-bottom:40px;max-width:34em" class="reveal">Alusta, älykäs käyrä ja jaettava koodi eivät maksa mitään. Lääkärin etävastaanoton varaat vain jos haluat.</p>
+    <p style="font-size:19px;color:var(--mid);margin-bottom:40px;max-width:34em" class="reveal">Alusta, älykäs käyrä ja demo-jakokoodi eivät maksa mitään. Lääkärin arvion varaat vain jos haluat.</p>
     <div class="price-row reveal">
       <div class="price-item hi">
         <div class="pi-top">Seuranta-alusta</div>
         <div class="pi-val">0 €</div>
-        <div class="pi-note">Mittaukset, älykäs käyrä, jaettava koodi</div>
+        <div class="pi-note">Mittaukset, älykäs käyrä, demo-jakokoodi</div>
       </div>
       <div class="price-item">
-        <div class="pi-top">Etävastaanotto</div>
+        <div class="pi-top">Lääkärin käynti</div>
         <div class="pi-val">49 €</div>
-        <div class="pi-note">20 min · Kela-korvattava · vain tarvittaessa</div>
+        <div class="pi-note">20 min · vain tarvittaessa</div>
       </div>
       <div class="price-item">
         <div class="pi-top">Laboratoriolähete</div>
         <div class="pi-val">0 €</div>
-        <div class="pi-note">Lähete etäkäynnin yhteydessä · labra laskuttaa näytteet erikseen</div>
+        <div class="pi-note">Lähete käynnin yhteydessä · labra laskuttaa näytteet erikseen</div>
       </div>
     </div>
-    <p class="fnote reveal">Voit käyttää alustaa myös ilman meidän lääkäriämme — jaa koodi omalle terveysasemallesi tai työterveyteen.</p>
+    <p class="fnote reveal">Demo-alusta. Jakokoodi on demo-ominaisuus — voit kokeilla sitä tai käyttää alustaa henkilökohtaiseen seurantaan ilman jakoa.</p>
   </div>
 </section>
 
@@ -1309,7 +1309,7 @@ header.hidden{transform:translateY(-100%)}
 <section class="cta-band" id="aloita">
   <div class="wrap">
     <h2>Näe suunta.<br>Kokeile demoa.</h2>
-    <p>Kirjaa mittaukset, seuraa älykästä käyrää ja jaa koodi lääkärillesi. Seuranta on ilmaista — etävastaanotto 49 € vain jos varaat sen meiltä.</p>
+    <p>Kirjaa mittaukset, seuraa älykästä käyrää ja jaa koodi lääkärillesi. Seuranta on ilmaista — lääkärin arvio 49 € vain jos varaat sen meiltä.</p>
     <div class="cta-row">
       <a class="btn btn-g" href="hoitopolku-demo.html">Kokeile demoa</a>
     </div>
@@ -1331,7 +1331,7 @@ header.hidden{transform:translateY(-100%)}
           </svg>
           Hoitopolku
         </a>
-        <p class="footer-fine">Hoitopolku on Suomen Omalääkärit Oy:n palvelu.<br>Valviran rekisteröimä yksityisen terveydenhuollon palveluntuottaja.</p>
+        <p class="footer-fine">Hoitopolku — Suomen Omalääkärit<br>Seurantatyökalu kotimittauksiin · ei korvaa lääkärin henkilökohtaista arviota.</p>
       </div>
       <div>
         <h4>Palvelu</h4>
@@ -1344,7 +1344,6 @@ header.hidden{transform:translateY(-100%)}
         <h4>Yhteystiedot</h4>
         <a href="mailto:asiakaspalvelu@suomenomalaakarit.fi">asiakaspalvelu@<br>suomenomalaakarit.fi</a>
         <a href="laakaripro.html" style="margin-top:8px">Lääkärille · LääkäriPRO</a>
-        <a href="#" style="margin-top:8px">Tietosuojaseloste</a>
       </div>
     </div>
     <p class="footer-fine">Sivuston luvut ovat laskentaesimerkkejä, ellei toisin mainita. Sisältö ei korvaa henkilökohtaista lääkärin arviota.</p>

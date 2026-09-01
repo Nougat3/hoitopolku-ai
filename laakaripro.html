@@ -149,7 +149,7 @@ h2{font-size:19px;font-weight:700;letter-spacing:-.03em}
     </div>
     <div class="card">
       <h2>Kirjaudu sisään</h2>
-      <p class="sub" style="margin-bottom:16px">Lääkärin demo-työpöytä · ei diagnoosia</p>
+      <p class="sub" style="margin-bottom:16px">Demo-kirjautuminen (ei oikeaa authia) · lääkärin työpöytä · ei diagnoosia</p>
       <form id="loginForm">
         <div class="fld"><label for="li_email">Sähköposti</label><input id="li_email" type="email" autocomplete="username" placeholder="anna.lehtinen@hoitopolku.fi" value="anna.lehtinen@hoitopolku.fi"></div>
         <div class="fld"><label for="li_pw">Salasana</label><input id="li_pw" type="password" autocomplete="current-password" placeholder="••••••••" value="demo1234"></div>
@@ -207,9 +207,9 @@ h2{font-size:19px;font-weight:700;letter-spacing:-.03em}
     </div>
     <div class="card codebox">
       <div class="label" style="margin-top:0">POTILAAN JAKOKOODI TAI JAKOLINKKI</div>
-      <input id="codeInput" type="text" placeholder="HP-4827" maxlength="12" autocomplete="off">
+      <input id="codeInput" type="text" placeholder="DEMO-4827" maxlength="12" autocomplete="off">
       <button class="btn full gold" style="margin-top:16px" id="codeGo">Avaa potilas</button>
-      <p class="code-hint">Demo-koodit: HP-4827, HP-3391, HP-5502 tai potilaan jakolinkki</p>
+      <p class="code-hint">Demo-koodit: DEMO-4827, DEMO-3391, DEMO-5502 tai potilaan jakolinkki</p>
     </div>
   </div>
 
@@ -300,19 +300,19 @@ function rolling(bp){
 }
 
 const PATIENTS=[
-  {id:'p1',code:'HP-4827',name:'Matti Korhonen',age:58,diag:'Verenpainetauti',
+  {id:'p1',code:'DEMO-4827',name:'Matti Korhonen',age:58,diag:'Verenpainetauti',
    target:135,bp:genBP(158,-1,4,28),meds:[{n:'Ramipril',d:'5 mg',s:'viikko 4'}],
    syms:['Ei uusia oireita'],note:'Laskusuunta Ramiprililla',badge:'ok',priority:1},
-  {id:'p2',code:'HP-3391',name:'Liisa Virtanen',age:52,diag:'Korkea verenpaine',
+  {id:'p2',code:'DEMO-3391',name:'Liisa Virtanen',age:52,diag:'Korkea verenpaine',
    target:135,bp:genBP(162,0,5,999),meds:[],
-   syms:['Päänsärky aamuisin'],note:'Ei lääkitystä — harkitse aloitusta',badge:'off',priority:4},
-  {id:'p3',code:'HP-5502',name:'Pekka Nieminen',age:61,diag:'Verenpainetauti',
+   syms:['Päänsärky aamuisin'],note:'Ei lääkitystä — tarkista trendi',badge:'off',priority:4},
+  {id:'p3',code:'DEMO-5502',name:'Pekka Nieminen',age:61,diag:'Verenpainetauti',
    target:135,bp:genBP(154,-.3,5,21),meds:[{n:'Amlodipiini',d:'10 mg',s:'5 vk'}],
    syms:['Nilkkojen turvotus','Väsymys'],note:'Vaste osittainen + oireet',badge:'mid',priority:3},
-  {id:'p4',code:'HP-6104',name:'Sari Laine',age:49,diag:'Verenpainetauti',
+  {id:'p4',code:'DEMO-6104',name:'Sari Laine',age:49,diag:'Verenpainetauti',
    target:135,bp:genBP(142,-.5,3,40),meds:[{n:'Losartan',d:'50 mg',s:'6 kk'}],
    syms:['Ei oireita'],note:'Tavoitteessa, hyvä vaste',badge:'ok',priority:0},
-  {id:'p5',code:'HP-2846',name:'Kaisa Mäkelä',age:55,diag:'Verenpaine + diabetes',
+  {id:'p5',code:'DEMO-2846',name:'Kaisa Mäkelä',age:55,diag:'Verenpaine + diabetes',
    target:135,bp:genBP(148,-.2,4,35),meds:[{n:'Metformiini',d:'1000 mg',s:'2x vrk'},{n:'Bisoprolol',d:'2,5 mg',s:'aamu'}],
    syms:['Janoisuus'],note:'HbA1c 6,8 % — seuraa painoa',badge:'mid',priority:2,
    glu:[{d:TODAY-2,v:7.2},{d:TODAY-5,v:6.8},{d:TODAY-8,v:8.1}]}
@@ -404,9 +404,7 @@ function openCode(){
   const fromUrl=new URLSearchParams(location.search).get('koodi');
   const c=(code||fromUrl||'').toUpperCase();
 
-  const found=PATIENTS.find(x=>x.code===c);
-  if(found){openPatient(found.id);return;}
-
+  // Check localStorage snapshot first (live patient data)
   if(c){
     try{
       const raw=localStorage.getItem('hoitopolku.share.'+c);
@@ -419,11 +417,23 @@ function openCode(){
     }catch(e){}
   }
 
+  // Check hash snapshot (from URL)
   const hash=location.hash.startsWith('#d=')?location.hash.slice(3):'';
   if(hash){
     const snap=decodeShare(hash);
-    if(snap){openSnapshotPatient(snap);return;}
+    if(snap){
+      if(snap.exp && snap.exp < Date.now()){
+        toast('Jakokoodi on vanhentunut');
+        return;
+      }
+      openSnapshotPatient(snap);
+      return;
+    }
   }
+
+  // Finally check demo patients
+  const found=PATIENTS.find(x=>x.code===c);
+  if(found){openPatient(found.id);return;}
 
   toast('Koodia ei löytynyt — kokeile demo-koodeja tai pyydä potilaalta jakolinkki');
 }
@@ -439,9 +449,9 @@ function renderPatient(CUR){
   const next=$('pNext');
   let nt='Jatka seurantaa',nd='Tarkista SmartGraph ja viimeisimmät mittaukset.';
   let nk='info';
-  if(ka&&ka>tgt+5){nk='warn';nt='Arvioi hoitoa';nd='Keskiarvo '+Math.round(ka)+' mmHg on tavoitteen yläpuolella.';}
+  if(ka&&ka>tgt+5){nk='warn';nt='Tarkista trendi';nd='Keskiarvo '+Math.round(ka)+' mmHg on tavoitteen yläpuolella — vie käynnille.';}
   else if(ka&&ka<=tgt){nk='good';nt='Tavoitteessa';nd='Verenpaineen keskiarvo on hyväksyttävällä tasolla.';}
-  else if(!CUR.meds||!CUR.meds.length){nk='warn';nt='Ei lääkitystä';nd='Korkea paine ilman lääkitystä — harkitse aloitusta.';}
+  else if(!CUR.meds||!CUR.meds.length){nk='warn';nt='Ei lääkitystä';nd='Korkea paine ilman lääkitystä — vie käynnille arvioon.';}
   next.innerHTML='<div class="alert '+nk+'"><span><span class="t">'+esc(nt)+'</span><span class="d">'+esc(nd)+'</span></span></div>';
 
   drawChart(CUR);
@@ -538,24 +548,25 @@ function localDraft(CUR,type){
   const meds=(CUR.meds||[]).map(m=>m.n+' '+m.d).join(', ')||'ei lääkitystä';
   const syms=(CUR.syms||[]).join(', ')||'ei oireita';
   if(type==='letter'){
-    return 'LUONNOS — VASTAANOTTOKIRJE\n\nPotilas: '+name+(CUR.code?' (koodi '+CUR.code+')':'')+'\n\n'+
+    return '═══ DEMO-LUONNOS ═══\n\nVASTAANOTTOKIRJE (malli)\n\nPotilas: '+name+(CUR.code?' (koodi '+CUR.code+')':'')+'\n\n'+
       'Verenpaineen 7 vrk keskiarvo: '+(ka?Math.round(ka)+' mmHg':'ei dataa')+'.\n'+
       'Lääkitys: '+meds+'.\nOireet: '+syms+'.\n\n'+
-      'Suositus: Käy läpi mittaukset ja oireet. Arvioi hoidon riittävyys seuraavalla käynnillä.\n\n'+
-      '— Dr. Anna Lehtinen (demo-luonnos, ei allekirjoitettu)';
+      'Tämä on paikallinen demo-malli. Ei hoitosuositusta, ei diagnoosia.\n\n'+
+      '— Dr. Anna Lehtinen (demo, ei allekirjoitettu)';
   }
   if(type==='summary'){
-    return 'POTILASYHTEENVETO — '+name+'\n\n'+
+    return '═══ DEMO-LUONNOS ═══\n\nYHTEENVETO — '+name+'\n\n'+
       '• Verenpaine: '+(ka?Math.round(ka)+' mmHg (7 vrk)':'ei mittauksia')+'\n'+
       '• Lääkitys: '+meds+'\n'+
       '• Oireet: '+syms+'\n'+
       (CUR.fromShare?'• Lähde: potilaan jakolinkki\n':'')+
-      '\nHuom: Seurantatyökalu — ei diagnoosia.';
+      '\nTämä on seurantatyökalun demo-yhteenveto. Ei diagnoosia, ei hoitopäätöstä.';
   }
-  return 'HOITOSUUNNITELMA — LUONNOS\n\n'+name+':\n'+
-    '1. Jatka kotimittausta 2×/vrk\n'+
-    '2. '+(ka&&ka>140?'Harkitse lääkityksen tehostamista':'Jatka nykyistä lääkitystä')+'\n'+
-    '3. Seuraava arvio 4 vk kuluttua\n\nTavoite: ≤135/85 mmHg';
+  return '═══ DEMO-LUONNOS ═══\n\nSEURANTAMUISTIO (malli) — '+name+'\n\n'+
+    '1. Jatka kotimittausta\n'+
+    '2. Tarkista mittausten trendi ja lääkityksen vaste\n'+
+    '3. Arvioi jatkotoimet seuraavalla käynnillä\n\n'+
+    'Tämä on paikallinen demo-malli, ei hoitosuunnitelma.';
 }
 
 function generate(type){
