@@ -149,7 +149,7 @@ h2{font-size:19px;font-weight:700;letter-spacing:-.03em}
     </div>
     <div class="card">
       <h2>Kirjaudu sisään</h2>
-      <p class="sub" style="margin-bottom:16px">Lääkärin demo-työpöytä · ei diagnoosia</p>
+      <p class="sub" style="margin-bottom:16px">Demo-kirjautuminen (ei oikeaa authia) · lääkärin työpöytä · ei diagnoosia</p>
       <form id="loginForm">
         <div class="fld"><label for="li_email">Sähköposti</label><input id="li_email" type="email" autocomplete="username" placeholder="anna.lehtinen@hoitopolku.fi" value="anna.lehtinen@hoitopolku.fi"></div>
         <div class="fld"><label for="li_pw">Salasana</label><input id="li_pw" type="password" autocomplete="current-password" placeholder="••••••••" value="demo1234"></div>
@@ -305,7 +305,7 @@ const PATIENTS=[
    syms:['Ei uusia oireita'],note:'Laskusuunta Ramiprililla',badge:'ok',priority:1},
   {id:'p2',code:'DEMO-3391',name:'Liisa Virtanen',age:52,diag:'Korkea verenpaine',
    target:135,bp:genBP(162,0,5,999),meds:[],
-   syms:['Päänsärky aamuisin'],note:'Ei lääkitystä — harkitse aloitusta',badge:'off',priority:4},
+   syms:['Päänsärky aamuisin'],note:'Ei lääkitystä — tarkista trendi',badge:'off',priority:4},
   {id:'p3',code:'DEMO-5502',name:'Pekka Nieminen',age:61,diag:'Verenpainetauti',
    target:135,bp:genBP(154,-.3,5,21),meds:[{n:'Amlodipiini',d:'10 mg',s:'5 vk'}],
    syms:['Nilkkojen turvotus','Väsymys'],note:'Vaste osittainen + oireet',badge:'mid',priority:3},
@@ -421,7 +421,14 @@ function openCode(){
   const hash=location.hash.startsWith('#d=')?location.hash.slice(3):'';
   if(hash){
     const snap=decodeShare(hash);
-    if(snap){openSnapshotPatient(snap);return;}
+    if(snap){
+      if(snap.exp && snap.exp < Date.now()){
+        toast('Jakokoodi on vanhentunut');
+        return;
+      }
+      openSnapshotPatient(snap);
+      return;
+    }
   }
 
   // Finally check demo patients
@@ -442,9 +449,9 @@ function renderPatient(CUR){
   const next=$('pNext');
   let nt='Jatka seurantaa',nd='Tarkista SmartGraph ja viimeisimmät mittaukset.';
   let nk='info';
-  if(ka&&ka>tgt+5){nk='warn';nt='Arvioi hoitoa';nd='Keskiarvo '+Math.round(ka)+' mmHg on tavoitteen yläpuolella.';}
+  if(ka&&ka>tgt+5){nk='warn';nt='Tarkista trendi';nd='Keskiarvo '+Math.round(ka)+' mmHg on tavoitteen yläpuolella — vie käynnille.';}
   else if(ka&&ka<=tgt){nk='good';nt='Tavoitteessa';nd='Verenpaineen keskiarvo on hyväksyttävällä tasolla.';}
-  else if(!CUR.meds||!CUR.meds.length){nk='warn';nt='Ei lääkitystä';nd='Korkea paine ilman lääkitystä — harkitse aloitusta.';}
+  else if(!CUR.meds||!CUR.meds.length){nk='warn';nt='Ei lääkitystä';nd='Korkea paine ilman lääkitystä — vie käynnille arvioon.';}
   next.innerHTML='<div class="alert '+nk+'"><span><span class="t">'+esc(nt)+'</span><span class="d">'+esc(nd)+'</span></span></div>';
 
   drawChart(CUR);

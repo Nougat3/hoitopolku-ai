@@ -11,10 +11,11 @@
 - Cross-device share failed: only koodi passed, no snapshot payload
 
 ### Solution (after fix)
-- `shareUrl()` → targets `laakaripro.html?koodi=HP-4827#d=<base64>`
-- `#d=` hash contains full snapshot (cross-device compatible)
-- Demo patients renamed to `DEMO-xxxx` (no collision)
+- `shareUrl()` → targets `laakaripro.html?koodi=HP-XXXX#d=<base64>` (dynamic code)
+- `#d=` hash contains full snapshot (cross-device compatible, **demo-only**)
+- Demo patients renamed to `DEMO-xxxx` (no collision with live codes)
 - Hash checked BEFORE demo patients (priority fix)
+- **`snap.exp` enforced on `#d=` decode** (same as localStorage)
 
 ---
 
@@ -37,7 +38,9 @@ function shareUrl(){
 ```
 
 **Result:**  
-`https://nougat3.github.io/hoitopolku-ai/laakaripro.html?koodi=HP-4827#d=eyJ2IjoxLCJjb2RlIjoi...`
+`https://nougat3.github.io/hoitopolku-ai/laakaripro.html?koodi=HP-XXXX#d=eyJ2IjoxLCJjb2RlIjoi...`
+
+*Note: koodi is dynamically generated (HP-XXXX format). DEMO-XXXX codes are hardcoded demo patients only.*
 
 ### 2. Doctor opens link (laakaripro.html)
 
@@ -62,6 +65,10 @@ function openCode(){
   if(hash){
     const snap=decodeShare(hash);  // base64 → object
     if(snap){
+      if(snap.exp && snap.exp < Date.now()){
+        toast('Jakokoodi on vanhentunut');
+        return;
+      }
       openSnapshotPatient(snap);   // ← Cross-device share
       return;
     }
@@ -100,7 +107,8 @@ function openCode(){
 
 ### ✅ Scenario D: Expired code
 1. Patient's code expired (> 7 days)
-2. Doctor opens link → **"Jakokoodi on vanhentunut"**
+2. Doctor opens link → **"Jakokoodi on vanhentunut"** (toast)
+3. `snap.exp` enforced on both localStorage and `#d=` paths
 
 ---
 
@@ -110,9 +118,9 @@ function openCode(){
 ```json
 {
   "v": 1,
-  "code": "HP-4827",
+  "code": "HP-XXXX",
   "exp": 1756800000000,
-  "name": "Matti Korhonen",
+  "name": "Demo Potilas",
   "BP": [{"d": 83, "v": 138, "dia": 86}, ...],
   "GLU": [{"d": 81, "v": 6.8}, ...],
   "WT": [{"d": 77, "v": 88.0}, ...],
@@ -127,6 +135,8 @@ function openCode(){
 
 Base64-encoded → URL-safe → placed in `#d=` hash.
 
+**Important:** `#d=` is **demo-only** — not for real patient data / real RR workflow. Expiry is enforced client-side on decode.
+
 ---
 
 ## Why This Is Critical
@@ -138,9 +148,12 @@ Base64-encoded → URL-safe → placed in `#d=` hash.
 ## Security Notes
 
 - Snapshot in URL hash (not logged by proxies, but visible in browser history)
-- 7-day expiry enforced client-side
+- 7-day expiry enforced client-side on both localStorage and `#d=` paths
 - No PHI identifiers (no SSN, address, etc.)
 - Demo disclaimers: "ei korvaa lääkärin arviota"
+- **`#d=` is demo-only** — not intended for real patient / real RR workflow
+
+**Annosmuutos (dose changes):** Recorded in `EVENTS[]` as journal/log entries only — no treatment recommendations generated.
 
 ---
 
