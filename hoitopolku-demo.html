@@ -511,7 +511,11 @@ body.sheet-open{overflow:hidden}
       <p id="nextText">Kaksi mittausta päivässä kertoo todellisen tason. Tämä alusta ei diagnostisoi — se näyttää suunnan.</p>
       <button class="btn gold" type="button" onclick="openEntry(ENTRY[0])">Kirjaa verenpaine</button>
     </div>
-    <p class="disc">Seurantatyökalu · ei korvaa lääkärin arviota · hätätilanteessa 112</p>
+    <div class="alert warn" style="margin-top:14px;padding:12px 14px;background:var(--red-t);border-radius:12px;display:flex;gap:10px;align-items:flex-start">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#B3452C" stroke-width="2.4" stroke-linecap="round" style="flex:none;margin-top:1px"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+      <div style="font-size:13px;line-height:1.45"><strong style="display:block;font-weight:700;color:#B3452C;margin-bottom:2px">Hätätilanne: Soita 112</strong>Jos verenpaine yli 180/110 toistuu levon jälkeen TAI sinulla on rintakipua, puristusta, hengenahdistusta tai halvausoireita, soita heti 112. Ilmainen seuranta, turvaviestit aina.</div>
+    </div>
+    <p class="disc">Seurantatyökalu · ei korvaa lääkärin arviota · kaikki turvatoiminnot aina ilmaisia</p>
 
     <div class="label">SEURATTAVAT ARVOT</div>
     <div class="tiles" id="tiles"></div>
@@ -632,10 +636,11 @@ body.sheet-open{overflow:hidden}
   <div class="view" id="v-koodi">
     <div class="head">
       <h1>Jaa lääkärille</h1>
-      <div class="sub">Anna koodi vastaanotolla — lääkäri näkee tietosi selaimessa</div>
+      <div class="sub">Anna koodi vastaanotolla — lääkäri näkee tietosi selaimessa · DEMO-toiminto</div>
     </div>
 
     <div class="code-hero">
+      <div style="font-size:10px;font-weight:700;letter-spacing:.08em;color:#946A16;background:var(--amber-t);padding:4px 10px;border-radius:980px;display:inline-block;margin-bottom:10px">DEMO · EI VIRALLINEN INTEGRAATIO</div>
       <div class="code-lbl">JAETTAVA KOODI</div>
       <div class="code-val" id="codeVal">HP-4827</div>
       <div class="code-exp" id="codeExp">Voimassa 7 vuorokautta<br>Vanhenee 3.9.2026 klo 15.40</div>
@@ -654,7 +659,8 @@ body.sheet-open{overflow:hidden}
     <button class="btn sec full" type="button" onclick="openDoctorPreview()" style="margin-top:8px">Avaa lääkärin näkymä</button>
     <button class="btn sec full" type="button" onclick="newCode()" style="margin-top:8px">Luo uusi koodi</button>
     <p style="font-size:12.5px;color:var(--mid);margin-top:14px;text-align:center;line-height:1.5">
-      Linkki sisältää seurantayhteenvedon 7 vuorokaudeksi.<br>Ei henkilötunnusta · voit luoda uuden koodin milloin tahansa.<br>Sisältö ei korvaa henkilökohtaista lääkärin arviota.
+      <strong style="color:#946A16;display:block;margin-bottom:6px">⚠️ DEMO-TOIMINTO</strong>
+      Linkki sisältää seurantayhteenvedon 7 vuorokaudeksi. Synteettinen #d=-koodi, ei todellinen potilastietojärjestelmäintegraatio.<br>Ei henkilötunnusta · voit luoda uuden koodin milloin tahansa.<br>Sisältö ei korvaa henkilökohtaista lääkärin arviota.
     </p>
   </div>
 
@@ -765,12 +771,14 @@ function seedBP(){
 function seedGLU(){
   sd=42; const out=[];
   for(let d=0;d<DAYS;d++){
-    if(rnd()<0.82){let b=8.1-Math.min(1.4,d*0.017);out.push({d:d,t:'am',v:+(b+(rnd()-0.5)*1.1).toFixed(1)});}
+    // Tiheämpi seuranta, vähemmän aukkoja
+    if(rnd()<0.76){let b=8.1-Math.min(1.4,d*0.017);out.push({d:d,t:'am',v:+(b+(rnd()-0.5)*1.1).toFixed(1)});}
   }
   return out;
 }
 function seedWT(){
   sd=42; const out=[];
+  // Säännöllisempi viikkopunnitus (12 viikkoa)
   for(let w=0;w<12;w++)out.push({d:w*7,t:'wk',v:+(94.2-w*0.56+(rnd()-0.5)*.4).toFixed(1)});
   return out;
 }
@@ -778,8 +786,8 @@ function seedLabs(){
   return [
     {n:'LDL-kolesteroli',u:'mmol/l',from:4.6,to:3.1,min:1,max:6,tgt:3.0,tgtLbl:'alle 3,0',dec:1,dir:'below'},
     {n:'HbA1c',u:'mmol/mol',from:51,to:49,min:30,max:75,tgt:48,tgtLbl:'alle 48',dec:0,dir:'below'},
-    {n:'Kalium',u:'mmol/l',from:null,to:4.2,min:3,max:6,lo:3.5,hi:5.0,tgtLbl:'3,5–5,0',dec:1,dir:'range'},
-    {n:'Kreatiniini',u:'µmol/l',from:null,to:82,min:40,max:130,lo:60,hi:100,tgtLbl:'60–100',dec:0,dir:'range'}
+    {n:'Kalium',u:'mmol/l',from:4.5,to:4.2,min:3,max:6,lo:3.5,hi:5.0,tgtLbl:'3,5–5,0',dec:1,dir:'range'},
+    {n:'Kreatiniini',u:'µmol/l',from:88,to:82,min:40,max:130,lo:60,hi:100,tgtLbl:'60–100',dec:0,dir:'range'}
   ];
 }
 function seedMeds(){
@@ -889,11 +897,24 @@ function syncCodeUI(){
   const val=$('codeVal'); if(val) val.textContent=code;
   const exp=$('codeExp');
   if(exp){
-    if(!profile.shareExp){ exp.textContent='Luo tai kopioi jakolinkki'; return; }
+    if(!profile.shareExp){ 
+      exp.innerHTML='<span style="color:#946A16">Demo-koodi · luo jakolinkki</span>'; 
+      return; 
+    }
     const d=new Date(profile.shareExp);
+    const now=Date.now();
+    const left=Math.max(0,profile.shareExp-now);
+    const daysLeft=Math.floor(left/864e5);
+    const hoursLeft=Math.floor((left%864e5)/36e5);
     const pad=x=>String(x).padStart(2,'0');
-    exp.innerHTML='Voimassa 7 vuorokautta<br>Vanhenee '+d.getDate()+'.'+(d.getMonth()+1)+'.'+d.getFullYear()+
-      ' klo '+pad(d.getHours())+'.'+pad(d.getMinutes());
+    let statusColor='#4E7D3C';
+    let statusText='Voimassa';
+    if(daysLeft<2){statusColor='#946A16';statusText='Vanhenee pian';}
+    if(left<0){statusColor='#B3452C';statusText='Vanhentunut';}
+    exp.innerHTML='<span style="color:'+statusColor+';font-weight:700">'+statusText+'</span> · '+
+      (left>0?daysLeft+' vrk '+hoursLeft+' h jäljellä':'Vanhentunut')+
+      '<br>Loppuu '+d.getDate()+'.'+(d.getMonth()+1)+'.'+d.getFullYear()+
+      ' klo '+pad(d.getHours())+'.'+pad(d.getMinutes())+' · Demo-koodi #d=';
   }
 }
 function buildShareSnapshot(){
@@ -1613,7 +1634,8 @@ $('entSave').onclick=()=>{
     BP.push({d:TODAY,t:entTime==='Aamu'?'am':'pm',v:Math.round(sy),dia:Math.round(di)});
     addLog('Verenpaine',Math.round(sy)+'/'+Math.round(di),'mmHg','#B3452C','tänään klo '+clock()+' · '+entTime.toLowerCase());
     if(sy>=180||di>=110){
-      msg('Tallennettu. Lukema on korkea — lepää viisi minuuttia ja mittaa uudelleen. Jos arvo toistuu, ota yhteys hoitavaan tahoon. Rintakivun tai halvausoireiden yhteydessä soita 112.','warn');
+      msg('⚠️ KORKEA VERENPAINE: Lepää 5 min ja mittaa uudelleen. Jos toistuu → soita 112 tai hoitoon. Rintakipu / halvausoireet → HETI 112. Turvaviestit aina ilmaisia.','warn');
+      toast('⚠️ Korkea verenpaine — lepää ja mittaa uudelleen');
       return refresh(false);
     }
     if(sy<100){msg('Tallennettu. Lukema on matala — kirjaa oire jos sinua huimaa.','warn');return refresh(false);}
@@ -1764,7 +1786,7 @@ function openSym(){
     const b=document.createElement('button');
     b.className='sym-opt';b.setAttribute('aria-selected','false');
     b.innerHTML='<span class="box"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg></span>'+
-      '<span style="font-size:15px;font-weight:500">'+sy.n+'</span>';
+      '<span style="font-size:15px;font-weight:500">'+esc(sy.n)+'</span>';
     b.onclick=()=>{
       const on=b.getAttribute('aria-selected')==='true';
       b.setAttribute('aria-selected',!on);

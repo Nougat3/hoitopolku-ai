@@ -330,6 +330,9 @@ function decodeShare(s){
 
 function snapToPatient(snap){
   const bp=(snap.BP||[]).map(p=>({d:typeof p.d==='number'?p.d:TODAY-Math.round((Date.now()-new Date(p.d||Date.now()))/86400000),v:p.v||p.sys||0}));
+  const glu=(snap.GLU||[]).map(p=>({d:typeof p.d==='number'?p.d:TODAY,v:p.v||0}));
+  const wt=(snap.WT||[]).map(p=>({d:typeof p.d==='number'?p.d:TODAY,v:p.v||0}));
+  const labs=(snap.LABS||[]);
   const meds=(snap.MEDS||[]).map(m=>({n:m.n||m.name||'—',d:m.d||m.dose||'',s:m.s||''}));
   const syms=(snap.SYMS||[]).map(s=>s.n||s.name||String(s)).filter(Boolean);
   const ka=ka7(bp);
@@ -338,7 +341,7 @@ function snapToPatient(snap){
     code:snap.code||'',
     name:snap.name||'Potilas',
     age:null,diag:'Jaettu seuranta',
-    target:135,bp,meds,syms:syms.length?syms:['Ei oirekirjauksia'],
+    target:135,bp,glu,wt,labs,meds,syms:syms.length?syms:['Ei oirekirjauksia'],
     note:'Potilaan jakolinkki · '+new Date(snap.created||Date.now()).toLocaleDateString('fi-FI'),
     badge:ka===null?'mid':(ka<=135?'ok':'off'),
     priority:ka&&ka>140?3:1,
@@ -526,9 +529,24 @@ function renderInsights(CUR){
 function renderMeas(CUR){
   const el=$('pMeas');
   const recent=(CUR.bp||[]).slice(-8).reverse();
-  if(!recent.length){el.innerHTML='<p class="sub">Ei mittauksia.</p>';return;}
-  el.innerHTML=recent.map(p=>'<div class="row"><span class="k">Päivä '+p.d+'</span><span class="v">'+p.v+' mmHg</span></div>').join('')+
-    (CUR.glu?'<div class="label">VERENSOKERI</div>'+CUR.glu.map(g=>'<div class="row"><span class="k">Päivä '+g.d+'</span><span class="v">'+fmt(g.v,1)+' mmol/l</span></div>').join(''):'');
+  const glu=(CUR.glu||[]).slice(-8).reverse();
+  const wt=(CUR.wt||WT||[]).slice(-4).reverse();
+  
+  let html='';
+  if(recent.length){
+    html+='<div class="label" style="margin-top:0">VERENPAINE</div>';
+    html+=recent.map(p=>'<div class="row"><span class="k">Päivä '+p.d+'</span><span class="v">'+p.v+' mmHg</span></div>').join('');
+  }
+  if(glu.length){
+    html+='<div class="label">VERENSOKERI (PAASTO)</div>';
+    html+=glu.map(g=>'<div class="row"><span class="k">Päivä '+g.d+'</span><span class="v">'+fmt(g.v,1)+' mmol/l</span></div>').join('');
+  }
+  if(wt.length){
+    html+='<div class="label">PAINO (VIIKKO)</div>';
+    html+=wt.map(w=>'<div class="row"><span class="k">Päivä '+w.d+'</span><span class="v">'+fmt(w.v,1)+' kg</span></div>').join('');
+  }
+  if(!html)html='<p class="sub">Ei mittauksia.</p>';
+  el.innerHTML=html;
 }
 
 function renderMeds(CUR){
