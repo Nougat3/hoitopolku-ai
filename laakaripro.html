@@ -255,7 +255,18 @@ h2{font-size:19px;font-weight:700;letter-spacing:-.03em}
     </div>
 
     <div class="tab-panel" id="tab-ai">
-      <div class="label" style="margin-top:0">AI-TYÖKALUT (DEMO)</div>
+      <div class="label" style="margin-top:0">LÄÄKÄRIN MUISTIINPANO (LUONNOS)</div>
+      <div class="card">
+        <p class="sub" style="margin-bottom:12px">Kirjoita tai sanelee lausunto/epikriisi. Ei allekirjoitettua hoitopäätöstä — ihminen päättää.</p>
+        <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+          <button class="btn sm sec" id="draftFromContext">Luo luonnos potilaskontekstista</button>
+          <button class="btn sm sec" id="copyToClipboard">Kopioi leikepöydälle</button>
+        </div>
+        <textarea id="physicianNote" placeholder="Kirjoita tai sanelee lääkärin muistiinpano tähän... Tämä on luonnos, ei allekirjoitettua dokumenttia." style="width:100%;min-height:280px;font-size:14px;line-height:1.55;padding:14px;border-radius:12px;border:1px solid var(--line);background:var(--w);resize:vertical;font-family:var(--f)"></textarea>
+        <p class="note" style="margin-top:8px;font-size:12px;color:var(--mid)">⚠️ LUONNOS — ei allekirjoitettu, ei diagnoosia. Seuranta-muistiinpano potilastietoihin.</p>
+      </div>
+
+      <div class="label">AI-TYÖKALUT (DEMO-LUONNOS)</div>
       <div class="card">
         <p class="sub" style="margin-bottom:14px">Luo luonnoksia paikallisesti — ei ulkoisia API-kutsuja.</p>
         <div class="ai-tools">
@@ -460,6 +471,7 @@ function renderPatient(CUR){
   renderMeds(CUR);
   renderSym(CUR);
   $('aiOut').textContent='Valitse työkalu yllä.';
+  $('physicianNote').value='';
   setTab('sum');
 }
 
@@ -593,6 +605,47 @@ $('pTabs').addEventListener('click',e=>{
 
 document.querySelectorAll('[data-gen]').forEach(b=>{
   b.addEventListener('click',()=>generate(b.dataset.gen));
+});
+
+$('draftFromContext').addEventListener('click',()=>{
+  if(!CUR){toast('Avaa ensin potilas');return;}
+  const name=CUR.name||'Potilas';
+  const code=CUR.code||'—';
+  const ka=ka7(CUR.bp);
+  const meds=(CUR.meds||[]).map(m=>m.n+' '+m.d).join(', ')||'ei lääkitystä';
+  const syms=(CUR.syms||[]).join(', ')||'ei oireita';
+  const bpData=ka?Math.round(ka)+' mmHg (7 vrk keskiarvo)':'ei mittauksia';
+  
+  const draft='SEURANTA-MUISTIINPANO (LUONNOS)\n\n'+
+    'Potilas: '+name+'\n'+
+    'Koodi: '+code+'\n'+
+    'Pvm: '+new Date().toLocaleDateString('fi-FI')+'\n\n'+
+    'VERENPAINE\n'+
+    bpData+'\n\n'+
+    'LÄÄKITYS\n'+
+    meds+'\n\n'+
+    'OIREET\n'+
+    syms+'\n\n'+
+    'ARVIO JA SUUNNITELMA\n'+
+    '[Kirjoita arvio tähän]\n\n'+
+    '────────────────────────────────\n'+
+    '⚠️ LUONNOS — ei allekirjoitettu\n'+
+    'Ei diagnoosia. Seuranta-muistiinpano.\n'+
+    'Lääkäri: Dr. Anna Lehtinen (demo)';
+  
+  $('physicianNote').value=draft;
+  toast('Luonnos luotu potilaskontekstista');
+});
+
+$('copyToClipboard').addEventListener('click',()=>{
+  const text=$('physicianNote').value;
+  if(!text.trim()){toast('Ei kopioitavaa tekstiä');return;}
+  
+  navigator.clipboard.writeText(text).then(()=>{
+    toast('Kopioitu leikepöydälle');
+  }).catch(()=>{
+    toast('Kopiointi epäonnistui');
+  });
 });
 
 $('loginForm').addEventListener('submit',e=>{
