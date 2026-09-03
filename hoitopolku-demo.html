@@ -1128,7 +1128,12 @@ function rolling(pts){
   }
   return out;
 }
-function series(m){return m.dense?rolling(m.data):m.data.map(p=>({d:p.d,v:p.v}));}
+function series(m){
+  if(!m.dense) return m.data.map(p=>({d:p.d,v:p.v}));
+  const avg=rolling(m.data);
+  // 7 vrk keskiarvo vaatii ≥5 mittausta. Ennen sitä näytetään raakalukemat, jotta ensimmäinen kirjaus näkyy.
+  return avg.length>=2?avg:m.data.map(p=>({d:p.d,v:p.v}));
+}
 function smooth(P){
   if(P.length<2)return '';
   if(P.length===2)return 'M'+P[0].x.toFixed(1)+' '+P[0].y.toFixed(1)+' L'+P[1].x.toFixed(1)+' '+P[1].y.toFixed(1);
@@ -1368,7 +1373,7 @@ function drawGraph(){
 
   let seg=[],segs=[];
   line.forEach((p,i)=>{
-    if(i&&p.d-line[i-1].d>(m.dense?2:14)){segs.push(seg);seg=[];}
+    if(i&&m.dense&&p.d-line[i-1].d>2){segs.push(seg);seg=[];}
     seg.push(p);
   });
   if(seg.length)segs.push(seg);
@@ -1412,21 +1417,29 @@ function updateSummary(m,line,proj,projEnd){
   const last=line[line.length-1].v,first=line[0].v,change=first-last;
   $('gVal').textContent=fmt(last,m.dec);
   $('gUnit').textContent=m.unit;
-  $('gSub').textContent=m.sub;
+  const hasRoll=m.dense&&rolling(m.data).length>=2;
+  $('gSub').textContent=hasRoll?m.sub:(m.dense?'viimeisin mittaus':m.sub);
   $('lgLine').style.background=m.color;
   const ok=last<=m.target;
   const pill=$('gPill');
-  pill.textContent=ok?'Tavoitteessa':(change>(m.dec?0.2:2)?'Laskusuunnassa':'Ei laskusuuntaa');
-  pill.className='pill '+(ok?'ok':(change>(m.dec?0.2:2)?'mid':'off'));
+  if(m.data.length<3){
+    pill.textContent='Kirjattu';
+    pill.className='pill mid';
+  }else{
+    pill.textContent=ok?'Tavoitteessa':(change>(m.dec?0.2:2)?'Laskusuunnassa':'Ei laskusuuntaa');
+    pill.className='pill '+(ok?'ok':(change>(m.dec?0.2:2)?'mid':'off'));
+  }
 
   const st=$('gStats');st.innerHTML='';
-  const add=(b,t)=>{const d=document.createElement('div');d.innerHTML='<b>'+b+'</b>'+t;st.appendChild(d);};
-  add('−'+fmt(change,m.dec)+' '+m.unit,'muutos alusta');
+  const add=(b,t)=>{const d=document.createElement('div');d.innerHTML='<b>'+esc(b)+'</b>'+esc(t);st.appendChild(d);};
+  add((change>=0?'−':'+')+fmt(Math.abs(change),m.dec)+' '+m.unit,'muutos alusta');
   if(proj)add('−'+Math.abs(proj.slope*7).toFixed(m.dec?2:1),'viikkovauhti');
-  add(m.data.length,'mittausta');
+  add(String(m.data.length),'mittausta');
 
   const ins=$('insights');ins.innerHTML='';
-  const items=[{k:'good',t:'Suunta on oikea',d:'Keskiarvo on laskenut '+fmt(change,m.dec)+' '+m.unit+' seurannan alusta.'}];
+  const items=m.data.length<5
+    ?[{k:'info',t:'Ensimmäiset mittaukset kirjattu',d:'Käyrä täydentyy, kun kirjaat lisää arvoja. Yksittäinen lukema ei vielä kerro suuntaa — 7 vrk keskiarvo ilmestyy noin viiden mittauksen jälkeen.'}]
+    :[{k:'good',t:'Suunta on oikea',d:'Keskiarvo on laskenut '+fmt(change,m.dec)+' '+m.unit+' seurannan alusta.'}];
   if(projEnd)items.push({k:'info',t:'Suuntaa-antava arvio',d:'Jos nykyinen muutosvauhti jatkuisi, tavoite osuisi noin viikolle '+(Math.floor(projEnd/7)+1)+'. Arvio on laskennallinen, ei ennuste hoidosta.'});
   if(m.dense){
     const rec=m.data.filter(p=>p.d>=TODAY-14).map(p=>p.v);
