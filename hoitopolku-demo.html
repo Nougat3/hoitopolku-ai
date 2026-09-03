@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
 <title>Hoitopolku — seuranta</title>
 <meta name="description" content="Seuraa verenpainetta, verensokeria ja painoa. Jaa yhteenveto lääkärille koodilla. Seurantatyökalu — ei diagnoosia.">
 <meta name="theme-color" content="#FBFAF7">
@@ -75,7 +76,7 @@ h3{font-size:16px;font-weight:700;letter-spacing:-.025em}
 .card.gold{background:var(--g0);box-shadow:none}
 
 /* ── metric tiles ── */
-.tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(160px,100%),1fr));gap:10px}
 .tile{
   background:#fff;border-radius:var(--r);padding:16px 15px 14px;text-align:left;width:100%;
   box-shadow:0 1px 3px rgba(30,24,12,.05),0 0 0 1px rgba(30,24,12,.04);
@@ -505,16 +506,27 @@ body.sheet-open{overflow:hidden}
       <div class="sub" id="kotiSub">Viikko 12 seurantaa · 118 mittausta kirjattu</div>
     </div>
 
+    <div class="card" style="background:#FAEDE9;border:1.5px solid #E8C4BB;margin-bottom:14px;padding:16px 18px">
+      <div style="display:flex;gap:13px;align-items:flex-start">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#B3452C" stroke-width="2.4" stroke-linecap="round" aria-hidden="true" style="flex:none;margin-top:1px">
+          <circle cx="12" cy="12" r="9"/><path d="M12 7v6M12 16.5v.5"/>
+        </svg>
+        <div style="font-size:14px;line-height:1.5;color:#8A3A26">
+          <strong style="display:block;margin-bottom:5px;font-size:15px;color:#B3452C">Tärkeä turvallisuusmuistutus</strong>
+          <span>Tämä on seurantatyökalu — <strong>ei korvaa lääkärin arviota</strong>. Äkillisissä oireissa (rintakipu, hengenahdistus, halvausoireet) tai hätätilanteessa <strong>soita välittömästi 112</strong>.<br><br>✓ Turvatoiminnot (hälytysrajat, "hae hoitoa" -ohjeet) ovat <strong>aina ilmaisia</strong> — ei koskaan maksumuurin takana.</span>
+        </div>
+      </div>
+    </div>
+
     <div class="next" id="nextCard">
       <div class="kick">SEURAAVA ASKEL</div>
       <h2 id="nextTitle">Kirjaa verenpaine</h2>
       <p id="nextText">Kaksi mittausta päivässä kertoo todellisen tason. Tämä alusta ei diagnostisoi — se näyttää suunnan.</p>
       <button class="btn gold" type="button" onclick="openEntry(ENTRY[0])">Kirjaa verenpaine</button>
     </div>
-    <p class="disc">Seurantatyökalu · ei korvaa lääkärin arviota · hätätilanteessa 112</p>
 
     <div class="label">SEURATTAVAT ARVOT</div>
-    <div class="tiles" id="tiles"></div>
+    <div class="tiles" id="tiles" style="grid-template-columns:repeat(auto-fit,minmax(min(160px,100%),1fr))"></div>
 
     <div class="label">VIIMEISIMMÄT KIRJAUKSET</div>
     <div class="card" id="logList"></div>
@@ -632,29 +644,37 @@ body.sheet-open{overflow:hidden}
   <div class="view" id="v-koodi">
     <div class="head">
       <h1>Jaa lääkärille</h1>
-      <div class="sub">Anna koodi vastaanotolla — lääkäri näkee tietosi selaimessa</div>
+      <div class="sub">Anna koodi vastaanotolla — lääkäri näkee yhteenvedon selaimessaan</div>
     </div>
 
     <div class="code-hero">
-      <div class="code-lbl">JAETTAVA KOODI</div>
+      <div class="code-lbl">LÄÄKÄRIKOODI</div>
       <div class="code-val" id="codeVal">HP-4827</div>
-      <div class="code-exp" id="codeExp">Voimassa 7 vuorokautta<br>Vanhenee 3.9.2026 klo 15.40</div>
+      <div class="code-exp" id="codeExp" style="color:var(--mid);font-weight:500">Voimassa 7 vuorokautta<br>Vanhenee 3.9.2026 klo 15.40</div>
+    </div>
+    
+    <div class="card" style="background:#FBF2E0;border:1px solid #EBD9A8;margin-bottom:12px">
+      <div style="font-size:13.5px;line-height:1.6;color:#8A6B16">
+        <strong style="display:block;margin-bottom:6px;color:#946A16">Jaettava seurantanäkymä (demo-only)</strong>
+        Koodi ja jakolinkki näyttävät <strong>vain seurantatiedot</strong> (mittaukset, lääkkeet, oireet) — ei henkilötunnusta tai diagnooseja. Lääkäri ei voi tehdä muutoksia. <strong>Koodi vanhenee 7 vrk:ssa</strong> — luo uusi tarvittaessa.
+      </div>
     </div>
 
     <div class="card">
       <div class="row"><span class="k">Verenpaine</span><span class="v" id="cntBp">—</span></div>
       <div class="row"><span class="k">Verensokeri</span><span class="v" id="cntGlu">—</span></div>
       <div class="row"><span class="k">Paino</span><span class="v" id="cntWt">—</span></div>
+      <div class="row"><span class="k">Kolesteroli</span><span class="v" id="cntChol">—</span></div>
       <div class="row"><span class="k">Laboratorio</span><span class="v" id="cntLab">—</span></div>
       <div class="row"><span class="k">Lääkkeet</span><span class="v" id="cntMed">—</span></div>
       <div class="row"><span class="k">Oireet</span><span class="v" id="cntSym">—</span></div>
     </div>
 
-    <button class="btn full" type="button" onclick="copyShareLink()" style="margin-top:4px">Kopioi jakolinkki</button>
-    <button class="btn sec full" type="button" onclick="openDoctorPreview()" style="margin-top:8px">Avaa lääkärin näkymä</button>
-    <button class="btn sec full" type="button" onclick="newCode()" style="margin-top:8px">Luo uusi koodi</button>
-    <p style="font-size:12.5px;color:var(--mid);margin-top:14px;text-align:center;line-height:1.5">
-      Linkki sisältää seurantayhteenvedon 7 vuorokaudeksi.<br>Ei henkilötunnusta · voit luoda uuden koodin milloin tahansa.<br>Sisältö ei korvaa henkilökohtaista lääkärin arviota.
+    <button class="btn full" type="button" onclick="copyShareLink()" style="margin-top:4px">Kopioi jakolinkki leikepöydälle</button>
+    <button class="btn sec full" type="button" onclick="openDoctorPreview()" style="margin-top:8px">Esikatsele lääkärin näkymä</button>
+    <button class="btn sec full" type="button" onclick="newCode()" style="margin-top:8px">Luo uusi koodi (vanha lakkaa)</button>
+    <p style="font-size:12.5px;color:var(--mid);margin-top:14px;text-align:center;line-height:1.6;padding:0 8px">
+      <strong>Turvallisuus:</strong> Linkki sisältää vain seurantayhteenvedon — ei henkilötunnusta, ei muokkausoikeuksia. Voit luoda uuden koodin milloin tahansa (vanha vanhenee). Tiedot eivät korvaa lääkärin arviota.
     </p>
   </div>
 
@@ -812,7 +832,15 @@ const METRICS=[
   {key:'glu',name:'Verensokeri', unit:'mmol/l', dec:1, target:6.0, color:'#2F6690', dense:true,
    desc:'Sormimittaus aamuisin, paastoarvo', sub:'7 vrk keskiarvo', get data(){return GLU;}},
   {key:'wt', name:'Paino', unit:'kg', dec:1, target:89.5,color:'#6B5B95', dense:false,
-   desc:'Viikkopunnitus samana aamuna', sub:'viikkopunnitus', get data(){return WT;}}
+   desc:'Viikkopunnitus samana aamuna', sub:'viikkopunnitus', get data(){return WT;}},
+  {key:'chol',name:'Kolesteroli (LDL)', unit:'mmol/l', dec:1, target:3.0, color:'#A67C2E', dense:false,
+   desc:'Laboratoriotulos', sub:'viimeisin mittaus', get data(){
+     const ldl=LABS.find(l=>l.n==='LDL-kolesteroli');
+     if(!ldl||ldl.to===null)return [];
+     const latest=ldl.to;
+     const prev=ldl.from!==null?ldl.from:latest;
+     return [{d:TODAY-28,v:prev},{d:TODAY,v:latest}];
+   }}
 ];
 
 function emptyState(){
@@ -1006,7 +1034,24 @@ function renderTiles(){
   let any=false;
   METRICS.forEach((m,i)=>{
     const s=series(m),vals=s.slice(-10).map(p=>p.v);
-    if(!vals.length)return;
+    if(!vals.length){
+      const b=document.createElement('button');
+      b.className='tile';
+      b.style.opacity='0.6';
+      b.innerHTML='<span class="t-top"><i style="background:'+m.color+'"></i>'+m.name+'</span>'+
+        '<span class="t-val" style="font-size:18px;color:var(--mid)">— <small>'+m.unit+'</small></span>'+
+        '<span class="t-tgt">Ei vielä mittauksia</span>';
+      const p=document.createElement('span');p.className='pill mid';p.textContent='Aloita kirjaus';
+      b.appendChild(p);
+      b.addEventListener('click',()=>{
+        if(m.key==='chol')openEntry(ENTRY[3]);
+        else if(m.key==='bp')openEntry(ENTRY[0]);
+        else if(m.key==='glu')openEntry(ENTRY[1]);
+        else if(m.key==='wt')openEntry(ENTRY[2]);
+      });
+      box.appendChild(b);
+      return;
+    }
     any=true;
     const last=vals[vals.length-1],[cls,txt]=tileState(m,last,s[0].v);
     const b=document.createElement('button');
@@ -1021,7 +1066,11 @@ function renderTiles(){
     box.appendChild(b);
   });
   if(!any){
-    box.innerHTML='<div class="empty" style="grid-column:1/-1"><h3>Ei vielä mittauksia</h3>Kirjaa verenpaine, verensokeri tai paino plus-painikkeesta.</div>';
+    const emptyMsg=document.createElement('div');
+    emptyMsg.className='empty';
+    emptyMsg.style.gridColumn='1/-1';
+    emptyMsg.innerHTML='<h3>Aloita seuranta</h3>Kirjaa ensimmäinen mittauksesi + -painikkeesta. Voit seurata verenpainetta, verensokeria, painoa ja kolesterolia.';
+    box.appendChild(emptyMsg);
   }
 }
 
@@ -1245,7 +1294,7 @@ function updateSummary(m,line,proj,projEnd){
     const d=document.createElement('div');d.className='ins '+i.k;
     const ic=i.k==='good'?'<path d="M5 13l4 4L19 7"/>':(i.k==='warn'?'<circle cx="12" cy="12" r="9"/><path d="M12 7v6M12 16.5v.5"/>':'<circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/>');
     d.innerHTML='<span class="ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">'+ic+'</svg></span>'+
-      '<span><span class="t">'+i.t+'</span><span class="d">'+i.d+'</span></span>';
+      '<span><span class="t">'+esc(i.t)+'</span><span class="d">'+esc(i.d)+'</span></span>';
     ins.appendChild(d);
   });
 }
@@ -1435,6 +1484,11 @@ function updateCounts(){
   const c=$('cntBp');if(c)c.textContent=BP.length? (BP.length+' mittausta') : 'Ei vielä';
   const g=$('cntGlu');if(g)g.textContent=GLU.length? (GLU.length+' mittausta') : 'Ei vielä';
   const w=$('cntWt');if(w)w.textContent=WT.length? (WT.length+' punnitusta') : 'Ei vielä';
+  const chol=$('cntChol');
+  if(chol){
+    const ldl=LABS.find(l=>l.n==='LDL-kolesteroli');
+    chol.textContent=(ldl&&ldl.to!==null)? (fmt(ldl.to,1)+' mmol/l') : 'Ei vielä';
+  }
   const lab=$('cntLab');
   if(lab){
     const named=LABS.filter(l=>l.to!=null).map(l=>l.n.replace(/-kolesteroli/,'').replace('Kreatiniini','krea')).slice(0,4);
@@ -1557,10 +1611,10 @@ function renderCalendar(){
   box.innerHTML=items.map(it=>{
     const done=isDone(key,it.id);
     const tag=it.kind==='m'?'Mittaus':(it.kind==='l'?'Lääke':'Oire');
-    return '<button type="button" class="cal-item kind-'+it.kind+(done?' done':'')+'" data-id="'+esc(it.id)+'" data-action="'+esc(it.action)+'" data-slot="'+(it.slot||'')+'">'+
+    return '<button type="button" class="cal-item kind-'+esc(it.kind)+(done?' done':'')+'" data-id="'+esc(it.id)+'" data-action="'+esc(it.action)+'" data-slot="'+(it.slot||'')+'">'+
       '<span class="cal-check" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg></span>'+
       '<span><span class="ci-n">'+esc(it.name)+'</span><span class="ci-d">'+esc(it.time)+' · '+esc(it.desc)+'</span></span>'+
-      '<span class="ci-tag">'+(done?'Tehty':tag)+'</span></button>';
+      '<span class="ci-tag">'+(done?'Tehty':esc(tag))+'</span></button>';
   }).join('');
 
   box.querySelectorAll('.cal-item').forEach(btn=>{
@@ -1613,17 +1667,17 @@ $('entSave').onclick=()=>{
     BP.push({d:TODAY,t:entTime==='Aamu'?'am':'pm',v:Math.round(sy),dia:Math.round(di)});
     addLog('Verenpaine',Math.round(sy)+'/'+Math.round(di),'mmHg','#B3452C','tänään klo '+clock()+' · '+entTime.toLowerCase());
     if(sy>=180||di>=110){
-      msg('Tallennettu. Lukema on korkea — lepää viisi minuuttia ja mittaa uudelleen. Jos arvo toistuu, ota yhteys hoitavaan tahoon. Rintakivun tai halvausoireiden yhteydessä soita 112.','warn');
+      msg('⚠️ TÄRKEÄÄ: Lukema on erittäin korkea ('+Math.round(sy)+'/'+Math.round(di)+'). Lepää 5 min ja mittaa uudelleen. Jos toistuu → ota yhteyttä hoitavaan tahoon SAMANA PÄIVÄNÄ. Rintakipu, hengenahdistus tai halvausoireet → SOITA 112 HETI.','warn');
       return refresh(false);
     }
-    if(sy<100){msg('Tallennettu. Lukema on matala — kirjaa oire jos sinua huimaa.','warn');return refresh(false);}
+    if(sy<100){msg('Tallennettu. Lukema on matala ('+Math.round(sy)+'). Jos sinua huimaa, pyörryttää tai et jaksa → ota yhteyttä terveydenhuoltoon. Vakavat oireet → soita 112.','warn');return refresh(false);}
   }else if(k===1){
     const v=num('e_glu');
     if(v===null)return msg('Syötä verensokeri.','warn');
     if(v<1.5||v>35)return msg('Tarkista lukema.','warn');
     GLU.push({d:TODAY,t:'am',v:v});
     addLog('Verensokeri',fmt(v,1),'mmol/l','#2F6690');
-    if(v<4.0){msg('Tallennettu. Arvo on matala — nauti hiilihydraattia ja mittaa uudelleen 15 min kuluttua.','warn');return refresh(false);}
+    if(v<4.0){msg('⚠️ Verensokeri matala ('+fmt(v,1)+'). Nauti HETI hiilihydraattia (esim. mehua, sokeria). Mittaa uudelleen 15 min kuluttua. Jos alle 3,0 tai tajunnan hämärtymistä → soita 112.','warn');return refresh(false);}
   }else if(k===2){
     const v=num('e_wt');
     if(v===null)return msg('Syötä paino.','warn');
@@ -1802,7 +1856,7 @@ addEventListener('orientationchange',()=>setTimeout(()=>{hideTip();drawGraph();}
 function newCode(){
   ensureShareCode(true);
   saveState();
-  toast('Uusi koodi luotu — vanha lakkasi toimimasta');
+  toast('Uusi koodi luotu — vanha koodi lakkasi toimimasta ja vanhenee');
 }
 async function copyShareLink(){
   const url=shareUrl();
