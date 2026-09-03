@@ -249,6 +249,39 @@ h3{font-size:16px;font-weight:700;letter-spacing:-.025em}
 .cal-item.kind-o:not(.done) .ci-tag{color:#2F6690;background:#EAF1F7}
 .cal-item.done .ci-tag{background:var(--green-t);color:var(--green)}
 .cal-empty{font-size:13.5px;color:var(--mid);text-align:center;padding:18px 8px;line-height:1.5}
+.cal-label-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px}
+.cal-label-row .label{margin:0}
+.cal-edit-btn{
+  font-size:13px;font-weight:700;color:var(--g);padding:6px 10px;border-radius:980px;
+  transition:background .15s;
+}
+.cal-edit-btn:active{background:var(--g0)}
+.cal-plan-row{
+  display:flex;justify-content:space-between;align-items:center;gap:12px;width:100%;
+  text-align:left;padding:12px 0;border-bottom:1px solid var(--line);font-size:14px;
+}
+.cal-plan-row:last-child{border-bottom:none}
+.cal-plan-row .k{color:var(--mid)}
+.cal-plan-row .v{font-weight:600;text-align:right}
+.cal-plan-row .chev{color:var(--mid2);flex:none;margin-left:4px}
+.plan-row{
+  display:flex;align-items:center;justify-content:space-between;gap:14px;
+  padding:14px 2px;border-bottom:1px solid var(--line);
+}
+.plan-row:last-of-type{border-bottom:none}
+.plan-row .pr-n{font-size:15px;font-weight:600;display:block}
+.plan-row .pr-d{font-size:12.5px;color:var(--mid);display:block;margin-top:2px}
+.plan-tog{
+  width:48px;height:30px;border-radius:980px;flex:none;position:relative;
+  background:var(--line);transition:background .2s;
+}
+.plan-tog[aria-checked="true"]{background:var(--g)}
+.plan-tog i{
+  position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;
+  background:#fff;box-shadow:0 1px 3px rgba(30,24,12,.2);transition:transform .2s;
+}
+.plan-tog[aria-checked="true"] i{transform:translateX(18px)}
+.plan-note{font-size:12.5px;color:var(--mid);line-height:1.5;padding:10px 2px 4px}
 .row{display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid var(--line);font-size:14px}
 .row:last-child{border-bottom:none}
 .row .k{color:var(--mid)}
@@ -629,15 +662,18 @@ body.sheet-open{overflow:hidden}
 
     <div class="card" id="calAgenda"></div>
 
-    <div class="label">AIKATAULU</div>
-    <div class="card" id="calPlan">
-      <div class="row"><span class="k">Verenpaine</span><span class="v">Aamu + ilta</span></div>
-      <div class="row"><span class="k">Verensokeri</span><span class="v">Aamu (paasto)</span></div>
-      <div class="row"><span class="k">Paino</span><span class="v">Kerran viikossa</span></div>
-      <div class="row"><span class="k">Lääkkeet</span><span class="v" id="calPlanMeds">Listan mukaan</span></div>
-      <div class="row"><span class="k">Oireet</span><span class="v">Iltaisin</span></div>
+    <div class="cal-label-row">
+      <div class="label">AIKATAULU</div>
+      <button type="button" class="cal-edit-btn" id="calPlanEdit" onclick="openPlanEdit()">Muokkaa</button>
     </div>
-    <p class="disc">Lääkärikoodi on yläpalkissa — jaa vastaanotolla. Kalenteri ei lähetä muistutuksia tässä versiossa.</p>
+    <div class="card" id="calPlan" role="button" tabindex="0" aria-label="Muokkaa aikataulua" onclick="openPlanEdit()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openPlanEdit();}">
+      <div class="cal-plan-row"><span class="k">Verenpaine</span><span class="v" id="calPlanBp">Aamu + ilta</span><span class="chev" aria-hidden="true">›</span></div>
+      <div class="cal-plan-row"><span class="k">Verensokeri</span><span class="v" id="calPlanGlu">Aamu (paasto)</span><span class="chev" aria-hidden="true">›</span></div>
+      <div class="cal-plan-row"><span class="k">Paino</span><span class="v" id="calPlanWt">Kerran viikossa</span><span class="chev" aria-hidden="true">›</span></div>
+      <div class="cal-plan-row"><span class="k">Lääkkeet</span><span class="v" id="calPlanMeds">Listan mukaan</span><span class="chev" aria-hidden="true">›</span></div>
+      <div class="cal-plan-row"><span class="k">Oireet</span><span class="v" id="calPlanSym">Iltaisin</span><span class="chev" aria-hidden="true">›</span></div>
+    </div>
+    <p class="disc">Lääkärikoodi on yläpalkissa — jaa vastaanotolla. Kalenteri ei lähetä muistutuksia tässä versiossa. Muuta mittauksia ja oireseurantaa Muokkaa-painikkeesta.</p>
   </div>
 
   <!-- KOODI (yläpalkista) -->
@@ -729,6 +765,16 @@ body.sheet-open{overflow:hidden}
   <button class="cancel" onclick="closeEnt()">Peruuta</button>
 </div>
 
+
+<div class="sheet-bg" id="planBg"></div>
+<div class="sheet" id="planSheet" role="dialog" aria-modal="true" aria-labelledby="planSheetTitle">
+  <div class="grab"></div>
+  <div class="sheet-t" id="planSheetTitle">MUOKKAA AIKATAULUA</div>
+  <div id="planFields"></div>
+  <p class="plan-note" id="planHint">Muutokset päivittävät päivän agendan heti. Lääkkeiden aamu-/ilta-ajat säädetään alla tai Tiedot-välilehdellä.</p>
+  <button class="btn full" type="button" id="planSave" onclick="savePlanEdit()">Tallenna aikataulu</button>
+  <button class="cancel" type="button" onclick="closePlanEdit()">Peruuta</button>
+</div>
 
 <div class="sheet-bg" id="acctBg"></div>
 <div class="sheet" id="acctSheet" role="dialog" aria-modal="true" aria-label="Tili">
@@ -1394,14 +1440,13 @@ addEventListener('scroll',()=>{if(!tick){requestAnimationFrame(onScroll);tick=tr
 /* ══ SHEETS ══ */
 const sheet=$('sheet'),sheetBg=$('sheetBg'),entSheet=$('entSheet'),entBg=$('entBg');
 function syncSheetLock(){
-  const open=sheet.classList.contains('on')||entSheet.classList.contains('on')||($('acctSheet')&&$('acctSheet').classList.contains('on'));
+  const open=sheet.classList.contains('on')||entSheet.classList.contains('on')||($('acctSheet')&&$('acctSheet').classList.contains('on'))||($('planSheet')&&$('planSheet').classList.contains('on'));
   document.body.classList.toggle('sheet-open',!!open);
 }
 function openSheet(){sheet.classList.add('on');sheetBg.classList.add('on');syncSheetLock();}
 function closeSheet(){sheet.classList.remove('on');sheetBg.classList.remove('on');syncSheetLock();}
 function closeEnt(){entSheet.classList.remove('on');entBg.classList.remove('on');syncSheetLock();}
 sheetBg.onclick=closeSheet;entBg.onclick=closeEnt;
-addEventListener('keydown',e=>{if(e.key==='Escape'){closeSheet();closeEnt();}});
 
 const ENTRY=[
   {i:0,name:'Verenpaine',d:'Ylä- ja alapaine',color:'#B3452C',tint:'var(--red-t)',
@@ -1600,6 +1645,7 @@ function renderCalendar(){
 
   const medLbl=$('calPlanMeds');
   if(medLbl) medLbl.textContent=MEDS.length? (MEDS.length+' lääkettä · aamu/ilta') : 'Ei lääkkeitä — lisää Tiedot-välilehdellä';
+  renderPlanSummary();
 
   const box=$('calAgenda');
   if(!box) return;
@@ -1654,6 +1700,161 @@ function renderCalendar(){
       }
     };
   });
+}
+
+/* ══ AIKATAULUN MUOKKAUS ══ */
+let planDraft=null;
+let planMedDraft=null; // [{am,pm}, ...] parallel to MEDS
+const FI_DAYS_SHORT=['su','ma','ti','ke','to','pe','la'];
+function planBpLabel(){
+  const am=PLAN.bpAm!==false, pm=PLAN.bpPm!==false;
+  if(am&&pm) return 'Aamu + ilta';
+  if(am) return 'Vain aamu';
+  if(pm) return 'Vain ilta';
+  return 'Ei seurannassa';
+}
+function planGluLabel(){ return PLAN.gluAm!==false ? 'Aamu (paasto)' : 'Ei seurannassa'; }
+function planWtLabel(){
+  if(PLAN.wtDow==null) return 'Ei seurannassa';
+  const d=FI_DAYS_LONG[PLAN.wtDow]||'—';
+  return 'Kerran viikossa · '+d;
+}
+function planSymLabel(){ return PLAN.symEve!==false ? 'Iltaisin' : 'Ei seurannassa'; }
+function renderPlanSummary(){
+  const bp=$('calPlanBp'); if(bp) bp.textContent=planBpLabel();
+  const glu=$('calPlanGlu'); if(glu) glu.textContent=planGluLabel();
+  const wt=$('calPlanWt'); if(wt) wt.textContent=planWtLabel();
+  const sym=$('calPlanSym'); if(sym) sym.textContent=planSymLabel();
+  const med=$('calPlanMeds');
+  if(med) med.textContent=MEDS.length? (MEDS.length+' lääkettä · aamu/ilta') : 'Ei lääkkeitä — lisää Tiedot-välilehdellä';
+  const edit=$('calPlanEdit');
+  if(edit) edit.style.display=doctorReadOnly?'none':'';
+}
+function makeToggle(on, onChange){
+  const b=document.createElement('button');
+  b.type='button';
+  b.className='plan-tog';
+  b.setAttribute('role','switch');
+  b.setAttribute('aria-checked', on?'true':'false');
+  b.innerHTML='<i aria-hidden="true"></i>';
+  b.onclick=()=>{
+    const next=b.getAttribute('aria-checked')!=='true';
+    b.setAttribute('aria-checked', next?'true':'false');
+    onChange(next);
+  };
+  return b;
+}
+function openPlanEdit(){
+  if(doctorReadOnly){ toast('Lukunäkymä — muutokset pois käytöstä'); return; }
+  planDraft={
+    bpAm:PLAN.bpAm!==false,
+    bpPm:PLAN.bpPm!==false,
+    gluAm:PLAN.gluAm!==false,
+    wtDow:PLAN.wtDow==null?null:PLAN.wtDow,
+    symEve:PLAN.symEve!==false
+  };
+  planMedDraft=MEDS.map(m=>({am:!!m.am, pm:!!m.pm}));
+  const w=$('planFields'); if(!w) return;
+  w.innerHTML='';
+
+  function addRow(name, desc, control){
+    const row=document.createElement('div');
+    row.className='plan-row';
+    const left=document.createElement('div');
+    left.innerHTML='<span class="pr-n">'+esc(name)+'</span><span class="pr-d">'+esc(desc)+'</span>';
+    row.appendChild(left);
+    row.appendChild(control);
+    w.appendChild(row);
+  }
+
+  addRow('Verenpaine · aamu','Kotimittaus ~07.30', makeToggle(planDraft.bpAm, v=>{planDraft.bpAm=v;}));
+  addRow('Verenpaine · ilta','Kotimittaus ~19.00', makeToggle(planDraft.bpPm, v=>{planDraft.bpPm=v;}));
+  addRow('Verensokeri · aamu','Paastoarvo ~07.45', makeToggle(planDraft.gluAm, v=>{planDraft.gluAm=v;}));
+  addRow('Oireseuranta · ilta','Kirjaa päivän oireet ~21.00', makeToggle(planDraft.symEve, v=>{planDraft.symEve=v;}));
+
+  const wtWrap=document.createElement('div');
+  wtWrap.style.cssText='padding:14px 2px 6px;border-bottom:1px solid var(--line)';
+  wtWrap.innerHTML='<div class="pr-n" style="margin-bottom:2px">Paino</div><div class="pr-d" style="margin-bottom:10px">Viikkopunnitus — valitse päivä tai poista</div>';
+  const seg=document.createElement('div');
+  seg.className='seg';
+  seg.style.marginBottom='0';
+  const opts=[{v:null,l:'Ei'},...[1,2,3,4,5,6,0].map(d=>({v:d,l:FI_DAYS_SHORT[d]}))];
+  opts.forEach(o=>{
+    const b=document.createElement('button');
+    b.type='button';
+    b.textContent=o.l;
+    const sel=(o.v===null && planDraft.wtDow==null) || (o.v!==null && planDraft.wtDow===o.v);
+    b.setAttribute('aria-selected', sel?'true':'false');
+    b.onclick=()=>{
+      planDraft.wtDow=o.v;
+      seg.querySelectorAll('button').forEach(x=>x.setAttribute('aria-selected','false'));
+      b.setAttribute('aria-selected','true');
+    };
+    seg.appendChild(b);
+  });
+  wtWrap.appendChild(seg);
+  w.appendChild(wtWrap);
+
+  if(MEDS.length){
+    const medHead=document.createElement('div');
+    medHead.style.cssText='font-size:11.5px;font-weight:700;letter-spacing:.09em;color:var(--mid2);margin:18px 2px 4px';
+    medHead.textContent='LÄÄKEOTTO';
+    w.appendChild(medHead);
+    MEDS.forEach((m,i)=>{
+      const row=document.createElement('div');
+      row.className='plan-row';
+      const left=document.createElement('div');
+      left.innerHTML='<span class="pr-n">'+esc(m.n)+'</span><span class="pr-d">'+esc(m.dose||'')+'</span>';
+      row.appendChild(left);
+      const segs=document.createElement('div');
+      segs.className='seg';
+      segs.style.cssText='margin:0;flex:none';
+      [['am','Aamu'],['pm','Ilta']].forEach(([key,label])=>{
+        const b=document.createElement('button');
+        b.type='button';
+        b.textContent=label;
+        b.setAttribute('aria-selected', planMedDraft[i][key]?'true':'false');
+        b.onclick=()=>{
+          planMedDraft[i][key]=!planMedDraft[i][key];
+          b.setAttribute('aria-selected', planMedDraft[i][key]?'true':'false');
+        };
+        segs.appendChild(b);
+      });
+      row.appendChild(segs);
+      w.appendChild(row);
+    });
+  }
+
+  $('planSheet').classList.add('on');
+  $('planBg').classList.add('on');
+  syncSheetLock();
+}
+function closePlanEdit(){
+  const ps=$('planSheet'), pb=$('planBg');
+  if(ps) ps.classList.remove('on');
+  if(pb) pb.classList.remove('on');
+  planDraft=null; planMedDraft=null;
+  syncSheetLock();
+}
+function savePlanEdit(){
+  if(!planDraft || doctorReadOnly) return;
+  PLAN.bpAm=!!planDraft.bpAm;
+  PLAN.bpPm=!!planDraft.bpPm;
+  PLAN.gluAm=!!planDraft.gluAm;
+  PLAN.wtDow=planDraft.wtDow;
+  PLAN.symEve=!!planDraft.symEve;
+  if(planMedDraft && planMedDraft.length===MEDS.length){
+    MEDS.forEach((m,i)=>{
+      m.am=!!planMedDraft[i].am;
+      m.pm=!!planMedDraft[i].pm;
+    });
+    renderMeds();
+  }
+  saveState();
+  renderPlanSummary();
+  renderCalendar();
+  closePlanEdit();
+  toast('Aikataulu päivitetty');
 }
 
 $('entSave').onclick=()=>{
@@ -2007,6 +2208,7 @@ function tryDoctorMode(){
 function bootUI(){
   syncCodeUI();
   renderTiles();renderLabs();renderMeds();renderSyms();renderLog();updateCounts();
+  if(typeof renderPlanSummary==='function') renderPlanSummary();
   if(typeof selMetric==='function') selMetric(0);
   if(typeof renderCalendar==='function' && $('v-kalenteri') && $('v-kalenteri').classList.contains('on')) renderCalendar();
   const ban=$('seedBanner');
@@ -2016,10 +2218,11 @@ function bootUI(){
 /* sheets a11y */
 document.addEventListener('keydown',e=>{
   if(e.key!=='Escape') return;
-  closeSheet(); closeEnt(); closeAccount();
+  closeSheet(); closeEnt(); closePlanEdit(); closeAccount();
 });
 $('sheetBg').addEventListener('click', closeSheet);
 $('entBg').addEventListener('click', closeEnt);
+if($('planBg')) $('planBg').addEventListener('click', closePlanEdit);
 
 /* PWA + offline */
 if('serviceWorker' in navigator){
