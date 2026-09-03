@@ -339,6 +339,55 @@ h3{font-size:16px;font-weight:700;letter-spacing:-.025em}
 }
 .toast.on{opacity:1;transform:translate(-50%,0)}
 
+/* consent modal */
+.consent-overlay{
+  position:fixed;inset:0;background:rgba(17,17,16,.85);z-index:999;
+  display:flex;align-items:center;justify-content:center;padding:20px;
+  backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);
+}
+.consent-modal{
+  background:var(--w);border-radius:20px;max-width:560px;width:100%;
+  max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(30,24,12,.4);
+  padding:28px 24px 24px;
+}
+.consent-modal h2{
+  font-size:22px;font-weight:800;letter-spacing:-.04em;margin-bottom:8px;
+  color:var(--k);line-height:1.15;
+}
+.consent-modal .cm-sub{
+  font-size:14px;color:var(--mid);margin-bottom:20px;line-height:1.5;
+}
+.consent-modal .cm-section{
+  background:#fff;border-radius:14px;padding:16px 18px;margin-bottom:12px;
+  border:1px solid var(--line);
+}
+.consent-modal .cm-section h3{
+  font-size:15px;font-weight:700;margin-bottom:8px;color:var(--k);
+}
+.consent-modal .cm-section p{
+  font-size:14px;color:var(--mid);line-height:1.55;margin-bottom:0;
+}
+.consent-modal .cm-section p+p{margin-top:10px}
+.consent-modal .cm-section ul{
+  margin:10px 0 0 0;padding-left:20px;font-size:14px;color:var(--mid);line-height:1.55;
+}
+.consent-modal .cm-section ul li{margin-bottom:6px}
+.consent-modal .cm-section ul li:last-child{margin-bottom:0}
+.consent-modal .cm-safety{
+  background:#FAEDE9;border:1.5px solid #E8C4BB;
+}
+.consent-modal .cm-safety h3{color:#B3452C}
+.consent-modal .cm-safety p{color:#8A3A26}
+.consent-modal .cm-actions{
+  display:flex;gap:10px;margin-top:18px;flex-wrap:wrap;
+}
+.consent-modal .cm-actions .btn{flex:1;min-width:140px}
+@media(max-width:400px){
+  .consent-modal{padding:22px 18px 20px}
+  .consent-modal .cm-actions{flex-direction:column}
+  .consent-modal .cm-actions .btn{width:100%}
+}
+
 /* symptom picker */
 .sym-opt{display:flex;align-items:center;gap:11px;width:100%;padding:12px;border-radius:12px;text-align:left;transition:background .15s}
 .sym-opt[aria-selected="true"]{background:var(--g0)}
@@ -507,6 +556,8 @@ body.sheet-open{overflow:hidden}
     </div>
 
     <div class="card" style="background:#FAEDE9;border:1.5px solid #E8C4BB;margin-bottom:14px;padding:16px 18px">
+      <!-- KRIITTINEN: 112-turvallisuusvaroitus EI SAA OLLA consent-portin takana -->
+      <!-- Tämä on staattinen HTML ja näkyy aina, riippumatta suostumuksen tilasta -->
       <div style="display:flex;gap:13px;align-items:flex-start">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#B3452C" stroke-width="2.4" stroke-linecap="round" aria-hidden="true" style="flex:none;margin-top:1px">
           <circle cx="12" cy="12" r="9"/><path d="M12 7v6M12 16.5v.5"/>
@@ -745,6 +796,45 @@ body.sheet-open{overflow:hidden}
   <button class="cancel" type="button" onclick="closeAccount()">Sulje</button>
 </div>
 
+<!-- CONSENT MODAL -->
+<div class="consent-overlay" id="consentOverlay" style="display:none">
+  <div class="consent-modal">
+    <h2>Tervetuloa Hoitopolku-demoon</h2>
+    <p class="cm-sub">Suomen Omalääkärit -brändillä tarjottava seurantatyökalu. Lue käyttöehdot ja hyväksy jatkaaksesi.</p>
+
+    <div class="cm-section cm-safety">
+      <h3>⚠️ Turvallisuus ensin</h3>
+      <p><strong>Hätätilanteessa soita aina 112</strong> — tämä työkalu ei korvaa lääkärin arviota. Turvallisuusvaroitukset (hälytysrajat, "hae hoitoa" -ohjeet) ovat <strong>aina ilmaisia ja käytettävissä</strong> — ne eivät koskaan ole maksumuurin takana.</p>
+    </div>
+
+    <div class="cm-section">
+      <h3>Tietojen käsittely</h3>
+      <p><strong>Kaikki tietosi pysyvät tässä selaimessa</strong> (localStorage) — ei pilvitallennusta, ei tiedonsiirtoa palvelimelle. Tämä on demo-sovellus, jonka tarjoaa Suomen Omalääkärit -brändi.</p>
+      <ul>
+        <li>Syöttämäsi mittaukset, lääkkeet ja oireet tallennetaan vain tähän laitteeseen</li>
+        <li>Jakokoodi-toiminto luo lyhyen URL:n selaimessasi, ei lähetä dataa palvelimelle</li>
+        <li>Tyhjentämällä selaimen tiedot menetät kaikki kirjaukset</li>
+      </ul>
+    </div>
+
+    <div class="cm-section">
+      <h3>Rekisterinpitäjä ja vastuut</h3>
+      <p>Tämä on demo-sovellus. Koska tiedot pysyvät selaimessasi eikä niitä kerätä keskitetysti, ei muodollista rekisterinpitäjää ole. Sovelluksen tarjoaa Suomen Omalääkärit -brändi. <strong>Oikeassa tuotannossa</strong> (jos tällainen rakennetaan) rekisterinpitäjä ilmoitetaan erikseen.</p>
+      <p>Sovellus <strong>ei diagnostisoi, ei hoida, ei anna lääketieteellisiä suosituksia</strong>. Se on seurantatyökalu, joka näyttää trendin. Kaikki hoitopäätökset tekee lääkäri.</p>
+    </div>
+
+    <div class="cm-section">
+      <h3>Evästeet ja analytiikka</h3>
+      <p>Tämä demo-sivu <strong>ei käytä evästeitä tai analytiikkapalveluita</strong> (esim. Google Analytics). Ainoa paikallinen tallennus on localStorage-avain, johon kirjaat itse mittauksesi.</p>
+    </div>
+
+    <div class="cm-actions">
+      <button class="btn sec" type="button" onclick="rejectConsent()">En hyväksy</button>
+      <button class="btn gold" type="button" onclick="acceptConsent()">Hyväksyn ja jatkan</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const reduce=matchMedia('(prefers-reduced-motion:reduce)').matches;
 const NS='http://www.w3.org/2000/svg';
@@ -762,8 +852,59 @@ const symDayLabels=()=>{
   return out;
 };
 
+/* ══ CONSENT MANAGEMENT ══ */
+function hasConsent(){
+  try{
+    const c=localStorage.getItem(CONSENT_KEY);
+    if(!c) return false;
+    const data=JSON.parse(c);
+    return data.accepted === true;
+  }catch(e){
+    return false;
+  }
+}
+function acceptConsent(){
+  try{
+    localStorage.setItem(CONSENT_KEY, JSON.stringify({
+      accepted: true,
+      timestamp: Date.now(),
+      version: 1
+    }));
+    const overlay=$('consentOverlay');
+    if(overlay) overlay.style.display='none';
+    // Nyt voidaan ladata ja tallentaa dataa
+    loadState();
+    bootUI();
+    toast('Suostumus hyväksytty — voit nyt käyttää sovellusta');
+  }catch(e){
+    console.error('Consent save failed', e);
+    toast('Suostumuksen tallentaminen epäonnistui');
+  }
+}
+function rejectConsent(){
+  const overlay=$('consentOverlay');
+  if(overlay){
+    overlay.innerHTML='<div class="consent-modal"><h2>Suostumus hylätty</h2>'+
+      '<p class="cm-sub">Et voi käyttää tätä sovellusta ilman suostumusta. Sulje tämä välilehti tai päivitä sivu hyväksyäksesi.</p>'+
+      '<div class="cm-actions"><button class="btn gold full" type="button" onclick="location.reload()">Päivitä sivu</button></div></div>';
+  }
+}
+function checkConsent(){
+  if(doctorReadOnly){
+    // Lääkärin lukunäkymässä ei vaadita suostumusta (jaettu snapshot)
+    return true;
+  }
+  if(!hasConsent()){
+    const overlay=$('consentOverlay');
+    if(overlay) overlay.style.display='flex';
+    return false;
+  }
+  return true;
+}
+
 /* ══ DATA + STORAGE (v1) ══ */
 const STORE_KEY='hoitopolku.v1';
+const CONSENT_KEY='hoitopolku.consent.v1';
 const DAYS=84,TODAY=DAYS-1;
 let sd=42;
 const rnd=()=>{sd=(sd*1103515245+12345)&0x7fffffff;return sd/0x7fffffff;};
@@ -869,6 +1010,11 @@ function applySeed(){
 }
 function saveState(){
   if(doctorReadOnly) return false;
+  // Tarkista suostumus ennen tallennusta
+  if(!hasConsent()){
+    console.warn('Ei suostumusta — tallennus estetty');
+    return false;
+  }
   try{
     const payload={
       v:1, savedAt:Date.now(), profile, BP, GLU, WT, LABS, MEDS, SYMS, LOG, EVENTS, PLAN, DONE
@@ -883,6 +1029,12 @@ function saveState(){
   }
 }
 function loadState(){
+  // Tarkista suostumus ennen lataamista
+  if(!hasConsent()){
+    // Älä lataa dataa ennen suostumusta
+    applySeed();
+    return;
+  }
   try{
     const raw=localStorage.getItem(STORE_KEY);
     if(!raw){ applySeed(); saveState(); return; }
@@ -2082,15 +2234,22 @@ const _q=new URLSearchParams(location.search);
 const _isShare=!!(_q.get('koodi') || (location.hash||'').startsWith('#d='));
 if(_isShare){
   // älä lataa/tallenna paikallista dataa — vain jaettu snapshot
+  // Lääkärin jaettu näkymä ei tarvitse suostumusta
   doctorReadOnly=true;
   if(!tryDoctorMode()){
     doctorReadOnly=false;
+    // Tarkista suostumus ennen lataamista
+    if(checkConsent()){
+      loadState();
+      bootUI();
+    }
+  }
+}else{
+  // Tarkista suostumus ennen lataamista
+  if(checkConsent()){
     loadState();
     bootUI();
   }
-}else{
-  loadState();
-  bootUI();
 }
 </script>
 </body>
