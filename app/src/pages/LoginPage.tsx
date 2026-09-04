@@ -1,6 +1,7 @@
 import { FormEvent, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { StrongAuthButton } from '@/components/auth/StrongAuthButton';
 import { supabase, handleSupabaseError } from '@/lib/supabase';
 
 export default function LoginPage() {
@@ -87,6 +88,17 @@ export default function LoginPage() {
           <button type="submit" className="btn-primary w-full" disabled={busy}>
             {busy ? 'Kirjaudutaan…' : 'Kirjaudu'}
           </button>
+
+          <div className="relative py-2">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-[var(--line)]" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase tracking-wide">
+              <span className="bg-white px-3 text-[var(--mid2)]">tai</span>
+            </div>
+          </div>
+
+          <StrongAuthButton />
         </form>
       </div>
     </div>

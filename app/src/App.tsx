@@ -3,6 +3,7 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/hooks/useAuthStore';
 import LoginPage from '@/pages/LoginPage';
+import StrongAuthCallbackPage from '@/pages/StrongAuthCallbackPage';
 import PatientDashboard from '@/pages/patient/Dashboard';
 import DoctorDashboard from '@/pages/doctor/Dashboard';
 import type { AppUser } from '@/types/database';
@@ -66,6 +67,8 @@ function App() {
           )
         }
       />
+
+      <Route path="/auth/callback" element={<StrongAuthCallbackPage />} />
 
       <Route
         path="/patient/*"

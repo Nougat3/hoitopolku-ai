@@ -33,6 +33,27 @@ supabase functions deploy ai-generate
 
 Ilman secretia LääkäriPRO käyttää `localDraft`-varaluonnosta.
 
+## Vahva tunnistus (Telia / Signicat) — valmis kytkettäväksi
+
+Ominaisuus on koodattu feature-flagin taakse. Oletuksena nappi näkyy “tulossa”-tilassa.
+
+```bash
+# app/.env.local — julkaisussa:
+VITE_STRONG_AUTH_ENABLED=true
+VITE_STRONG_AUTH_PROVIDER=telia   # tai signicat
+VITE_TELIA_OIDC_ISSUER=https://...
+VITE_TELIA_OIDC_CLIENT_ID=...
+```
+
+Edge Function (token-vaihto):
+
+```bash
+supabase secrets set TELIA_OIDC_CLIENT_SECRET=... TELIA_OIDC_ISSUER=... TELIA_OIDC_CLIENT_ID=...
+supabase functions deploy strong-auth-exchange
+```
+
+Callback-reitti: `/auth/callback`. Provider-vaihto ilman UI-muutoksia: `VITE_STRONG_AUTH_PROVIDER`.
+
 ## Live-skeema
 
 Älä aja `20260904000000_initial_schema.sql` live-projektiin — se kuvaa vanhaa suunnitelmamallia. Käytä Aug 2026 -migraatioita (`20260825*` … `20260828*`).
