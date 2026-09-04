@@ -612,7 +612,7 @@ h3{font-size:16px;font-weight:700;letter-spacing:-.025em}
   <div class="view on" id="v-koti">
     <div class="head">
       <h1>Hyvää huomenta, <span id="greetName">—</span></h1>
-      <div class="sub" id="kotiSub">Viikko 12 seurantaa · 118 mittausta kirjattu</div>
+      <div class="sub" id="kotiSub">—</div>
     </div>
 
     <div class="next" id="nextCard">
@@ -655,7 +655,7 @@ h3{font-size:16px;font-weight:700;letter-spacing:-.025em}
         </div>
         <div class="sym-grid" id="symGridM"></div>
         <div class="sym-axis" id="symAxisM"></div>
-        <div class="sym-note"><span class="se-mark"></span>Annos nostettu 14.10. — yskä alkoi 3 vrk myöhemmin</div>
+        <div class="sym-note" id="symNote" hidden></div>
         <div class="sym-actions">
           <button class="btn sec sm" onclick="openSym()">Kirjaa tänään</button>
           <button class="btn sec sm" onclick="openAddSym()">Lisää seurattava oire</button>
@@ -800,7 +800,7 @@ h3{font-size:16px;font-weight:700;letter-spacing:-.025em}
     </div>
 
     <div class="card">
-      <div class="row"><span class="k">Verenpaine</span><span class="v" id="cntBp">118 mittausta · 12 vk</span></div>
+      <div class="row"><span class="k">Verenpaine</span><span class="v" id="cntBp">—</span></div>
       <div class="row"><span class="k">Verensokeri</span><span class="v" id="cntGlu">84 mittausta</span></div>
       <div class="row"><span class="k">Paino</span><span class="v" id="cntWt">12 punnitusta</span></div>
       <div class="row"><span class="k">Laboratorio</span><span class="v">LDL, HbA1c, K, krea</span></div>
@@ -1041,11 +1041,23 @@ function renderMeds(){
     '</div></div><div class="med-hist"><span class="mh-dot'+(m.isNew?' new':'')+'"></span>'+esc(m.hist)+'</div></div>'
   ).join('');
 }
-const SYMDAYS=['1.10','2.','3.','4.','5.','6.','7.','8.','9.','10.','11.','12.','13.','14.'];
 const SYMC=['#B3452C','#946A16','#6B5B95','#2F6690'];
+
+/* Oireruudukon x-akseli on aina 14 viimeista vuorokautta tahan paivaan asti,
+   samassa jarjestyksessa kuin symptomGrid tayttaa arvot. */
+function symDays(){
+  const out=[];
+  for(let i=13;i>=0;i--){
+    const d=new Date(TODAY_DATE);d.setDate(d.getDate()-i);
+    out.push(d.getDate()+'.'+(d.getMonth()+1)+'.');
+  }
+  return out;
+}
+
 function renderSyms(){
   const grid=$('symGridM'),axis=$('symAxisM');
   if(!grid)return;
+  const SYMDAYS=symDays();
   grid.innerHTML='';
   if(!SYMS.length){
     grid.innerHTML='<div class="sym-empty">Et seuraa vielä yhtään oiretta.<br>Lisää ensimmäinen alta.</div>';
@@ -1055,7 +1067,7 @@ function renderSyms(){
   SYMS.forEach((sy,si)=>{
     const c=SYMC[si%SYMC.length];
     const bars=sy.v.map((v,i)=>{
-      const day=SYMDAYS[i].replace(/\.$/,'')+'.10.';
+      const day=SYMDAYS[i];
       if(v<0)return '<span class="sym-cell" title="'+day+' ei kirjausta"><span class="sym-miss"></span></span>';
       if(v===0)return '<span class="sym-cell" title="'+day+' ei oiretta"><span class="sym-zero"></span></span>';
       return '<span class="sym-cell" title="'+esc(day+' '+sy.n.toLowerCase()+' '+v+'/5')+'"><span class="sym-bar grown" style="--sc:'+c+';height:'+(v/5*100)+'%;opacity:'+(0.45+v*0.11)+'"></span></span>';
@@ -1069,6 +1081,18 @@ function renderSyms(){
   });
   if(axis)axis.innerHTML='<span class="sym-days">'+SYMDAYS.map((d,i)=>
     '<span>'+(i===0||i===13||i===6?d:'')+'</span>').join('')+'</span>';
+
+  /* Huomautus kertoo lääkemuutoksesta vain jos sellainen osuu samaan
+     14 vuorokauden ikkunaan — muuten oireiden rinnalla ei ole mitään verrattavaa. */
+  const note=$('symNote');
+  if(!note)return;
+  const recent=MEDS.filter(m=>m.startedOn&&(TODAY_DATE-dayStart(m.startedOn))/864e5<14)
+    .sort((a,b)=>dayStart(b.startedOn)-dayStart(a.startedOn))[0];
+  note.hidden=!recent;
+  if(recent){
+    note.innerHTML='<span class="se-mark"></span>'+esc(recent.n+' aloitettu '+fmtDate(dayStart(recent.startedOn)))+
+      ' — vertaa oireiden kehitystä tähän';
+  }
 }
 
 /* ══ BIG GRAPH ══ */
@@ -1359,11 +1383,23 @@ function toast(t){
   const el=$('toast');el.textContent=t;el.classList.add('on');
   clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('on'),2600);
 }
+/** Monesko viikko hoitopolkua on menossa, jos polun alku on tiedossa. */
+function careWeek(){
+  const dates=PATH.map(e=>e.occurs_at).filter(Boolean).map(x=>new Date(x));
+  if(!dates.length)return null;
+  return Math.floor((TODAY_DATE-dayStart(new Date(Math.min(...dates))))/864e5/7)+1;
+}
+
 function updateCounts(){
-  const c=$('cntBp');if(c)c.textContent=BP.length+' mittausta · 12 vk';
+  const c=$('cntBp');if(c)c.textContent=BP.length+' mittausta · '+Math.round(DAYS/7)+' vk';
   const g=$('cntGlu');if(g)g.textContent=GLU.length+' mittausta';
   const w=$('cntWt');if(w)w.textContent=WT.length+' punnitusta';
-  const h=$('kotiSub');if(h)h.textContent='Viikko 12 seurantaa · '+(BP.length+GLU.length+WT.length)+' mittausta kirjattu';
+  const h=$('kotiSub');
+  if(h){
+    const wk=careWeek();
+    h.textContent=(wk?'Viikko '+wk+' seurantaa · ':'')+
+      (BP.length+GLU.length+WT.length)+' mittausta kirjattu';
+  }
 }
 
 /* Kaikki kirjaukset tallennetaan ensin kantaan; paikalliset taulukot
