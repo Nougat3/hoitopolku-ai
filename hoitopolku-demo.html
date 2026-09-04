@@ -489,7 +489,7 @@ h3{font-size:16px;font-weight:700;letter-spacing:-.025em}
     </button>
     <button class="code-btn" onclick="go('koodi')">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3M20 14v3M14 20h3M20 20v.01"/></svg>
-      <span id="codeChip">HP-4827</span>
+      <span id="codeChip">HP-0000</span>
     </button>
   </div>
 </div>
@@ -683,8 +683,8 @@ h3{font-size:16px;font-weight:700;letter-spacing:-.025em}
 
     <div class="code-hero">
       <div class="code-lbl">JAETTAVA KOODI</div>
-      <div class="code-val" id="codeVal">HP-4827</div>
-      <div class="code-exp" id="codeExp">Voimassa 7 vuorokautta<br>Vanhenee 3.9.2026 klo 15.40</div>
+      <div class="code-val" id="codeVal">HP-0000</div>
+      <div class="code-exp" id="codeExp">Ladataan...</div>
     </div>
 
     <div class="card">
@@ -1446,16 +1446,60 @@ addEventListener('resize',()=>{
 },{passive:true});
 addEventListener('orientationchange',()=>setTimeout(()=>{hideTip();drawGraph();},260));
 
-/* uusi jakokoodi */
-function newCode(){
+/* jakokoodi-hallinta */
+let currentShareCode={code:'HP-0000',expiresAt:0};
+
+function loadShareCode(){
+  try{
+    const stored=localStorage.getItem('hoitopolku_share_code');
+    if(stored){
+      const data=JSON.parse(stored);
+      if(data.code&&data.expiresAt&&Date.now()<data.expiresAt){
+        return data;
+      }
+    }
+  }catch(e){}
+  return null;
+}
+
+function saveShareCode(code,expiresAt){
+  currentShareCode={code:code,expiresAt:expiresAt};
+  try{
+    localStorage.setItem('hoitopolku_share_code',JSON.stringify(currentShareCode));
+  }catch(e){}
+}
+
+function generateNewShareCode(){
   const n=Math.floor(1000+Math.random()*9000);
   const code='HP-'+n;
+  const expiresAt=Date.now()+7*864e5;
+  saveShareCode(code,expiresAt);
+  updateShareCodeUI();
+  return code;
+}
+
+function updateShareCodeUI(){
+  const code=currentShareCode.code;
+  const d=new Date(currentShareCode.expiresAt);
+  const pad=x=>String(x).padStart(2,'0');
   $('codeVal').textContent=code;
   $('codeChip').textContent=code;
-  const d=new Date(Date.now()+7*864e5);
-  const pad=x=>String(x).padStart(2,'0');
   $('codeExp').innerHTML='Voimassa 7 vuorokautta<br>Vanhenee '+d.getDate()+'.'+(d.getMonth()+1)+'.'+d.getFullYear()+
     ' klo '+pad(d.getHours())+'.'+pad(d.getMinutes());
+}
+
+function initShareCode(){
+  const loaded=loadShareCode();
+  if(loaded){
+    currentShareCode=loaded;
+  }else{
+    generateNewShareCode();
+  }
+  updateShareCodeUI();
+}
+
+function newCode(){
+  generateNewShareCode();
   toast('Uusi koodi luotu — vanha lakkasi toimimasta');
 }
 
@@ -1582,7 +1626,7 @@ function downloadIcs(idx){
     'DTSTART:'+fmt(start),
     'DTEND:'+fmt(end),
     'SUMMARY:'+e.title.replace(/,/g,'\\,'),
-    'DESCRIPTION:Hoitopolku-tapahtuma. Koodi HP-4827.',
+    'DESCRIPTION:Hoitopolku-tapahtuma. Koodi '+currentShareCode.code+'.',
     'END:VEVENT','END:VCALENDAR'
   ].join('\r\n');
   const blob=new Blob([ics],{type:'text/calendar'});
@@ -1707,7 +1751,7 @@ function renderReminders(){
 }
 
 /* ══ INIT ══ */
-renderTiles();renderLabs();renderMeds();renderSyms();renderLog();updateCounts();renderTasks();renderReminders();selMetric(0);
+initShareCode();renderTiles();renderLabs();renderMeds();renderSyms();renderLog();updateCounts();renderTasks();renderReminders();selMetric(0);
 </script>
 </body>
 </html>
