@@ -1420,16 +1420,20 @@ $('entSave').onclick=async()=>{
         LABS[1].from=LABS[1].to;LABS[1].to=v;
         addLog('HbA1c',v,'mmol/mol','#A67C2E','laboratorio · tänään');
       }
-      renderLabs();
+      const labDay=new Date().toDateString();
+      if(!LAB_DATES.includes(labDay))LAB_DATES.push(labDay);
+      buildCalendarEvents();
+      renderLabs();renderCalendar();renderEvents();
     }else if(k===7){
       const n=String(($('e_medname')||{}).value||'').trim();
       const ds=String(($('e_meddose')||{}).value||'').trim();
       if(!n)return msg('Anna lääkkeen nimi.','warn');
       if(MEDS.some(m=>m.n.toLowerCase()===n.toLowerCase()))return msg('Tämä lääke on jo listalla.','warn');
-      const row=await HP.addMedication(ME.id,{name:n,dose:ds||'—'},ME.id);
+      const row=await HP.addMedication(ME.id,{name:n,dose:ds||'—',timeOfDay:medWhen},ME.id);
       MEDS.push({id:row&&row.id,n,dose:ds||'—',am:medWhen!=='pm',pm:medWhen!=='am',
-        hist:'Lisätty tänään',isNew:true});
-      renderMeds();renderReminders();
+        startedOn:(row&&row.started_on)||new Date(),hist:'Lisätty tänään',isNew:true});
+      buildCalendarEvents();
+      renderMeds();renderReminders();renderCalendar();renderEvents();
       msg('Lääke lisätty listalle.','ok');
       toast('Lääke lisätty');
       return setTimeout(closeEnt,1000);
@@ -1665,15 +1669,33 @@ function fmtDate(d){return d.getDate()+'.'+(d.getMonth()+1)+'.'+d.getFullYear();
 const WD=['ma','ti','ke','to','pe','la','su'];
 const MONTHS=['tammikuu','helmikuu','maaliskuu','huhtikuu','toukokuu','kesäkuu','heinäkuu','elokuu','syyskuu','lokakuu','marraskuu','joulukuu'];
 
-const CAL_EVENTS=[
-  {d:8,  type:'lab', title:'Verikokeet'},
-  {d:14, type:'med', title:'Lääkitys aloitettu — Ramipriili 5 mg'},
-  {d:42, type:'med', title:'Annos nostettu — Ramipriili 10 mg'},
-  {d:80, type:'lab', title:'Verikokeet'},
-  {d:DAYS-1+14, type:'visit', title:'Kontrollikäynti — etävastaanotto', time:'14.20'}
-].map(e=>({...e,date:dateForDay(e.d),past:e.d<=DAYS-1}));
+/* Kalenteri kootaan kannasta kolmesta lahteesta: hoitopolun ajoitetut vaiheet
+   (care_events.occurs_at), lääkitysten aloituspaivat ja laboratoriotulosten
+   paivamaarat. Tapahtuma on mennyt, jos sen paiva on jo ohitettu. */
+let CAL_EVENTS=[];
+let LAB_DATES=[];
 
 const EVT_COLOR={med:'#A67C2E',lab:'#2F6690',visit:'#6B5B95'};
+
+function dayStart(x){const d=new Date(x);d.setHours(0,0,0,0);return d;}
+
+function buildCalendarEvents(){
+  const out=[];
+  for(const e of PATH){
+    if(!e.occurs_at)continue;
+    const at=new Date(e.occurs_at);
+    out.push({type:'visit',title:e.title,date:dayStart(at),
+      time:at.getHours()+'.'+String(at.getMinutes()).padStart(2,'0')});
+  }
+  for(const m of MEDS){
+    if(!m.startedOn)continue;
+    out.push({type:'med',title:'Lääkitys aloitettu — '+m.n+' '+m.dose,date:dayStart(m.startedOn)});
+  }
+  for(const at of LAB_DATES){
+    out.push({type:'lab',title:'Laboratoriotulokset',date:dayStart(at)});
+  }
+  CAL_EVENTS=out.sort((a,b)=>a.date-b.date).map(e=>({...e,past:e.date<TODAY_DATE}));
+}
 
 let calView=new Date(TODAY_DATE.getFullYear(),TODAY_DATE.getMonth(),1);
 function calShift(n){calView.setMonth(calView.getMonth()+n);renderCalendar();}
@@ -1713,7 +1735,7 @@ function renderEvents(){
   if(upcoming.length){
     const e=upcoming[0];
     nc.innerHTML='<div class="kick">'+fmtDate(e.date)+(e.time?' klo '+e.time:'')+'</div>'+
-      '<h2>'+e.title+'</h2>'+
+      '<h2>'+esc(e.title)+'</h2>'+
       '<p>Lisää tapahtuma laitteesi omaan kalenteriin, niin saat muistutuksen.</p>'+
       '<button class="btn gold ics-btn" onclick="downloadIcs('+CAL_EVENTS.indexOf(e)+')">Lisää laitteen kalenteriin</button>';
   }else{
@@ -1725,7 +1747,7 @@ function renderEvents(){
   list.innerHTML=all.map(e=>
     '<div class="evt-row"><span class="evt-dot'+(e.past?' past':'')+'" style="background:'+EVT_COLOR[e.type]+'"></span>'+
     '<span><span class="evt-date">'+fmtDate(e.date)+(e.time?' · klo '+e.time:'')+(e.past?' · mennyt':' · tuleva')+'</span>'+
-    '<span class="evt-title'+(e.past?' past':'')+'">'+e.title+'</span></span></div>'
+    '<span class="evt-title'+(e.past?' past':'')+'">'+esc(e.title)+'</span></span></div>'
   ).join('');
 }
 
@@ -1855,7 +1877,7 @@ function renderReminders(){
   if(!box)return;
   box.innerHTML=MEDS.map(m=>{
     const time=m.am&&m.pm?'klo 8.00 ja 20.00':(m.am?'klo 8.00':'klo 20.00');
-    return '<div class="rem-row"><div><span class="rem-name">'+m.n+'</span>'+
+    return '<div class="rem-row"><div><span class="rem-name">'+esc(m.n)+'</span>'+
       '<span class="rem-time">Muistutus '+time+'</span></div>'+
       '<button class="rem-toggle on" onclick="this.classList.toggle(\'on\')" aria-label="Muistutus päällä tai pois"><span></span></button></div>';
   }).join('');
@@ -1905,9 +1927,10 @@ function applyBundle(b){
     lab.from=hist.length>1?hist[hist.length-2].v:null;
   }
 
-  // Tietokanta ei viela mallinna lääkkeen ottoaikaa, joten aamu on oletus.
   fill(MEDS,b.meds.map(m=>({
-    id:m.id,n:m.name,dose:m.dose||'—',am:true,pm:false,
+    id:m.id,n:m.name,dose:m.dose||'—',
+    am:m.time_of_day!=='ilta',pm:m.time_of_day==='ilta'||m.time_of_day==='aamu_ilta',
+    startedOn:m.started_on,
     hist:m.note||('Aloitettu '+fmtDate(new Date(m.started_on))),
     isNew:(TODAY_DATE-new Date(m.started_on))/864e5<14
   })));
@@ -1920,6 +1943,8 @@ function applyBundle(b){
   fill(SYMS,symptomGrid(b.symptoms));
   TASKS=b.tasks;
   PATH=b.events;
+  LAB_DATES=[...new Set(Object.values(b.labs).flat().map(r=>new Date(r.at).toDateString()))];
+  buildCalendarEvents();
 
   if(b.targets){
     METRICS[0].target=b.targets.bp_sys;
@@ -1931,7 +1956,7 @@ function applyBundle(b){
 function renderAll(){
   renderTiles();renderLabs();renderMeds();renderSyms();renderLog();
   updateCounts();renderTasks();renderReminders();renderPath();selMetric(0);
-  renderShare();
+  renderCalendar();renderEvents();renderShare();
 }
 
 async function loadData(){

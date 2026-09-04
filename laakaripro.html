@@ -619,7 +619,8 @@ function patientFromBundle(user,b,session){
     n:m.name,dose:m.dose||'—',
     hist:m.note||'Ei muutoksia kirjattu',
     when:'aloitettu '+new Date(m.started_on).toLocaleDateString('fi-FI'),
-    am:true,pm:false
+    am:m.time_of_day!=='ilta',
+    pm:m.time_of_day==='ilta'||m.time_of_day==='aamu_ilta'
   }));
 
   // Oireet 14 vrk ruudukkona: -1 ei kirjausta, 0 ei oiretta, 1-5 voimakkuus.
@@ -845,7 +846,8 @@ function openPatient(id){
     '<div class="med"><div><div class="med-n">'+esc(m.n)+'<em>'+esc(m.dose)+'</em></div>'+
     '<div class="med-h"><span class="ch">'+esc(m.hist)+'</span> · '+esc(m.when)+'</div></div>'+
     '<div class="med-when"><span class="chip'+(m.am?' on':'')+'">Aamu</span>'+
-    '<span class="chip'+(m.pm?' on':'')+'">Ilta</span></div></div>').join('');
+    '<span class="chip'+(m.pm?' on':'')+'">Ilta</span></div></div>').join('')
+    ||'<div class="med"><div class="med-h">Ei kirjattua lääkitystä.</div></div>';
   $('meds').innerHTML=medHtml;$('sumMeds').innerHTML=medHtml;
   $('medCount').textContent=CUR.meds.length+' lääkettä';
 
