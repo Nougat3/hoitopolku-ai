@@ -51,6 +51,30 @@ export function getSession() {
   return session;
 }
 
+/**
+ * Kirjautuneen auth-kayttajan tunniste paasytunnuksen sub-kentasta.
+ *
+ * Tata tarvitaan oman users-rivin hakuun: rivitason suojaus paastaa lapi myos
+ * hoitosuhteessa olevien kayttajien rivit, joten pelkka "ensimmainen rivi" voi
+ * olla joku muu kuin kirjautunut kayttaja.
+ */
+export function authUserId() {
+  const token = session?.access_token;
+  if (!token) return null;
+  try {
+    const payload = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+    const json = decodeURIComponent(
+      atob(payload)
+        .split('')
+        .map((c) => '%' + c.charCodeAt(0).toString(16).padStart(2, '0'))
+        .join('')
+    );
+    return JSON.parse(json).sub ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export function isSignedIn() {
   return Boolean(session?.access_token);
 }
