@@ -41,29 +41,33 @@ hoitopolku-ai/
 
 ## 🎯 Nykytila
 
-### ✅ Valmiina (HTML-demot)
+### ✅ Toiminnassa
 
-- **Potilassovellus** (`hoitopolku-demo.html`) — toimiva demo mittausten kirjaamisesta, käyrän piirtämisestä ja oireiden seurannasta
-- **LääkäriPRO** (`laakaripro.html`) — lääkärin työpöytä AI-lausuntoapurilla
+Molemmat sovellukset lukevat ja kirjoittavat **Supabase-tietokantaan** (EU, Tukholma).
+Kirjaukset säilyvät, ja lääkäri näkee potilaan tiedot jakokoodilla.
+
+- **Potilassovellus** (`hoitopolku-demo.html`) — mittausten kirjaus, käyrät, oireseuranta,
+  hoitopolun aikajana ja jakokoodin luonti
+- **LääkäriPRO** (`laakaripro.html`) — lääkärin työpöytä: jakokoodin lunastus, potilaan
+  mittaukset, laboratorio, lääkitys, oireet ja lausuntoluonnos
 - **Landing page** (`index.html`) — esittelysivu
 
-🔗 **Livenä:** [nougat3.github.io/hoitopolku-ai](https://nougat3.github.io/hoitopolku-ai/)
+**Demotunnukset**
 
-### 🚧 Työn alla (React/Supabase-migraatio)
+| Rooli | Sähköposti | Salasana |
+|---|---|---|
+| Potilas | `p@demo.fi` | `hoitopolku2026` |
+| Lääkäri | `l@demo.fi` | `hoitopolku2026` |
 
-**Vaihe 0: Perusrakenne** ✅ VALMIS
-- [x] Tietokannan SQL-skriptit (`supabase/migrations/`)
-- [x] React-projektipohja (`app/`)
-- [x] Ydinlaskentafunktiot (`src/utils/`)
-- [x] Dokumentaatio
+### 🚧 Kesken
 
-**Vaihe 1–4: Toteutus** 🚧 ALOITTAMATTA
-- [ ] Potilassovelluksen datakerros
-- [ ] LääkäriPRO-datakerros
-- [ ] Reaaliaikainen synkronointi
-- [ ] PWA + tuotantovalmius
-
-📖 **Katso:** [`docs/MIGRATION_ROADMAP.md`](docs/MIGRATION_ROADMAP.md) — yksityiskohtainen 12 viikon aikataulu
+- `app/` — React-runko, jonka sivut ovat vielä paikkamerkkejä. Se osoittaa
+  tietomalliin jota ei ole olemassa, joten se on joko poistettava tai
+  osoitettava nykyiseen skeemaan.
+- Kalenterinäkymän tapahtumat ovat yhä kovakoodattuja (`care_events` kattaisi ne).
+- Tietokanta ei mallinna lääkkeen ottoaikaa (aamu/ilta).
+- AI-lausuntoluonnos koostetaan paikallisesta pohjasta. Oikea kielimalli vaatii
+  palvelinpuolen välityksen, jotta API-avain ei päädy selaimeen.
 
 ---
 
@@ -71,28 +75,22 @@ hoitopolku-ai/
 
 ### Katso demoja paikallisesti
 
+Sovellukset käyttävät ES-moduuleja, joten ne on tarjoiltava palvelimelta —
+`file://`-osoitteesta avaaminen ei toimi.
+
 ```bash
-# Kloonaa repo
 git clone https://github.com/Nougat3/hoitopolku-ai.git
 cd hoitopolku-ai
-
-# Avaa selaimessa
-# macOS:
-open index.html
-
-# Linux:
-xdg-open index.html
-
-# Windows:
-start index.html
+python3 -m http.server 8000
 ```
 
-Tai käytä paikallista palvelinta:
+Avaa selaimessa:
 
-```bash
-python -m http.server 8000
-# Avaa http://localhost:8000
-```
+- Potilas: <http://localhost:8000/hoitopolku-demo.html>
+- Lääkäri: <http://localhost:8000/laakaripro.html>
+
+Kirjaudu yllä olevilla demotunnuksilla. Kokeile koko ketju: kirjaa potilaana
+mittaus, luo jakokoodi, ja lunasta se lääkärin työpöydällä.
 
 ---
 
@@ -157,34 +155,29 @@ pnpm lint
 
 ## 🏗️ Arkkitehtuuri
 
-### Nykyinen (Demot)
-
 ```
-┌─────────────────┐        ┌─────────────────┐
-│  hoitopolku-    │        │  laakaripro.    │
-│  demo.html      │        │  html           │
-│  (potilas)      │        │  (lääkäri)      │
-└─────────────────┘        └─────────────────┘
-       ↓                           ↓
-  [Kovakoodattu data]       [Kovakoodattu data]
-       ↓                           ↓
-  [Ei kommunikoi keskenään]
-```
-
-**Ongelma:** Lääkäri ei voi muuttaa potilaan lääkitystä, koska kyseessä on kaksi erillistä HTML-tiedostoa.
-
-### Tuleva (React + Supabase)
-
-```
-┌─────────────────┐        ┌──────────────────┐        ┌─────────────────┐
-│   Hoitopolku     │◄──────►│                   │◄──────►│   LääkäriPRO     │
-│   (potilas, PWA) │        │  Supabase (EU)    │        │   (lääkäri, PWA)  │
-└─────────────────┘        │  Postgres + Auth  │        └─────────────────┘
-                            │  + Realtime       │
-                            └──────────────────┘
+┌──────────────────┐                              ┌──────────────────┐
+│  hoitopolku-     │                              │  laakaripro.     │
+│  demo.html       │                              │  html            │
+│  (potilas)       │                              │  (lääkäri)       │
+└────────┬─────────┘                              └────────┬─────────┘
+         │                js/api.js                        │
+         │            js/supabase.js                       │
+         └──────────────────┬─────────────────────────────-┘
+                            ▼
+                 ┌────────────────────────┐
+                 │  Supabase (eu-north-1) │
+                 │  Postgres + Auth + RLS │
+                 └────────────────────────┘
 ```
 
-**Ratkaisu:** Yksi yhteinen tietokanta, reaaliaikainen synkronointi, rivitason suojaus (RLS).
+Sovellukset ovat staattisia tiedostoja ilman käännösvaihetta. `js/supabase.js`
+puhuu suoraan PostgREST- ja GoTrue-rajapinnoille `fetch`illä, joten sivujen CSP
+voi pysyä tiukkana (`script-src 'self'`).
+
+**Pääsy potilaan tietoihin:** lääkäri ei näe mitään ennen kuin potilas on luonut
+jakokoodin ja lääkäri lunastanut sen. Lunastus luo `care_sessions`-rivin, joka
+vanhenee koodin mukana. Koodi tallennetaan vain SHA-256-tiivisteenä.
 
 ---
 

@@ -760,7 +760,9 @@ function statusOf(p){
 function accessLeft(p){
   if(!p.sessionExpires)return '';
   const h=Math.max(0,Math.round((new Date(p.sessionExpires)-Date.now())/36e5));
-  return 'pääsy '+h+' h';
+  if(h<1)return 'pääsy päättyy pian';
+  if(h<48)return 'pääsy '+h+' h';
+  return 'pääsy '+Math.round(h/24)+' vrk';
 }
 function prow(p,note){
   const st=statusOf(p);
@@ -825,19 +827,23 @@ function openPatient(id){
     });
   });
 
-  $('labBody').innerHTML=CUR.labs.map(l=>{
-    const d=l.now-l.prev,ds=(d>0?'+':'−')+fmt(Math.abs(d),l.dec);
-    return '<tr><td>'+l.n+'</td><td class="ref">'+fv(l.prev,l.dec)+'</td><td class="v">'+fv(l.now,l.dec)+
+  const noLabs='<tr><td colspan="6" class="ref">Ei kirjattuja laboratoriotuloksia.</td></tr>';
+  $('labBody').innerHTML=CUR.labs.length?CUR.labs.map(l=>{
+    const d=(l.prev==null||l.now==null)?null:l.now-l.prev;
+    const ds=d==null?'—':((d>0?'+':'−')+fmt(Math.abs(d),l.dec));
+    return '<tr><td>'+esc(l.n)+'</td><td class="ref">'+fv(l.prev,l.dec)+'</td><td class="v">'+fv(l.now,l.dec)+
       '</td><td class="d">'+ds+'</td><td class="ref">'+l.ref+'</td><td><span class="tag '+l.st+'">'+l.stl+'</span></td></tr>';
-  }).join('');
+  }).join(''):noLabs;
   const safety=CUR.labs.filter(l=>['Kalium','Kreatiniini','eGFR','Natrium'].indexOf(l.n)>=0);
-  $('sumSafety').innerHTML=(safety.length?safety:CUR.labs.slice(0,3)).map(l=>
-    '<tr><td>'+l.n+'</td><td class="v">'+fv(l.now,l.dec)+'</td><td class="ref">'+l.ref+'</td>'+
-    '<td><span class="tag '+l.st+'">'+l.stl+'</span></td></tr>').join('');
+  const sum=safety.length?safety:CUR.labs.slice(0,3);
+  $('sumSafety').innerHTML=sum.length?sum.map(l=>
+    '<tr><td>'+esc(l.n)+'</td><td class="v">'+fv(l.now,l.dec)+'</td><td class="ref">'+l.ref+'</td>'+
+    '<td><span class="tag '+l.st+'">'+l.stl+'</span></td></tr>').join('')
+    :'<tr><td colspan="4" class="ref">Ei kirjattuja laboratoriotuloksia.</td></tr>';
 
   const medHtml=CUR.meds.map(m=>
-    '<div class="med"><div><div class="med-n">'+m.n+'<em>'+m.dose+'</em></div>'+
-    '<div class="med-h"><span class="ch">'+m.hist+'</span> · '+m.when+'</div></div>'+
+    '<div class="med"><div><div class="med-n">'+esc(m.n)+'<em>'+esc(m.dose)+'</em></div>'+
+    '<div class="med-h"><span class="ch">'+esc(m.hist)+'</span> · '+esc(m.when)+'</div></div>'+
     '<div class="med-when"><span class="chip'+(m.am?' on':'')+'">Aamu</span>'+
     '<span class="chip'+(m.pm?' on':'')+'">Ilta</span></div></div>').join('');
   $('meds').innerHTML=medHtml;$('sumMeds').innerHTML=medHtml;
@@ -850,7 +856,7 @@ function openPatient(id){
       if(v===0)return '<span class="sym-cell" title="'+day+' ei oiretta"><span class="sym-zero"></span></span>';
       return '<span class="sym-cell" title="'+day+' '+sy.n.toLowerCase()+' '+v+'/5"><span class="sym-bar" style="--sc:'+sy.c+';height:'+(v/5*100)+'%;opacity:'+(0.45+v*0.11)+'"></span></span>';
     }).join('');
-    return '<div class="sym-row"><span class="sym-name">'+sy.n+'</span><span class="sym-bars">'+bars+'</span></div>';
+    return '<div class="sym-row"><span class="sym-name">'+esc(sy.n)+'</span><span class="sym-bars">'+bars+'</span></div>';
   }).join('');
   $('symAxis').innerHTML='<span class="sym-days">'+SYMDAYS.map((d,i)=>'<span>'+(i===0||i===13||i===6?d:'')+'</span>').join('')+'</span>';
 
@@ -1008,7 +1014,7 @@ function localDraft(type,extra){
     'Arvio työkyvystä':'Sairaus ei aiheuta työkyvyn rajoitusta. Seuranta jatkuu avohoidossa.',
     'Suunnitelma':'• Kotimittausten jatko, uusi seitsemän vuorokauden sarja\n• Kontrollikäynti 6 viikon kuluttua\n• Laboratorio 2–4 vk mahdollisen lääkemuutoksen jälkeen: kreatiniini, kalium'
   };
-  let out=T.t+'\n'+pv+' · '+CUR.name+' ('+CUR.id+')\n\n';
+  let out=T.t+'\n'+pv+' · '+CUR.name+'\n\n';
   T.s.forEach(sec=>{out+='## '+sec+'\n'+(B[sec]||'—')+'\n\n';});
   if(extra&&extra.trim())out+='## Lääkärin lisätiedot\n'+extra.trim()+'\n\n';
   return out+'—\nLuonnos koottu potilaan kirjaamista tiedoista. Tarkistettava ennen käyttöä.';

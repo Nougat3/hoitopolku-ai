@@ -1058,13 +1058,13 @@ function renderSyms(){
       const day=SYMDAYS[i].replace(/\.$/,'')+'.10.';
       if(v<0)return '<span class="sym-cell" title="'+day+' ei kirjausta"><span class="sym-miss"></span></span>';
       if(v===0)return '<span class="sym-cell" title="'+day+' ei oiretta"><span class="sym-zero"></span></span>';
-      return '<span class="sym-cell" title="'+day+' '+sy.n.toLowerCase()+' '+v+'/5"><span class="sym-bar grown" style="--sc:'+c+';height:'+(v/5*100)+'%;opacity:'+(0.45+v*0.11)+'"></span></span>';
+      return '<span class="sym-cell" title="'+esc(day+' '+sy.n.toLowerCase()+' '+v+'/5')+'"><span class="sym-bar grown" style="--sc:'+c+';height:'+(v/5*100)+'%;opacity:'+(0.45+v*0.11)+'"></span></span>';
     }).join('');
     const row=document.createElement('div');
     row.className='sym-row'+(sy.own?' editable':'');
-    row.innerHTML=(sy.own?'<button class="sym-del" onclick="removeSym('+si+')" aria-label="Poista '+sy.n+'">'+
+    row.innerHTML=(sy.own?'<button class="sym-del" onclick="removeSym('+si+')" aria-label="Poista '+esc(sy.n)+'">'+
       '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>':'')+
-      '<span class="sym-name">'+sy.n+'</span><span class="sym-bars">'+bars+'</span>';
+      '<span class="sym-name">'+esc(sy.n)+'</span><span class="sym-bars">'+bars+'</span>';
     grid.appendChild(row);
   });
   if(axis)axis.innerHTML='<span class="sym-days">'+SYMDAYS.map((d,i)=>
@@ -1538,7 +1538,7 @@ function openSym(){
     const b=document.createElement('button');
     b.className='sym-opt';b.setAttribute('aria-selected','false');
     b.innerHTML='<span class="box"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg></span>'+
-      '<span style="font-size:15px;font-weight:500">'+sy.n+'</span>';
+      '<span style="font-size:15px;font-weight:500">'+esc(sy.n)+'</span>';
     b.onclick=()=>{
       const on=b.getAttribute('aria-selected')==='true';
       b.setAttribute('aria-selected',!on);
