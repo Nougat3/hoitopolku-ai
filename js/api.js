@@ -56,6 +56,16 @@ function timeOfDayToDb(value) {
 }
 
 /**
+ * Laakkeen ottoaika. Mittaus on aina joko aamu tai ilta, mutta laake voidaan
+ * ottaa molempina, joten sille on oma muunnoksensa.
+ */
+function medTimeToDb(value) {
+  if (value === 'pm' || value === 'ilta') return 'ilta';
+  if (value === 'both' || value === 'aamu_ilta') return 'aamu_ilta';
+  return 'aamu';
+}
+
+/**
  * Kirjautuneen kayttajan rivi users-taulusta.
  *
  * Haku on rajattava auth-tunnisteella: rivitason suojaus palauttaa myos
@@ -88,7 +98,7 @@ export async function loadPatientBundle(patientId, { days = DAYS } = {}) {
   const [bpRows, metricRows, medRows, taskRows, eventRows, symptomRows, targetRows] = await Promise.all([
     select('bp_measurements', `select=id,sys,dia,pulse,time_of_day,measured_at&patient_id=eq.${pid}&measured_at=gte.${since}&order=measured_at.asc`),
     select('metric_measurements', `select=id,metric,value,measured_at,source&patient_id=eq.${pid}&order=measured_at.asc`),
-    select('patient_medications', `select=id,name,dose,note,started_on,ended_on,linked_metric&patient_id=eq.${pid}&order=started_on.asc`),
+    select('patient_medications', `select=id,name,dose,note,started_on,ended_on,linked_metric,time_of_day&patient_id=eq.${pid}&order=started_on.asc`),
     select('patient_tasks', `select=id,title,detail,due_hint,target_view,sort_order,done,done_at&patient_id=eq.${pid}&order=sort_order.asc`),
     select('care_events', `select=id,title,detail,when_label,status,card_note,card_button,sort_order,occurs_at&patient_id=eq.${pid}&order=sort_order.asc`),
     select('symptom_reports', `select=id,symptoms,severity,note,reported_at&patient_id=eq.${pid}&order=reported_at.asc`),
@@ -176,7 +186,11 @@ export function addSymptomReport(patientId, symptoms, severity, note = null) {
   });
 }
 
-export function addMedication(patientId, { name, dose, note = null, startedOn = null, linkedMetric = 'bp' }, createdBy) {
+export function addMedication(
+  patientId,
+  { name, dose, note = null, startedOn = null, linkedMetric = 'bp', timeOfDay = 'aamu' },
+  createdBy
+) {
   return insert('patient_medications', {
     patient_id: patientId,
     name,
@@ -184,6 +198,7 @@ export function addMedication(patientId, { name, dose, note = null, startedOn = 
     note,
     started_on: startedOn ?? new Date().toISOString().slice(0, 10),
     linked_metric: linkedMetric,
+    time_of_day: medTimeToDb(timeOfDay),
     created_by: createdBy
   });
 }
