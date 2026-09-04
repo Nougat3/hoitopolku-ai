@@ -1,7 +1,8 @@
-/* Hoitopolku CSS - React version */
-/* Migrated from hoitopolku-demo.html with Tailwind-compatible custom properties */
-
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 :root {
   --w: #FBFAF7;
@@ -29,6 +30,12 @@
   margin: 0;
   padding: 0;
   min-width: 0;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
 }
 
 html,
@@ -74,18 +81,70 @@ svg {
   border-radius: 8px;
 }
 
-/* Utility classes matching the demo's design system */
 .app-container {
   max-width: 620px;
   margin: 0 auto;
-  padding: 0 18px;
 }
 
-@media (max-width: 400px) {
-  .app-container {
-    padding-left: 14px;
-    padding-right: 14px;
-  }
+.field {
+  display: block;
+  width: 100%;
+  margin-top: 6px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #fff;
+  font: inherit;
+  color: var(--k);
+}
+
+.field:focus {
+  outline: none;
+  border-color: var(--g);
+  box-shadow: 0 0 0 3px rgba(166, 124, 46, 0.18);
+}
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 18px;
+  border-radius: 14px;
+  background: var(--k);
+  color: #fff;
+  font-weight: 700;
+  font-size: 15px;
+}
+
+.btn-primary:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 18px;
+  border-radius: 14px;
+  background: var(--g0);
+  color: var(--k);
+  font-weight: 700;
+  font-size: 15px;
+  border: 1px solid var(--line);
+}
+
+.tile {
+  display: block;
+  padding: 16px;
+  border-radius: 20px;
+  border: 1px solid var(--line);
+  background: #fff;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.tile:active {
+  transform: scale(0.98);
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -1,6 +1,5 @@
 /**
- * Supabase client configuration
- * EU-region (Frankfurt) for GDPR compliance
+ * Supabase client — live hoitopolku-ai project (EU).
  */
 
 import { createClient } from '@supabase/supabase-js';
@@ -29,10 +28,9 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
   }
 });
 
-// Helper for handling Supabase errors
 export function handleSupabaseError(error: unknown): string {
   if (typeof error === 'object' && error !== null && 'message' in error) {
-    return String(error.message);
+    return String((error as { message: unknown }).message);
   }
   return 'Tapahtui virhe. Yritä uudelleen.';
 }

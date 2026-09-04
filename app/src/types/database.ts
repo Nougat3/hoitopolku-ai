@@ -1,6 +1,6 @@
 /**
- * TypeScript type definitions for Supabase database
- * Generated from schema - keep in sync with migrations
+ * Live Supabase schema types (hoitopolku-ai).
+ * Compatible with @supabase/supabase-js Database generic.
  */
 
 export type Json =
@@ -11,156 +11,597 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[];
 
+export type AppRole = 'potilas' | 'laakari' | 'yllapito';
+
+export type MetricKey =
+  | 'weight'
+  | 'waist'
+  | 'ldl'
+  | 'hba1c'
+  | 'glucose'
+  | 'sodium'
+  | 'potassium'
+  | 'creatinine';
+
+export type LinkedMetric = 'bp' | 'ldl' | 'hba1c' | 'weight' | 'glucose';
+
 export interface Database {
   public: {
     Tables: {
-      profiles: {
+      users: {
         Row: {
           id: string;
-          role: 'patient' | 'doctor' | 'admin';
+          email: string;
+          role: AppRole;
+          idp_sub: string | null;
+          created_at: string;
+          updated_at: string;
+          auth_user_id: string | null;
           full_name: string | null;
-          phone: string | null;
-          created_at: string;
-          updated_at: string;
+          title: string | null;
         };
-        Insert: Omit<Database['public']['Tables']['profiles']['Row'], 'created_at' | 'updated_at'>;
-        Update: Partial<Database['public']['Tables']['profiles']['Insert']>;
+        Insert: {
+          id: string;
+          email: string;
+          role: AppRole;
+          idp_sub?: string | null;
+          created_at?: string;
+          updated_at?: string;
+          auth_user_id?: string | null;
+          full_name?: string | null;
+          title?: string | null;
+        };
+        Update: {
+          id?: string;
+          email?: string;
+          role?: AppRole;
+          idp_sub?: string | null;
+          created_at?: string;
+          updated_at?: string;
+          auth_user_id?: string | null;
+          full_name?: string | null;
+          title?: string | null;
+        };
+        Relationships: [];
       };
-      patients: {
+      bp_measurements: {
         Row: {
           id: string;
-          user_id: string;
-          date_of_birth: string | null;
-          gender: 'male' | 'female' | 'other' | null;
-          care_path_start_date: string;
+          patient_id: string;
+          sys: number;
+          dia: number;
+          pulse: number | null;
+          time_of_day: string | null;
+          measured_at: string;
           created_at: string;
-          updated_at: string;
         };
-        Insert: Omit<Database['public']['Tables']['patients']['Row'], 'id' | 'created_at' | 'updated_at'>;
-        Update: Partial<Database['public']['Tables']['patients']['Insert']>;
+        Insert: {
+          id?: string;
+          patient_id: string;
+          sys: number;
+          dia: number;
+          pulse?: number | null;
+          time_of_day?: string | null;
+          measured_at?: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          patient_id?: string;
+          sys?: number;
+          dia?: number;
+          pulse?: number | null;
+          time_of_day?: string | null;
+          measured_at?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'bp_measurements_patient_id_fkey';
+            columns: ['patient_id'];
+            isOneToOne: false;
+            referencedRelation: 'users';
+            referencedColumns: ['id'];
+          }
+        ];
       };
-      doctors: {
+      metric_measurements: {
         Row: {
           id: string;
-          user_id: string;
-          medical_title: string | null;
-          specialization: string | null;
-          license_number: string | null;
+          patient_id: string;
+          metric: string;
+          value: number;
+          measured_at: string;
+          source: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          patient_id: string;
+          metric: string;
+          value: number;
+          measured_at?: string;
+          source?: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          patient_id?: string;
+          metric?: string;
+          value?: number;
+          measured_at?: string;
+          source?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'metric_measurements_patient_id_fkey';
+            columns: ['patient_id'];
+            isOneToOne: false;
+            referencedRelation: 'users';
+            referencedColumns: ['id'];
+          }
+        ];
+      };
+      patient_medications: {
+        Row: {
+          id: string;
+          patient_id: string;
+          name: string;
+          dose: string;
+          started_on: string;
+          ended_on: string | null;
+          linked_metric: string;
+          note: string | null;
+          created_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          patient_id: string;
+          name: string;
+          dose: string;
+          started_on: string;
+          ended_on?: string | null;
+          linked_metric?: string;
+          note?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          patient_id?: string;
+          name?: string;
+          dose?: string;
+          started_on?: string;
+          ended_on?: string | null;
+          linked_metric?: string;
+          note?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'patient_medications_patient_id_fkey';
+            columns: ['patient_id'];
+            isOneToOne: false;
+            referencedRelation: 'users';
+            referencedColumns: ['id'];
+          }
+        ];
+      };
+      patient_targets: {
+        Row: {
+          patient_id: string;
+          bp_sys: number;
+          bp_dia: number;
+          ldl: number;
+          hba1c: number;
+          weight: number | null;
+          weight_note: string | null;
+          updated_at: string;
+          glucose: number | null;
+        };
+        Insert: {
+          patient_id: string;
+          bp_sys?: number;
+          bp_dia?: number;
+          ldl?: number;
+          hba1c?: number;
+          weight?: number | null;
+          weight_note?: string | null;
+          updated_at?: string;
+          glucose?: number | null;
+        };
+        Update: {
+          patient_id?: string;
+          bp_sys?: number;
+          bp_dia?: number;
+          ldl?: number;
+          hba1c?: number;
+          weight?: number | null;
+          weight_note?: string | null;
+          updated_at?: string;
+          glucose?: number | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'patient_targets_patient_id_fkey';
+            columns: ['patient_id'];
+            isOneToOne: true;
+            referencedRelation: 'users';
+            referencedColumns: ['id'];
+          }
+        ];
+      };
+      patient_tasks: {
+        Row: {
+          id: string;
+          patient_id: string;
+          title: string;
+          detail: string | null;
+          due_hint: string | null;
+          target_view: string | null;
+          sort_order: number;
+          done: boolean;
+          done_at: string | null;
           created_at: string;
           updated_at: string;
         };
-        Insert: Omit<Database['public']['Tables']['doctors']['Row'], 'id' | 'created_at' | 'updated_at'>;
-        Update: Partial<Database['public']['Tables']['doctors']['Insert']>;
+        Insert: {
+          id?: string;
+          patient_id: string;
+          title: string;
+          detail?: string | null;
+          due_hint?: string | null;
+          target_view?: string | null;
+          sort_order?: number;
+          done?: boolean;
+          done_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          patient_id?: string;
+          title?: string;
+          detail?: string | null;
+          due_hint?: string | null;
+          target_view?: string | null;
+          sort_order?: number;
+          done?: boolean;
+          done_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'patient_tasks_patient_id_fkey';
+            columns: ['patient_id'];
+            isOneToOne: false;
+            referencedRelation: 'users';
+            referencedColumns: ['id'];
+          }
+        ];
       };
-      care_paths: {
+      symptom_reports: {
+        Row: {
+          id: string;
+          patient_id: string;
+          symptoms: string[];
+          severity: number | null;
+          note: string | null;
+          reported_at: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          patient_id: string;
+          symptoms: string[];
+          severity?: number | null;
+          note?: string | null;
+          reported_at?: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          patient_id?: string;
+          symptoms?: string[];
+          severity?: number | null;
+          note?: string | null;
+          reported_at?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'symptom_reports_patient_id_fkey';
+            columns: ['patient_id'];
+            isOneToOne: false;
+            referencedRelation: 'users';
+            referencedColumns: ['id'];
+          }
+        ];
+      };
+      care_events: {
+        Row: {
+          id: string;
+          patient_id: string;
+          title: string;
+          detail: string | null;
+          when_label: string;
+          status: string;
+          card_note: string | null;
+          card_button: string | null;
+          sort_order: number;
+          occurs_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          patient_id: string;
+          title: string;
+          detail?: string | null;
+          when_label: string;
+          status?: string;
+          card_note?: string | null;
+          card_button?: string | null;
+          sort_order?: number;
+          occurs_at?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          patient_id?: string;
+          title?: string;
+          detail?: string | null;
+          when_label?: string;
+          status?: string;
+          card_note?: string | null;
+          card_button?: string | null;
+          sort_order?: number;
+          occurs_at?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'care_events_patient_id_fkey';
+            columns: ['patient_id'];
+            isOneToOne: false;
+            referencedRelation: 'users';
+            referencedColumns: ['id'];
+          }
+        ];
+      };
+      care_sessions: {
         Row: {
           id: string;
           patient_id: string;
           doctor_id: string;
-          condition: string;
-          status: 'active' | 'completed' | 'paused';
-          target_systolic: number | null;
-          target_diastolic: number | null;
-          target_glucose: number | null;
-          target_weight: number | null;
-          started_at: string;
-          completed_at: string | null;
+          access_code_id: string | null;
+          expires_at: string;
           created_at: string;
-          updated_at: string;
-        };
-        Insert: Omit<Database['public']['Tables']['care_paths']['Row'], 'id' | 'created_at' | 'updated_at'>;
-        Update: Partial<Database['public']['Tables']['care_paths']['Insert']>;
-      };
-      measurements: {
-        Row: {
-          id: string;
-          care_path_id: string;
-          measurement_type: 'blood_pressure' | 'glucose' | 'weight';
-          systolic: number | null;
-          diastolic: number | null;
-          glucose: number | null;
-          weight: number | null;
-          time_of_day: 'morning' | 'evening' | 'night' | null;
-          measured_at: string;
-          created_at: string;
-        };
-        Insert: Omit<Database['public']['Tables']['measurements']['Row'], 'id' | 'created_at'>;
-        Update: Partial<Database['public']['Tables']['measurements']['Insert']>;
-      };
-      lab_results: {
-        Row: {
-          id: string;
-          care_path_id: string;
-          test_name: string;
-          value: number;
-          unit: string;
-          reference_min: number | null;
-          reference_max: number | null;
-          test_date: string;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: Omit<Database['public']['Tables']['lab_results']['Row'], 'id' | 'created_at' | 'updated_at'>;
-        Update: Partial<Database['public']['Tables']['lab_results']['Insert']>;
-      };
-      medications: {
-        Row: {
-          id: string;
-          care_path_id: string;
-          name: string;
-          dosage: string;
-          morning: boolean;
-          evening: boolean;
-          is_active: boolean;
-          started_at: string;
           ended_at: string | null;
-          created_at: string;
-          updated_at: string;
         };
-        Insert: Omit<Database['public']['Tables']['medications']['Row'], 'id' | 'created_at' | 'updated_at'>;
-        Update: Partial<Database['public']['Tables']['medications']['Insert']>;
-      };
-      symptoms: {
-        Row: {
-          id: string;
-          care_path_id: string;
-          symptom_name: string;
-          severity: number; // 0-5
-          recorded_date: string;
-          created_at: string;
+        Insert: {
+          id?: string;
+          patient_id: string;
+          doctor_id: string;
+          access_code_id?: string | null;
+          expires_at: string;
+          created_at?: string;
+          ended_at?: string | null;
         };
-        Insert: Omit<Database['public']['Tables']['symptoms']['Row'], 'id' | 'created_at'>;
-        Update: Partial<Database['public']['Tables']['symptoms']['Insert']>;
-      };
-      events: {
-        Row: {
-          id: string;
-          care_path_id: string;
-          event_type: 'medication_start' | 'medication_change' | 'lab_test' | 'appointment' | 'milestone';
-          title: string;
-          description: string | null;
-          event_date: string;
-          event_time: string | null;
-          status: 'scheduled' | 'completed' | 'cancelled';
-          created_at: string;
-          updated_at: string;
+        Update: {
+          id?: string;
+          patient_id?: string;
+          doctor_id?: string;
+          access_code_id?: string | null;
+          expires_at?: string;
+          created_at?: string;
+          ended_at?: string | null;
         };
-        Insert: Omit<Database['public']['Tables']['events']['Row'], 'id' | 'created_at' | 'updated_at'>;
-        Update: Partial<Database['public']['Tables']['events']['Insert']>;
+        Relationships: [
+          {
+            foreignKeyName: 'care_sessions_patient_id_fkey';
+            columns: ['patient_id'];
+            isOneToOne: false;
+            referencedRelation: 'users';
+            referencedColumns: ['id'];
+          }
+        ];
       };
-      access_log: {
+      patient_access_codes: {
         Row: {
           id: string;
           patient_id: string;
-          accessed_by: string;
-          access_type: 'view' | 'edit' | 'share';
-          ip_address: string | null;
-          user_agent: string | null;
-          accessed_at: string;
+          code_hash: string;
+          expires_at: string;
+          created_at: string;
+          revoked_at: string | null;
+          redeemed_at: string | null;
+          redeemed_by_doctor_id: string | null;
         };
-        Insert: Omit<Database['public']['Tables']['access_log']['Row'], 'id' | 'accessed_at'>;
-        Update: never; // Access log is append-only
+        Insert: {
+          id?: string;
+          patient_id: string;
+          code_hash: string;
+          expires_at: string;
+          created_at?: string;
+          revoked_at?: string | null;
+          redeemed_at?: string | null;
+          redeemed_by_doctor_id?: string | null;
+        };
+        Update: {
+          id?: string;
+          patient_id?: string;
+          code_hash?: string;
+          expires_at?: string;
+          created_at?: string;
+          revoked_at?: string | null;
+          redeemed_at?: string | null;
+          redeemed_by_doctor_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'patient_access_codes_patient_id_fkey';
+            columns: ['patient_id'];
+            isOneToOne: false;
+            referencedRelation: 'users';
+            referencedColumns: ['id'];
+          }
+        ];
       };
+      enrollments: {
+        Row: {
+          id: string;
+          patient_id: string;
+          doctor_id: string;
+          status: string;
+          pregnancy_excluded: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id: string;
+          patient_id: string;
+          doctor_id: string;
+          status: string;
+          pregnancy_excluded?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          patient_id?: string;
+          doctor_id?: string;
+          status?: string;
+          pregnancy_excluded?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'enrollments_patient_id_fkey';
+            columns: ['patient_id'];
+            isOneToOne: false;
+            referencedRelation: 'users';
+            referencedColumns: ['id'];
+          }
+        ];
+      };
+      audit_log: {
+        Row: {
+          id: string;
+          actor_id: string;
+          action: string;
+          entity: string;
+          entity_id: string;
+          at: string;
+          meta: string | null;
+        };
+        Insert: {
+          id?: string;
+          actor_id: string;
+          action: string;
+          entity: string;
+          entity_id: string;
+          at?: string;
+          meta?: string | null;
+        };
+        Update: {
+          id?: string;
+          actor_id?: string;
+          action?: string;
+          entity?: string;
+          entity_id?: string;
+          at?: string;
+          meta?: string | null;
+        };
+        Relationships: [];
+      };
+      billing_subscriptions: {
+        Row: {
+          id: string;
+          user_id: string;
+          stripe_customer_id: string | null;
+          stripe_subscription_id: string | null;
+          price_id: string | null;
+          plan: string;
+          status: string;
+          current_period_end: string | null;
+          cancel_at_period_end: boolean;
+          updated_at: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          stripe_customer_id?: string | null;
+          stripe_subscription_id?: string | null;
+          price_id?: string | null;
+          plan?: string;
+          status?: string;
+          current_period_end?: string | null;
+          cancel_at_period_end?: boolean;
+          updated_at?: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          stripe_customer_id?: string | null;
+          stripe_subscription_id?: string | null;
+          price_id?: string | null;
+          plan?: string;
+          status?: string;
+          current_period_end?: string | null;
+          cancel_at_period_end?: boolean;
+          updated_at?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'billing_subscriptions_user_id_fkey';
+            columns: ['user_id'];
+            isOneToOne: true;
+            referencedRelation: 'users';
+            referencedColumns: ['id'];
+          }
+        ];
+      };
+    };
+    Views: {
+      [_ in never]: never;
+    };
+    Functions: {
+      create_patient_access_code: {
+        Args: Record<PropertyKey, never>;
+        Returns: Json;
+      };
+      revoke_patient_access_code: {
+        Args: Record<PropertyKey, never>;
+        Returns: undefined;
+      };
+      redeem_patient_access_code: {
+        Args: { p_code: string };
+        Returns: Json;
+      };
+    };
+    Enums: {
+      [_ in never]: never;
+    };
+    CompositeTypes: {
+      [_ in never]: never;
     };
   };
 }
+
+export type AppUser = Database['public']['Tables']['users']['Row'];
+export type BpMeasurement = Database['public']['Tables']['bp_measurements']['Row'];
+export type MetricMeasurement = Database['public']['Tables']['metric_measurements']['Row'];
+export type PatientMedication = Database['public']['Tables']['patient_medications']['Row'];
+export type PatientTargets = Database['public']['Tables']['patient_targets']['Row'];
+export type PatientTask = Database['public']['Tables']['patient_tasks']['Row'];
+export type SymptomReport = Database['public']['Tables']['symptom_reports']['Row'];
+export type CareEvent = Database['public']['Tables']['care_events']['Row'];
+export type CareSession = Database['public']['Tables']['care_sessions']['Row'];
