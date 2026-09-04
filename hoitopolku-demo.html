@@ -620,7 +620,7 @@ body.doctor-mode{padding-bottom:24px}
   <div class="view on" id="v-koti">
     <div class="head">
       <h1>Hyvää huomenta, <span id="greetName">—</span></h1>
-      <div class="sub" id="kotiSub">Viikko 12 seurantaa · 118 mittausta kirjattu</div>
+      <div class="sub" id="kotiSub">—</div>
     </div>
 
     <div class="card" style="background:#FAEDE9;border:1.5px solid #E8C4BB;margin-bottom:14px;padding:16px 18px">
@@ -669,10 +669,19 @@ body.doctor-mode{padding-bottom:24px}
         <button aria-selected="false" data-r="42">6 vk</button>
         <button aria-selected="true" data-r="999">Koko jakso</button>
       </div>
-      <div class="g-head">
-        <div>
-          <div class="g-val"><span id="gVal">138</span> <small id="gUnit">mmHg</small></div>
-          <div class="g-sub" id="gSub">7 vrk keskiarvo</div>
+
+      <div class="label">OIREET</div>
+      <div class="card">
+        <div class="sym-top">
+          <span class="sym-title">Oireet · 14 vrk</span>
+          <span class="sym-key"><i class="k-none"></i>ei oiretta &nbsp;<i class="k-miss"></i>ei kirjausta</span>
+        </div>
+        <div class="sym-grid" id="symGridM"></div>
+        <div class="sym-axis" id="symAxisM"></div>
+        <div class="sym-note" id="symNote" hidden></div>
+        <div class="sym-actions">
+          <button class="btn sec sm" onclick="openSym()">Kirjaa tänään</button>
+          <button class="btn sec sm" onclick="openAddSym()">Lisää seurattava oire</button>
         </div>
         <span class="pill off" id="gPill" style="margin:0">Koholla</span>
       </div>
@@ -778,12 +787,11 @@ body.doctor-mode{padding-bottom:24px}
 
     <div class="card">
       <div class="row"><span class="k">Verenpaine</span><span class="v" id="cntBp">—</span></div>
-      <div class="row"><span class="k">Verensokeri</span><span class="v" id="cntGlu">—</span></div>
-      <div class="row"><span class="k">Paino</span><span class="v" id="cntWt">—</span></div>
-      <div class="row"><span class="k">Kolesteroli</span><span class="v" id="cntChol">—</span></div>
-      <div class="row"><span class="k">Laboratorio</span><span class="v" id="cntLab">—</span></div>
-      <div class="row"><span class="k">Lääkkeet</span><span class="v" id="cntMed">—</span></div>
-      <div class="row"><span class="k">Oireet</span><span class="v" id="cntSym">—</span></div>
+      <div class="row"><span class="k">Verensokeri</span><span class="v" id="cntGlu">84 mittausta</span></div>
+      <div class="row"><span class="k">Paino</span><span class="v" id="cntWt">12 punnitusta</span></div>
+      <div class="row"><span class="k">Laboratorio</span><span class="v">LDL, HbA1c, K, krea</span></div>
+      <div class="row"><span class="k">Lääkkeet</span><span class="v">3 lääkettä + historia</span></div>
+      <div class="row"><span class="k">Oireet</span><span class="v">14 vrk kirjaukset</span></div>
     </div>
 
     <button class="btn full" id="newCodeBtn" onclick="newCode()" style="margin-top:4px">Luo uusi koodi</button>
@@ -1064,19 +1072,23 @@ function renderMeds(){
     '</div></div><div class="med-hist"><span class="mh-dot'+(m.isNew?' new':'')+'"></span>'+esc(m.hist)+'</div></div>'
   ).join('');
 }
-function removeMed(i){
-  if(document.body.classList.contains('doctor-mode')) return;
-  if(!MEDS[i]) return;
-  if(!confirm('Poistetaanko '+MEDS[i].n+' listalta?')) return;
-  const n=MEDS[i].n;
-  MEDS.splice(i,1);
-  saveState(); renderMeds(); toast(n+' poistettu');
-}
-const SYMDAYS=symDayLabels();
 const SYMC=['#B3452C','#946A16','#6B5B95','#2F6690'];
+
+/* Oireruudukon x-akseli on aina 14 viimeista vuorokautta tahan paivaan asti,
+   samassa jarjestyksessa kuin symptomGrid tayttaa arvot. */
+function symDays(){
+  const out=[];
+  for(let i=13;i>=0;i--){
+    const d=new Date(TODAY_DATE);d.setDate(d.getDate()-i);
+    out.push(d.getDate()+'.'+(d.getMonth()+1)+'.');
+  }
+  return out;
+}
+
 function renderSyms(){
   const grid=$('symGrid'),axis=$('symAxis');
   if(!grid)return;
+  const SYMDAYS=symDays();
   grid.innerHTML='';
   const note=$('symNote');
   if(note) note.hidden=!(profile.seeded && EVENTS.some(e=>/annos|lääkitys/i.test(e.l||'')));
@@ -1089,7 +1101,7 @@ function renderSyms(){
   SYMS.forEach((sy,si)=>{
     const c=SYMC[si%SYMC.length];
     const bars=sy.v.map((v,i)=>{
-      const day=SYMDAYS[i].replace(/\.$/,'')+'.10.';
+      const day=SYMDAYS[i];
       if(v<0)return '<span class="sym-cell" title="'+day+' ei kirjausta"><span class="sym-miss"></span></span>';
       if(v===0)return '<span class="sym-cell" title="'+day+' ei oiretta"><span class="sym-zero"></span></span>';
       return '<span class="sym-cell" title="'+esc(day+' '+sy.n.toLowerCase()+' '+v+'/5')+'"><span class="sym-bar grown" style="--sc:'+c+';height:'+(v/5*100)+'%;opacity:'+(0.45+v*0.11)+'"></span></span>';
@@ -1101,8 +1113,20 @@ function renderSyms(){
       '<span class="sym-name">'+esc(sy.n)+'</span><span class="sym-bars">'+bars+'</span>';
     grid.appendChild(row);
   });
-  if(axis)axis.innerHTML='<span class="sym-days">'+days.map((d,i)=>
-    '<span>'+(i===0||i===13||i===6?esc(d):'')+'</span>').join('')+'</span>';
+  if(axis)axis.innerHTML='<span class="sym-days">'+SYMDAYS.map((d,i)=>
+    '<span>'+(i===0||i===13||i===6?d:'')+'</span>').join('')+'</span>';
+
+  /* Huomautus kertoo lääkemuutoksesta vain jos sellainen osuu samaan
+     14 vuorokauden ikkunaan — muuten oireiden rinnalla ei ole mitään verrattavaa. */
+  const note=$('symNote');
+  if(!note)return;
+  const recent=MEDS.filter(m=>m.startedOn&&(TODAY_DATE-dayStart(m.startedOn))/864e5<14)
+    .sort((a,b)=>dayStart(b.startedOn)-dayStart(a.startedOn))[0];
+  note.hidden=!recent;
+  if(recent){
+    note.innerHTML='<span class="se-mark"></span>'+esc(recent.n+' aloitettu '+fmtDate(dayStart(recent.startedOn)))+
+      ' — vertaa oireiden kehitystä tähän';
+  }
 }
 
 /* ══ BIG GRAPH ══ */
@@ -1424,279 +1448,23 @@ function toast(t){
   const el=$('toast');el.textContent=t;el.classList.add('on');
   clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('on'),2600);
 }
+/** Monesko viikko hoitopolkua on menossa, jos polun alku on tiedossa. */
+function careWeek(){
+  const dates=PATH.map(e=>e.occurs_at).filter(Boolean).map(x=>new Date(x));
+  if(!dates.length)return null;
+  return Math.floor((TODAY_DATE-dayStart(new Date(Math.min(...dates))))/864e5/7)+1;
+}
+
 function updateCounts(){
-  const total=BP.length+GLU.length+WT.length;
-  const c=$('cntBp');if(c)c.textContent=BP.length? (BP.length+' mittausta') : 'Ei vielä';
-  const g=$('cntGlu');if(g)g.textContent=GLU.length? (GLU.length+' mittausta') : 'Ei vielä';
-  const w=$('cntWt');if(w)w.textContent=WT.length? (WT.length+' punnitusta') : 'Ei vielä';
-  const chol=$('cntChol');
-  if(chol){
-    const ldl=LABS.find(l=>l.n==='LDL-kolesteroli');
-    chol.textContent=(ldl&&ldl.to!==null)? (fmt(ldl.to,1)+' mmol/l') : 'Ei vielä';
-  }
-  const lab=$('cntLab');
-  if(lab){
-    const named=LABS.filter(l=>l.to!=null).map(l=>l.n.replace(/-kolesteroli/,'').replace('Kreatiniini','krea')).slice(0,4);
-    lab.textContent=named.length? named.join(', ') : 'Ei vielä tuloksia';
-  }
-  const med=$('cntMed'); if(med) med.textContent=MEDS.length? (MEDS.length+' lääkettä') : 'Ei lääkkeitä';
-  const sym=$('cntSym'); if(sym) sym.textContent=SYMS.length? (SYMS.length+' oiretta · 14 vrk') : 'Ei oireita';
+  const c=$('cntBp');if(c)c.textContent=BP.length+' mittausta · '+Math.round(DAYS/7)+' vk';
+  const g=$('cntGlu');if(g)g.textContent=GLU.length+' mittausta';
+  const w=$('cntWt');if(w)w.textContent=WT.length+' punnitusta';
   const h=$('kotiSub');
-  if(h)h.textContent=total? (total+' mittausta kirjattu · tallennettu tähän selaimeen') : 'Ei vielä mittauksia — aloita kirjaamalla ensimmäinen arvo';
-  updateGreeting();
-}
-function greetWord(){
-  const h=new Date().getHours();
-  if(h<5) return 'Hyvää yötä';
-  if(h<11) return 'Hyvää huomenta';
-  if(h<17) return 'Hyvää päivää';
-  return 'Hyvää iltaa';
-}
-function updateGreeting(){
-  const el=$('greetTitle'); if(!el) return;
-  const n=(profile.name||'').trim();
-  el.textContent=n? (greetWord()+', '+n) : greetWord();
-  const nt=$('nextTitle'), nx=$('nextText');
-  if(nt && nx){
-    if(!BP.length){ nt.textContent='Kirjaa ensimmäinen verenpaine'; nx.textContent='Aloita kotiseuranta. Alusta näyttää suunnan — se ei diagnostisoi eikä määrää hoitoa.'; }
-    else { nt.textContent='Kirjaa verenpaine'; nx.textContent='Kaksi mittausta päivässä kertoo todellisen tason. Tämä alusta ei diagnostisoi — se näyttää suunnan.'; }
+  if(h){
+    const wk=careWeek();
+    h.textContent=(wk?'Viikko '+wk+' seurantaa · ':'')+
+      (BP.length+GLU.length+WT.length)+' mittausta kirjattu';
   }
-}
-
-/* ══ KALENTERI ══ */
-const FI_DAYS=['su','ma','ti','ke','to','pe','la'];
-const FI_DAYS_LONG=['sunnuntai','maanantai','tiistai','keskiviikko','torstai','perjantai','lauantai'];
-function dayKey(d){
-  const x=d instanceof Date?d:new Date(d);
-  return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0');
-}
-function startOfDay(d){const x=new Date(d);x.setHours(0,0,0,0);return x;}
-function addDays(d,n){const x=new Date(d);x.setDate(x.getDate()+n);return x;}
-function ensureCalDay(){
-  if(!calSelected) calSelected=startOfDay(new Date());
-}
-function isDone(key,id){
-  return !!(DONE[key]&&DONE[key][id]);
-}
-function setDone(key,id,val){
-  if(!DONE[key]) DONE[key]={};
-  if(val) DONE[key][id]=true; else delete DONE[key][id];
-  if(DONE[key] && !Object.keys(DONE[key]).length) delete DONE[key];
-}
-function markTodayDone(id){
-  setDone(dayKey(new Date()), id, true);
-  saveState();
-  if($('v-kalenteri')&&$('v-kalenteri').classList.contains('on')) renderCalendar();
-}
-function dayIndex(date){
-  const today=startOfDay(new Date());
-  const sel=startOfDay(date);
-  return TODAY+Math.round((sel-today)/864e5);
-}
-function measuresOn(date){
-  const di=dayIndex(date);
-  return {
-    bp:BP.filter(p=>p.d===di),
-    glu:GLU.filter(p=>p.d===di),
-    wt:WT.filter(p=>p.d===di)
-  };
-}
-function renderCalPlan(){
-  const bpEl=$('calPlanBp'),gluEl=$('calPlanGlu'),wtEl=$('calPlanWt'),symEl=$('calPlanSym');
-  if(bpEl){
-    if(PLAN.bpAm!==false&&PLAN.bpPm!==false) bpEl.textContent='Aamu + ilta';
-    else if(PLAN.bpAm!==false) bpEl.textContent='Vain aamu';
-    else if(PLAN.bpPm!==false) bpEl.textContent='Vain ilta';
-    else bpEl.textContent='Ei aikataulussa';
-  }
-  if(gluEl) gluEl.textContent=PLAN.gluAm!==false?'Aamu (paasto)':'Ei aikataulussa';
-  if(wtEl){
-    if(PLAN.wtDow==null) wtEl.textContent='Ei aikataulussa';
-    else wtEl.textContent='Joka '+FI_DAYS_LONG[PLAN.wtDow];
-  }
-  if(symEl) symEl.textContent=PLAN.symEve!==false?'Iltaisin':'Ei aikataulussa';
-}
-function renderCalLogged(date){
-  const box=$('calLogged'); if(!box) return;
-  const m=measuresOn(date);
-  const rows=[];
-  m.bp.forEach(p=>rows.push('Verenpaine '+(p.dia? (p.v+'/'+p.dia) : p.v)+' mmHg'+(p.t==='pm'?' · ilta':' · aamu')));
-  m.glu.forEach(p=>rows.push('Verensokeri '+fmt(p.v,1)+' mmol/l'));
-  m.wt.forEach(p=>rows.push('Paino '+fmt(p.v,1)+' kg'));
-  if(!rows.length){
-    box.innerHTML='<div class="cal-empty">Ei kirjattuja mittauksia tälle päivälle.</div>';
-    return;
-  }
-  box.innerHTML=rows.map(t=>'<div class="row"><span class="k">'+esc(t)+'</span><span class="v">kirjattu</span></div>').join('');
-}
-function openPlanEdit(){
-  if(doctorReadOnly){ toast('Lukunäkymä — muutokset pois käytöstä'); return; }
-  entCur={i:10};
-  $('entT').textContent='Muokkaa aikataulua';
-  $('entS').textContent='Valitse mitä kalenteri muistuttaa';
-  $('entDot').style.background='#A67C2E';
-  $('entMsg').textContent='';$('entMsg').className='msg';
-  const w=$('entFields');w.innerHTML='';
-  const addToggle=(id,label,on)=>{
-    const b=document.createElement('button');
-    b.type='button';b.className='sym-opt';b.id=id;
-    b.setAttribute('aria-selected',on?'true':'false');
-    b.innerHTML='<span class="box"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg></span><span style="font-size:15px;font-weight:500">'+esc(label)+'</span>';
-    b.onclick=()=>{
-      const now=b.getAttribute('aria-selected')==='true';
-      b.setAttribute('aria-selected',(!now).toString());
-    };
-    w.appendChild(b);
-  };
-  addToggle('pl_bpAm','Verenpaine aamulla',PLAN.bpAm!==false);
-  addToggle('pl_bpPm','Verenpaine illalla',PLAN.bpPm!==false);
-  addToggle('pl_gluAm','Verensokeri aamulla',PLAN.gluAm!==false);
-  addToggle('pl_symEve','Oireseuranta illalla',PLAN.symEve!==false);
-  const lbl=document.createElement('div');
-  lbl.style.cssText='font-size:12.5px;font-weight:600;color:var(--mid);margin:16px 2px 6px';
-  lbl.textContent='Painon viikkopäivä';
-  w.appendChild(lbl);
-  const seg=document.createElement('div');seg.className='seg';seg.id='pl_wtDow';
-  const days=[{v:null,t:'Ei'},{v:1,t:'Ma'},{v:2,t:'Ti'},{v:3,t:'Ke'},{v:4,t:'To'},{v:5,t:'Pe'},{v:6,t:'La'},{v:0,t:'Su'}];
-  days.forEach(d=>{
-    const b=document.createElement('button');
-    b.type='button';b.textContent=d.t;b.dataset.dow=d.v===null?'':String(d.v);
-    b.setAttribute('aria-selected', (PLAN.wtDow===d.v || (d.v===null&&PLAN.wtDow==null)) ?'true':'false');
-    b.onclick=()=>{
-      seg.querySelectorAll('button').forEach(o=>o.setAttribute('aria-selected','false'));
-      b.setAttribute('aria-selected','true');
-    };
-    seg.appendChild(b);
-  });
-  w.appendChild(seg);
-  entSheet.classList.add('on');entBg.classList.add('on');syncSheetLock();
-}
-function savePlanEdit(){
-  PLAN.bpAm=$('pl_bpAm')&&$('pl_bpAm').getAttribute('aria-selected')==='true';
-  PLAN.bpPm=$('pl_bpPm')&&$('pl_bpPm').getAttribute('aria-selected')==='true';
-  PLAN.gluAm=$('pl_gluAm')&&$('pl_gluAm').getAttribute('aria-selected')==='true';
-  PLAN.symEve=$('pl_symEve')&&$('pl_symEve').getAttribute('aria-selected')==='true';
-  const picked=document.querySelector('#pl_wtDow button[aria-selected="true"]');
-  PLAN.wtDow=picked&&picked.dataset.dow!==''?Number(picked.dataset.dow):null;
-  saveState();
-  renderCalendar();
-  msg('Aikataulu päivitetty.','ok');
-  toast('Aikataulu päivitetty');
-  setTimeout(closeEnt,700);
-}
-function agendaFor(date){
-  const items=[];
-  const dow=date.getDay();
-  if(PLAN.bpAm!==false) items.push({id:'bp-am',kind:'m',time:'07.30',name:'Verenpaine · aamu',desc:'Kotimittaus',action:'bp',slot:'am'});
-  if(PLAN.gluAm!==false) items.push({id:'glu-am',kind:'m',time:'07.45',name:'Verensokeri · aamu',desc:'Paastoarvo',action:'glu'});
-  MEDS.forEach((m,i)=>{
-    if(m.am) items.push({id:'med-'+i+'-am',kind:'l',time:'08.00',name:m.n,desc:(m.dose||'')+' · aamu',action:'med',medIdx:i,slot:'am'});
-  });
-  if(PLAN.bpPm!==false) items.push({id:'bp-pm',kind:'m',time:'19.00',name:'Verenpaine · ilta',desc:'Kotimittaus',action:'bp',slot:'pm'});
-  MEDS.forEach((m,i)=>{
-    if(m.pm) items.push({id:'med-'+i+'-pm',kind:'l',time:'20.00',name:m.n,desc:(m.dose||'')+' · ilta',action:'med',medIdx:i,slot:'pm'});
-  });
-  if(PLAN.symEve!==false) items.push({id:'sym-eve',kind:'o',time:'21.00',name:'Oireseuranta',desc:SYMS.length?'Kirjaa päivän oireet':'Lisää seurattava oire',action:'sym'});
-  if(PLAN.wtDow!=null && PLAN.wtDow===dow){
-    items.splice(Math.min(2,items.length),0,{id:'wt',kind:'m',time:'08.15',name:'Paino',desc:'Viikkopunnitus',action:'wt'});
-  }
-  return items;
-}
-function dayStats(date){
-  const items=agendaFor(date);
-  const key=dayKey(date);
-  const done=items.filter(it=>isDone(key,it.id)).length;
-  return {total:items.length,done,has:items.length>0,all:items.length>0&&done===items.length};
-}
-function renderCalendar(){
-  ensureCalDay();
-  const today=startOfDay(new Date());
-  const week=$('calWeek'); if(!week) return;
-  // show Mon–Sun of selected week
-  const sel=calSelected;
-  const mondayOffset=(sel.getDay()+6)%7;
-  const monday=addDays(sel,-mondayOffset);
-  week.innerHTML='';
-  for(let i=0;i<7;i++){
-    const d=addDays(monday,i);
-    const st=dayStats(d);
-    const b=document.createElement('button');
-    b.type='button';
-    b.className='cal-day'+(dayKey(d)===dayKey(sel)?' on':'')+(dayKey(d)===dayKey(today)?' today':'')+(st.all?' done':(st.done?' has':''));
-    b.innerHTML='<span class="dn">'+FI_DAYS[d.getDay()]+'</span><span class="dd">'+d.getDate()+'</span><span class="dot"></span>';
-    b.onclick=()=>{calSelected=startOfDay(d);renderCalendar();};
-    week.appendChild(b);
-  }
-
-  const isToday=dayKey(sel)===dayKey(today);
-  const title=$('calDayTitle');
-  if(title){
-    title.textContent=isToday?('Tänään · '+FI_DAYS_LONG[sel.getDay()])
-      :(sel.getDate()+'.'+(sel.getMonth()+1)+'. · '+FI_DAYS_LONG[sel.getDay()]);
-  }
-  const items=agendaFor(sel);
-  const key=dayKey(sel);
-  const doneN=items.filter(it=>isDone(key,it.id)).length;
-  const prog=$('calProg'); if(prog) prog.textContent=doneN+' / '+items.length+' tehty';
-
-  const medLbl=$('calPlanMeds');
-  if(medLbl) medLbl.textContent=MEDS.length? (MEDS.length+' lääkettä · aamu/ilta') : 'Ei lääkkeitä — lisää Tiedot-välilehdellä';
-  renderCalPlan();
-  renderCalLogged(sel);
-
-  const box=$('calAgenda');
-  if(!box) return;
-  if(!items.length){
-    box.innerHTML='<div class="cal-empty">Ei aikataulutettuja tehtäviä tälle päivälle.</div>';
-    return;
-  }
-  const ro=doctorReadOnly;
-  box.innerHTML=items.map(it=>{
-    const done=isDone(key,it.id);
-    const tag=it.kind==='m'?'Mittaus':(it.kind==='l'?'Lääke':'Oire');
-    return '<button type="button" class="cal-item kind-'+esc(it.kind)+(done?' done':'')+'" data-id="'+esc(it.id)+'" data-action="'+esc(it.action)+'" data-slot="'+(it.slot||'')+'">'+
-      '<span class="cal-check" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg></span>'+
-      '<span><span class="ci-n">'+esc(it.name)+'</span><span class="ci-d">'+esc(it.time)+' · '+esc(it.desc)+'</span></span>'+
-      '<span class="ci-tag">'+(done?'Tehty':esc(tag))+'</span></button>';
-  }).join('');
-
-  box.querySelectorAll('.cal-item').forEach(btn=>{
-    btn.onclick=()=>{
-      if(ro){ toast('Lukunäkymä — muutokset pois käytöstä'); return; }
-      const id=btn.dataset.id;
-      const action=btn.dataset.action;
-      const done=isDone(key,id);
-      if(action==='med'){
-        setDone(key,id,!done); saveState(); renderCalendar();
-        toast(done?'Merkintä poistettu':'Lääkeotto merkitty');
-        return;
-      }
-      if(done){
-        setDone(key,id,false); saveState(); renderCalendar();
-        toast('Merkintä poistettu');
-        return;
-      }
-      // open entry for measurement / symptom, then mark done on save
-      window._calPending=id;
-      if(action==='bp'){
-        const e=ENTRY[0];
-        openEntry(e);
-        // preselect am/pm if possible after open
-        setTimeout(()=>{
-          const segs=$('entFields')&&$('entFields').querySelectorAll('.seg button');
-          if(segs&&segs.length===2){
-            const want=btn.dataset.slot==='pm'?1:0;
-            segs.forEach((b,i)=>{b.setAttribute('aria-selected',i===want);if(i===want)entTime=b.textContent;});
-          }
-        },280);
-      }else if(action==='glu') openEntry(ENTRY[1]);
-      else if(action==='wt') openEntry(ENTRY[2]);
-      else if(action==='sym'){
-        if(!SYMS.length) openAddSym();
-        else openSym();
-      }
-    };
-  });
 }
 
 /* Kaikki kirjaukset tallennetaan ensin kantaan; paikalliset taulukot

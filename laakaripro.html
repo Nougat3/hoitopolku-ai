@@ -144,7 +144,7 @@ h2{font-size:19px;font-weight:700;letter-spacing:-.03em}
 
 <div class="shell" id="shell">
   <nav class="side">
-    <a class="brand" href="hoitopolku-landing.html">
+    <a class="brand" href="index.html">
       <svg width="22" height="22" viewBox="0 0 40 40" aria-hidden="true">
         <circle cx="20" cy="20" r="14.5" fill="none" stroke="#E4DFD6" stroke-width="4.5"/>
         <circle cx="20" cy="20" r="14.5" fill="none" stroke="#A67C2E" stroke-width="4.5" stroke-dasharray="63 91" stroke-linecap="round" transform="rotate(-90 20 20)"/>
@@ -176,7 +176,7 @@ h2{font-size:19px;font-weight:700;letter-spacing:-.03em}
 
     <section class="view on" id="v-dash">
       <div class="head">
-        <h1 id="greet">Hyvää päivää, Anna</h1>
+        <h1 id="greet">Hyvää päivää</h1>
         <div class="sub" id="today">—</div>
       </div>
     </div>
@@ -227,8 +227,154 @@ h2{font-size:19px;font-weight:700;letter-spacing:-.03em}
         </div>
         <div class="ai-out" id="aiOut">Valitse työkalu yllä.</div>
       </div>
-    </div>
-  </div>
+
+      <div class="tabs" id="pTabs">
+        <button class="tab" aria-selected="true">Yhteenveto</button>
+        <button class="tab">Mittaukset</button>
+        <button class="tab">Laboratorio</button>
+        <button class="tab">Lääkitys</button>
+        <button class="tab">Oireet</button>
+      </div>
+
+      <div class="pane on" id="pane0">
+        <div class="card">
+          <div class="card-h"><h2>Kotimittaukset</h2><span class="note">7 vrk keskiarvo</span></div>
+          <div id="sumMetrics"></div>
+        </div>
+        <div class="two">
+          <div class="card">
+            <div class="card-h"><h2>Turvakokeet</h2><span class="note">viimeisin</span></div>
+            <table class="lab"><tbody id="sumSafety"></tbody></table>
+          </div>
+          <div class="card">
+            <div class="card-h"><h2>Lääkitys</h2><span class="note" id="medCount">—</span></div>
+            <div id="sumMeds"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="pane" id="pane1">
+        <div id="p1List">
+          <div class="card">
+            <div class="card-h"><h2>Kotimittaukset</h2><span class="note">12 viikkoa · avaa käyrä painamalla</span></div>
+            <div id="metrics"></div>
+          </div>
+        </div>
+
+        <div id="p1Detail" style="display:none">
+          <button class="back" onclick="closeMetricDetail()">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg>
+            Kotimittaukset
+          </button>
+          <div class="card">
+            <div class="g-head">
+              <div>
+                <div class="g-name" id="dTitle">Verenpaine</div>
+                <div class="g-sub" id="dSub">kotimittaus</div>
+              </div>
+              <div class="g-val"><span id="dVal">—</span> <small id="dUnit"></small></div>
+            </div>
+            <div class="g-wrap">
+              <svg id="lpGraph" viewBox="0 0 520 190"></svg>
+              <div class="g-tip" id="lpTip"></div>
+            </div>
+            <div class="legend">
+              <span><i class="lg-dot"></i>Yksittäinen mittaus</span>
+              <span><i class="lg-line" id="lgLineLP"></i>7 vrk keskiarvo</span>
+              <span><i class="lg-dash"></i>Tavoite</span>
+            </div>
+            <div class="stats" id="dStats"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="pane" id="pane2">
+        <div class="card">
+          <div class="card-h"><h2>Laboratorio</h2><span class="note">aiempi ja viimeisin</span></div>
+          <table class="lab">
+            <thead><tr><th>Tutkimus</th><th>Aiempi</th><th>Nyt</th><th>Muutos</th><th>Viite</th><th></th></tr></thead>
+            <tbody id="labBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="pane" id="pane3">
+        <div class="card">
+          <div class="card-h"><h2>Lääkitys</h2><span class="note">potilaan kirjaama</span></div>
+          <div id="meds"></div>
+        </div>
+      </div>
+
+      <div class="pane" id="pane4">
+        <div class="card">
+          <div class="card-h"><h2>Oireet</h2><span class="note">14 vrk</span></div>
+          <div id="symGrid"></div>
+          <div class="sym-axis" id="symAxis"></div>
+          <div class="sym-key">
+            <span><i class="kn"></i>ei oiretta</span>
+            <span><i class="km"></i>ei kirjausta</span>
+            <span style="margin-left:auto">pylvään korkeus = voimakkuus 1–5</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="view" id="v-ai">
+      <div class="head">
+        <h1>AI-työkalut</h1>
+        <div class="sub">Koostavat luonnoksen potilaan kirjaamista tiedoista — lääkäri tarkistaa ja hyväksyy</div>
+      </div>
+
+      <div class="ctx" id="aiCtx"></div>
+
+      <div class="ai-grid">
+        <div class="card" style="margin:0">
+          <div class="card-h"><h2>Työkalut</h2></div>
+          <button class="tool" aria-selected="true">
+            <span class="ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg></span>
+            <span><span class="n">Lausuntoapuri</span><span class="d">Hoitoyhteenveto, lähete tai todistus luonnoksena</span></span>
+          </button>
+          <button class="tool soon"><span class="ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M3 17l5-6 4 3 5-8"/></svg></span><span><span class="n">Vasteanalyysi</span><span class="d">Vertaa hoidon vastetta annosmuutoksiin</span></span></button>
+          <button class="tool soon"><span class="ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M12 8v5M12 16v.5"/><circle cx="12" cy="12" r="9"/></svg></span><span><span class="n">Turvatarkistus</span><span class="d">Laboratorioarvot ja lääkitys ristiin</span></span></button>
+        </div>
+
+        <div>
+          <div class="card" style="margin-bottom:14px">
+            <div class="form-row">
+              <div>
+                <div class="f-lbl">Asiakirjan tyyppi</div>
+                <select id="docType">
+                  <option value="yhteenveto">Hoitoyhteenveto käynnistä</option>
+                  <option value="seuranta">Seurantajakson yhteenveto</option>
+                  <option value="lahete">Lähetteen taustatiedot</option>
+                  <option value="A">A-todistuksen luonnos</option>
+                </select>
+              </div>
+              <div>
+                <div class="f-lbl">Laajuus</div>
+                <select id="tone">
+                  <option value="tiivis">Tiivis</option>
+                  <option value="laaja">Laajempi</option>
+                </select>
+              </div>
+            </div>
+            <div class="f-lbl">Lisätiedot lääkäriltä <span style="font-weight:400;color:var(--mid2)">— valinnainen</span></div>
+            <textarea class="ta" id="extra" placeholder="esim. potilas kertoi kuivasta yskästä; harkitaan vaihtoa ATR-salpaajaan"></textarea>
+            <button class="btn gold" style="width:100%;margin-top:14px" id="genBtn" onclick="generate()">Luo luonnos</button>
+          </div>
+
+          <div class="out empty" id="out">Valitse potilas ja asiakirjan tyyppi.<br>Luonnos perustuu vain potilaan kirjaamiin tietoihin.</div>
+          <div class="out-bar" id="outBar" style="display:none">
+            <button class="btn sec sm" onclick="copyOut(this)">Kopioi</button>
+            <button class="btn sec sm" onclick="editOut()">Muokkaa</button>
+            <button class="btn sec sm" onclick="generate()">Luo uudelleen</button>
+          </div>
+          <p class="disc">Luonnos ei ole lääketieteellinen kannanotto. Tarkista jokainen luku ja päätelmä ennen kirjaamista potilastietojärjestelmään. Vastuu sisällöstä on hoitavalla lääkärillä.</p>
+        </div>
+      </div>
+    </section>
+
+  </main>
 </div>
 
 <!-- Datakerros moduulina; klassinen skripti odottaa hp:ready-tapahtumaa. -->
