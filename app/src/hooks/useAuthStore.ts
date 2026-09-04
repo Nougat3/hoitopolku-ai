@@ -1,28 +1,21 @@
-/**
- * Global state management with Zustand
- * Auth store for user session and profile
- */
-
 import { create } from 'zustand';
 import type { User } from '@supabase/supabase-js';
-import type { Database } from '@/types/database';
-
-type Profile = Database['public']['Tables']['profiles']['Row'];
+import type { AppUser } from '@/types/database';
 
 interface AuthState {
   user: User | null;
-  profile: Profile | null;
+  appUser: AppUser | null;
   loading: boolean;
   setUser: (user: User | null) => void;
-  setProfile: (profile: Profile | null) => void;
+  setAppUser: (appUser: AppUser | null) => void;
   setLoading: (loading: boolean) => void;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
-  profile: null,
+  appUser: null,
   loading: true,
   setUser: (user) => set({ user }),
-  setProfile: (profile) => set({ profile }),
+  setAppUser: (appUser) => set({ appUser }),
   setLoading: (loading) => set({ loading })
 }));

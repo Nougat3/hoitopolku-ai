@@ -35,9 +35,15 @@ Kaikki laskentalogiikka (käyrät, trendit, ennusteet, tehtävälistat) on kuite
 
 ---
 
-## 3. Tietomalli — se puuttuva keskiö
+## 3. Tietomalli — live (hoitopolku-ai)
 
-Tämä on koko suunnitelman ydin. Taulut vastaavat suoraan demoissa jo olevia käsitteitä.
+> **Huom:** Alla oleva “suunnitelmataulu”-lista on historiallinen. **Live-kanta** käyttää suomenkielisiä rooleja ja tauluja:
+> `users` (`potilas`/`laakari`), `bp_measurements`, `metric_measurements`, `patient_medications`,
+> `patient_targets`, `patient_tasks`, `symptom_reports`, `care_events`, `care_sessions`,
+> `patient_access_codes`, `enrollments`, `audit_log`.
+> Pääsy lääkärille perustuu määräaikaiseen `care_sessions` + jakokoodi-RPC:hen — ei pelkkään enrollmentiin.
+
+Historiallinen suunnitelmataulu (älä käytä uusissa migraatioissa sellaisenaan):
 
 | Taulu | Sisältö | Vastaa demossa |
 |---|---|---|

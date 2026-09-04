@@ -1,24 +1,26 @@
 import { useEffect } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Navigate, Route, Routes } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/hooks/useAuthStore';
-
-// Pages (to be created)
 import LoginPage from '@/pages/LoginPage';
 import PatientDashboard from '@/pages/patient/Dashboard';
 import DoctorDashboard from '@/pages/doctor/Dashboard';
+import type { AppUser } from '@/types/database';
+
+function homeForRole(role: AppUser['role'] | undefined): string {
+  if (role === 'laakari' || role === 'yllapito') return '/doctor';
+  return '/patient';
+}
 
 function App() {
-  const { user, setUser, setProfile, loading, setLoading } = useAuthStore();
+  const { user, appUser, setUser, setAppUser, loading, setLoading } = useAuthStore();
 
   useEffect(() => {
-    // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
       setLoading(false);
     });
 
-    // Listen for auth changes
     const {
       data: { subscription }
     } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -28,62 +30,81 @@ function App() {
     return () => subscription.unsubscribe();
   }, [setUser, setLoading]);
 
-  // Fetch profile when user changes
   useEffect(() => {
-    if (user) {
-      supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single()
-        .then(({ data }) => {
-          if (data) {
-            setProfile(data);
-          }
-        });
-    } else {
-      setProfile(null);
+    if (!user) {
+      setAppUser(null);
+      return;
     }
-  }, [user, setProfile]);
+
+    supabase
+      .from('users')
+      .select('*')
+      .eq('auth_user_id', user.id)
+      .single()
+      .then(({ data }) => {
+        setAppUser((data as AppUser | null) ?? null);
+      });
+  }, [user, setAppUser]);
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#FBFAF7]">
-        <div className="text-[#6B6860]">Ladataan...</div>
+      <div className="min-h-screen flex items-center justify-center bg-[var(--w)]">
+        <div className="text-[var(--mid)]">Ladataan…</div>
       </div>
     );
   }
 
   return (
     <Routes>
-      <Route path="/login" element={<LoginPage />} />
-      
-      {/* Protected routes */}
       <Route
-        path="/patient/*"
+        path="/login"
         element={
-          user ? <PatientDashboard /> : <Navigate to="/login" replace />
-        }
-      />
-      
-      <Route
-        path="/doctor/*"
-        element={
-          user ? <DoctorDashboard /> : <Navigate to="/login" replace />
+          user && appUser ? (
+            <Navigate to={homeForRole(appUser.role)} replace />
+          ) : (
+            <LoginPage />
+          )
         }
       />
 
-      {/* Default redirect based on role */}
       <Route
-        path="/"
+        path="/patient/*"
         element={
-          user ? (
-            <Navigate to="/patient" replace />
+          user && appUser?.role === 'potilas' ? (
+            <PatientDashboard />
+          ) : user && appUser ? (
+            <Navigate to={homeForRole(appUser.role)} replace />
           ) : (
             <Navigate to="/login" replace />
           )
         }
       />
+
+      <Route
+        path="/doctor/*"
+        element={
+          user && (appUser?.role === 'laakari' || appUser?.role === 'yllapito') ? (
+            <DoctorDashboard />
+          ) : user && appUser ? (
+            <Navigate to={homeForRole(appUser.role)} replace />
+          ) : (
+            <Navigate to="/login" replace />
+          )
+        }
+      />
+
+      <Route
+        path="/"
+        element={
+          user && appUser ? (
+            <Navigate to={homeForRole(appUser.role)} replace />
+          ) : (
+            <Navigate to="/login" replace />
+          )
+        }
+      />
+
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }

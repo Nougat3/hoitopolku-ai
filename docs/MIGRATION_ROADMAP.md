@@ -17,6 +17,9 @@ Tämä dokumentti täydentää [teknistä siirtymäsuunnitelmaa](./TECH_MIGRATIO
 
 **Yhteensä: 9–13 viikkoa** (1 kokopäiväinen kehittäjä tai vastaava osa-aikaisena)
 
+> **Tila 2026-09:** Vaiheet 0–4 on toteutettu React-sovelluksessa live-skeemaa vasten
+> (`app/`). AI Edge Function deployataan tarvittaessa; ilman secretia toimii localDraft.
+
 ---
 
 ## Vaihe 0: Perusta (1–2 viikkoa)
