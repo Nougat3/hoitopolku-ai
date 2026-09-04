@@ -4,7 +4,7 @@
 // mittaukset indeksoidaan paivanumerolla 0..DAYS-1 seurantaikkunan alusta, jolloin
 // kayrien piirtologiikka voi kasitella niita suoraan taulukkoina.
 
-import { select, insert, update, rpc } from './supabase.js';
+import { select, insert, update, rpc, authUserId } from './supabase.js';
 
 /** Seurantaikkunan pituus paivina. Sama kuin kayrien x-akselilla. */
 export const DAYS = 84;
@@ -56,11 +56,19 @@ function timeOfDayToDb(value) {
 }
 
 /**
- * Kirjautuneen kayttajan rivi users-taulusta. RLS palauttaa vain oman rivin,
- * joten hakuun ei tarvita tunnistetta.
+ * Kirjautuneen kayttajan rivi users-taulusta.
+ *
+ * Haku on rajattava auth-tunnisteella: rivitason suojaus palauttaa myos
+ * hoitosuhteessa olevien kayttajien rivit, joten ilman rajausta rooli voisi
+ * tulla vaaralta rivilta.
  */
 export async function currentUser() {
-  const rows = await select('users', 'select=id,email,role,full_name,title');
+  const uid = authUserId();
+  if (!uid) return null;
+  const rows = await select(
+    'users',
+    `select=id,email,role,full_name,title&auth_user_id=eq.${encodeURIComponent(uid)}`
+  );
   return rows?.[0] ?? null;
 }
 
