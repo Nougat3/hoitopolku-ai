@@ -54,6 +54,31 @@ supabase functions deploy strong-auth-exchange
 
 Callback-reitti: `/auth/callback`. Provider-vaihto ilman UI-muutoksia: `VITE_STRONG_AUTH_PROVIDER`.
 
+## Stripe-laskutus (LääkäriPRO) — valmis kytkettäväksi
+
+Taulu `billing_subscriptions` + UI `/doctor/billing`. Oletuksena “Tulossa”.
+
+```bash
+# app/.env.local — julkaisussa:
+VITE_STRIPE_ENABLED=true
+VITE_STRIPE_PUBLISHABLE_KEY=pk_live_...
+VITE_STRIPE_PRICE_STARTER=price_...
+VITE_STRIPE_PRICE_PRO=price_...
+VITE_STRIPE_PRICE_CLINIC=price_...
+```
+
+Edge Functions:
+
+```bash
+supabase secrets set STRIPE_SECRET_KEY=sk_live_... STRIPE_WEBHOOK_SECRET=whsec_...
+supabase functions deploy stripe-checkout
+supabase functions deploy stripe-portal
+supabase functions deploy stripe-webhook
+```
+
+Stripe Dashboard → Webhook URL: `https://<project>.supabase.co/functions/v1/stripe-webhook`  
+Eventit: `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`.
+
 ## Live-skeema
 
-Älä aja `20260904000000_initial_schema.sql` live-projektiin — se kuvaa vanhaa suunnitelmamallia. Käytä Aug 2026 -migraatioita (`20260825*` … `20260828*`).
+Älä aja `20260904000000_initial_schema.sql` live-projektiin — se kuvaa vanhaa suunnitelmamallia. Käytä Aug 2026 -migraatioita (`20260825*` … `20260828*`) sekä `20260904120000_billing_subscriptions.sql`.

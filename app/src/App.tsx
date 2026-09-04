@@ -6,11 +6,22 @@ import LoginPage from '@/pages/LoginPage';
 import StrongAuthCallbackPage from '@/pages/StrongAuthCallbackPage';
 import PatientDashboard from '@/pages/patient/Dashboard';
 import DoctorDashboard from '@/pages/doctor/Dashboard';
+import BillingPage from '@/pages/doctor/BillingPage';
 import type { AppUser } from '@/types/database';
 
 function homeForRole(role: AppUser['role'] | undefined): string {
   if (role === 'laakari' || role === 'yllapito') return '/doctor';
   return '/patient';
+}
+
+function DoctorRoutes() {
+  return (
+    <Routes>
+      <Route index element={<DoctorDashboard />} />
+      <Route path="billing" element={<BillingPage />} />
+      <Route path="*" element={<Navigate to="/doctor" replace />} />
+    </Routes>
+  );
 }
 
 function App() {
@@ -87,7 +98,7 @@ function App() {
         path="/doctor/*"
         element={
           user && (appUser?.role === 'laakari' || appUser?.role === 'yllapito') ? (
-            <DoctorDashboard />
+            <DoctorRoutes />
           ) : user && appUser ? (
             <Navigate to={homeForRole(appUser.role)} replace />
           ) : (

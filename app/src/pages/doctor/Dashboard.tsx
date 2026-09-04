@@ -1,4 +1,6 @@
 import { useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { BillingPanel } from '@/components/doctor/BillingPanel';
 import { CodeRedeem } from '@/components/doctor/CodeRedeem';
 import { PatientView } from '@/components/doctor/PatientView';
 import { useAuthStore } from '@/hooks/useAuthStore';
@@ -42,13 +44,18 @@ export default function DoctorDashboard() {
               <p className="text-sm text-[var(--mid)]">{appUser.title}</p>
             )}
           </div>
-          <button
-            type="button"
-            className="text-sm font-semibold text-[var(--mid)]"
-            onClick={() => void signOut()}
-          >
-            Kirjaudu ulos
-          </button>
+          <div className="flex items-center gap-3">
+            <Link to="/doctor/billing" className="text-sm font-semibold text-[var(--blue)]">
+              Laskutus
+            </Link>
+            <button
+              type="button"
+              className="text-sm font-semibold text-[var(--mid)]"
+              onClick={() => void signOut()}
+            >
+              Kirjaudu ulos
+            </button>
+          </div>
         </div>
       </header>
 
@@ -68,6 +75,13 @@ export default function DoctorDashboard() {
                 setActivePatientId(id);
               }}
             />
+
+            <BillingPanel compact />
+            <p className="text-sm text-[var(--mid)] -mt-2">
+              <Link to="/doctor/billing" className="font-semibold text-[var(--blue)]">
+                Avaa hinnoittelu →
+              </Link>
+            </p>
 
             <div className="rounded-2xl border border-[var(--line)] bg-white p-4">
               <h3 className="font-bold mb-3">Aktiiviset istunnot</h3>
