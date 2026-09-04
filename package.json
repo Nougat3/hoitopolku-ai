@@ -1,0 +1,26 @@
+{
+  "name": "workspace",
+  "version": "1.0.0",
+  "description": "Potilaan ja lääkärin välinen hoitoseurantasovellus — verenpaine, verensokeri, paino ja lääkitys yhdessä paikassa.",
+  "main": "sw.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Nougat3/hoitopolku-ai.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Nougat3/hoitopolku-ai/issues"
+  },
+  "homepage": "https://github.com/Nougat3/hoitopolku-ai#readme",
+  "devDependencies": {
+    "puppeteer": "^25.10.0"
+  }
+}
