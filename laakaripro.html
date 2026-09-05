@@ -123,6 +123,12 @@ h2{font-size:19px;font-weight:700;letter-spacing:-.03em}
 
 .ai-tools{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
 .ai-out{min-height:120px;font-size:14px;line-height:1.55;color:var(--k);white-space:pre-wrap;background:var(--g0);border-radius:12px;padding:14px}
+.field{margin-bottom:12px}
+.field label{display:block;font-size:12.5px;font-weight:600;color:var(--mid);margin-bottom:6px}
+.field input{
+  width:100%;font-family:var(--f);font-size:15px;padding:12px 13px;
+  border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--k);
+}
 
 .alert{display:flex;gap:11px;padding:14px;border-radius:12px;background:var(--g0)}
 .alert.good{background:var(--green-t)}
@@ -258,9 +264,25 @@ h2{font-size:19px;font-weight:700;letter-spacing:-.03em}
         <p class="note" style="margin-top:8px;font-size:12px;color:var(--mid)">⚠️ LUONNOS — ei allekirjoitettu, ei diagnoosia. Seuranta-muistiinpano potilastietoihin.</p>
       </div>
 
-      <div class="label">AI-TYÖKALUT (TULOSSA)</div>
+      <div class="label">CLAUDE — LIITÄ AVAIN TÄNNE</div>
+      <div class="card" style="background:var(--amber-t);margin-bottom:12px">
+        <p class="sub" style="margin-bottom:10px;color:#8A6B16"><strong>Claude-avainta (`sk-ant-…`) EI liitetä tähän sivuun.</strong> Liitä se yhteen ruutuun Supabasessa:</p>
+        <ol style="margin:0 0 10px 18px;font-size:14px;line-height:1.6;color:#8A6B16">
+          <li>Avaa <a href="https://supabase.com/dashboard" target="_blank" rel="noopener">supabase.com/dashboard</a></li>
+          <li>Project Settings (ratas) → Edge Functions → Secrets</li>
+          <li>Add secret — Name: <code>ANTHROPIC_API_KEY</code> — Value: liitä avain</li>
+          <li>Julkaise funktio kerran: <code>supabase functions deploy ai-generate</code></li>
+        </ol>
+        <p class="sub" style="margin-bottom:10px">Tähän sivuun liität vain Supabasen julkiset tiedot (Settings → API):</p>
+        <div class="field"><label for="sbUrl">Project URL</label><input id="sbUrl" type="url" placeholder="https://xxxx.supabase.co" autocomplete="off"></div>
+        <div class="field"><label for="sbAnon">anon public -avain</label><input id="sbAnon" type="text" placeholder="eyJ..." autocomplete="off"></div>
+        <button class="btn sm" type="button" id="saveSb">Tallenna tähän selaimeen</button>
+        <p class="note" id="sbStatus" style="margin-top:10px;font-size:12.5px;color:var(--mid)">Claude ei ole kytketty — käytetään paikallista malliluonnosta.</p>
+      </div>
+
+      <div class="label">AI-TYÖKALUT</div>
       <div class="card">
-        <p class="sub" style="margin-bottom:14px">Paikallinen malliluonnos nyt. Claude-API lisätään myöhemmin — ei ulkoisia kutsuja tässä versiossa.</p>
+        <p class="sub" style="margin-bottom:14px">Jos Claude on kytketty, napit kutsuvat sitä. Muuten syntyy paikallinen malliluonnos. Ei diagnoosia.</p>
         <div class="ai-tools">
           <button class="btn sm sec" data-gen="letter">Vastaanottokirje</button>
           <button class="btn sm sec" data-gen="summary">Yhteenveto</button>
@@ -608,12 +630,61 @@ function localDraft(CUR,type){
     'Tämä on paikallinen demo-malli, ei hoitosuunnitelma.';
 }
 
-function generate(type){
+const SB_STORE='hoitopolku.laakaripro.supabase';
+function loadSb(){
+  try{return JSON.parse(localStorage.getItem(SB_STORE)||'{}');}catch(e){return {};}
+}
+function sbReady(){
+  const c=loadSb();
+  return !!(c.url&&c.anon&&/^https:\/\/[a-z0-9-]+\.supabase\.co\/?$/i.test(c.url));
+}
+function syncSbUi(){
+  const c=loadSb();
+  const url=$('sbUrl'),anon=$('sbAnon'),st=$('sbStatus');
+  if(url) url.value=c.url||'';
+  if(anon) anon.value=c.anon||'';
+  if(st) st.textContent=sbReady()
+    ? 'Claude-kutsu päällä (avain on Supabase Secretsissä, ei tällä sivulla).'
+    : 'Claude ei ole kytketty — käytetään paikallista malliluonnosta.';
+}
+function patientPayload(CUR){
+  return {
+    name:CUR.name||'Potilas',
+    code:CUR.code||'',
+    bp7:ka7(CUR.bp),
+    glu:CUR.glu&&CUR.glu.length?CUR.glu[CUR.glu.length-1]:null,
+    wt:CUR.wt&&CUR.wt.length?CUR.wt[CUR.wt.length-1]:null,
+    meds:(CUR.meds||[]).map(m=>(m.n||'')+' '+(m.d||'')),
+    syms:CUR.syms||[]
+  };
+}
+async function generate(type){
   if(!CUR){toast('Avaa ensin potilas');return;}
   $('aiOut').textContent='Luodaan luonnos…';
-  setTimeout(function(){
+  if(!sbReady()){
     $('aiOut').textContent=localDraft(CUR,type);
-  },350);
+    return;
+  }
+  const c=loadSb();
+  const url=c.url.replace(/\/$/,'')+'/functions/v1/ai-generate';
+  try{
+    const res=await fetch(url,{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'apikey':c.anon,
+        'Authorization':'Bearer '+c.anon
+      },
+      body:JSON.stringify({type:type,patientData:patientPayload(CUR)})
+    });
+    const data=await res.json();
+    if(!res.ok||!data.text){
+      throw new Error(data.error||('HTTP '+res.status));
+    }
+    $('aiOut').textContent=data.text;
+  }catch(e){
+    $('aiOut').textContent='Claude-kutsu epäonnistui: '+(e&&e.message?e.message:e)+'\n\nTarkista: 1) ANTHROPIC_API_KEY Secretsissä 2) supabase functions deploy ai-generate 3) URL ja anon-avain.\n\n'+localDraft(CUR,type);
+  }
 }
 
 function setTab(t){
@@ -675,6 +746,18 @@ $('copyToClipboard').addEventListener('click',()=>{
   });
 });
 
+$('saveSb').addEventListener('click',()=>{
+  const url=(($('sbUrl')||{}).value||'').trim();
+  const anon=(($('sbAnon')||{}).value||'').trim();
+  if(url&&!/^https:\/\/[a-z0-9-]+\.supabase\.co\/?$/i.test(url)){
+    toast('Project URL näyttää väärältä');
+    return;
+  }
+  localStorage.setItem(SB_STORE,JSON.stringify({url:url,anon:anon}));
+  syncSbUi();
+  toast(sbReady()?'Supabase tallennettu — Claude-kutsut päällä':'Tiedot tyhjennetty');
+});
+
 $('demoSkip').addEventListener('click',()=>{signIn();toast('Demo-työpöytä avattu');});
 $('btnLogout').addEventListener('click',()=>{signedIn=false;location.href='index.html';});
 $('btnCode').addEventListener('click',()=>showView('code'));
@@ -685,6 +768,7 @@ $('codeGo').addEventListener('click',openCode);
 $('codeInput').addEventListener('keydown',e=>{if(e.key==='Enter')openCode();});
 
 (function boot(){
+  syncSbUi();
   const q=new URLSearchParams(location.search);
   const code=(q.get('koodi')||'').toUpperCase();
   const hasShare=code||(location.hash||'').startsWith('#d=');
