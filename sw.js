@@ -1,4 +1,4 @@
-const CACHE_NAME = 'hoitopolku-v28';
+const CACHE_NAME = 'hoitopolku-v29';
 
 /* Älä precache hoitopolku-demo.html — muuten vanha sovellus jää PWA-välimuistiin
    ja uudet mittarit (paino, verensokeri) eivät näy. */

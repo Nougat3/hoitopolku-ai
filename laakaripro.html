@@ -148,18 +148,10 @@ h2{font-size:19px;font-weight:700;letter-spacing:-.03em}
       Hoitopolku <span>LääkäriPRO</span>
     </div>
     <div class="card">
-      <h2>Kirjaudu sisään</h2>
-      <p class="sub" style="margin-bottom:16px">Demo-kirjautuminen (ei oikeaa authia) · lääkärin työpöytä · ei diagnoosia</p>
-      <form id="loginForm">
-        <div class="fld"><label for="li_email">Sähköposti</label><input id="li_email" type="email" autocomplete="username" placeholder="anna.lehtinen@hoitopolku.fi" value="anna.lehtinen@hoitopolku.fi"></div>
-        <div class="fld"><label for="li_pw">Salasana</label><input id="li_pw" type="password" autocomplete="current-password" placeholder="••••••••" value="demo1234"></div>
-        <button class="btn full gold" type="submit" id="loginBtn">Kirjaudu</button>
-        <p class="note" id="loginNote" hidden></p>
-      </form>
-      <div class="demo-row">
-        <button type="button" class="demo-cred" data-email="anna.lehtinen@hoitopolku.fi" data-pw="demo1234">Anna Lehtinen (demo)</button>
-        <button type="button" id="demoSkip">Ohita kirjautuminen (demo)</button>
-      </div>
+      <h2>Lääkärin demo-työpöytä</h2>
+      <p class="sub" style="margin-bottom:16px">Ei oikeaa kirjautumista vielä. Vahva tunnistus (Telia) lisätään myöhemmin. Potilaan jakolinkki avaa seurantanäkymän suoraan.</p>
+      <button class="btn full gold" type="button" id="demoSkip">Avaa demo-työpöytä</button>
+      <p class="note" style="margin-top:14px">Mallipotilaat ovat esimerkkejä. Oikea potilas avataan jakokoodilla tai -linkillä. Ei diagnoosia.</p>
     </div>
     <p class="foot-link"><a href="index.html">← Takaisin etusivulle</a> · <a href="hoitopolku-demo.html">Potilasdemo</a></p>
   </div>
@@ -190,7 +182,7 @@ h2{font-size:19px;font-weight:700;letter-spacing:-.03em}
       <h1 id="docHello">Potilaasi</h1>
       <p class="sub" id="docSub">5 potilasta · priorisoitu seurannan mukaan</p>
     </div>
-    <div class="label">HOIDOSSASI</div>
+      <div class="label">MALLIPOTILAAT (DEMO)</div>
     <div class="card tight"><div class="plist" id="patientList"></div></div>
     <div class="label">PIKATOIMINNOT</div>
     <div class="card">
@@ -207,9 +199,9 @@ h2{font-size:19px;font-weight:700;letter-spacing:-.03em}
     </div>
     <div class="card codebox">
       <div class="label" style="margin-top:0">POTILAAN JAKOKOODI TAI JAKOLINKKI</div>
-      <input id="codeInput" type="text" placeholder="DEMO-4827" maxlength="12" autocomplete="off">
+      <input id="codeInput" type="text" placeholder="HP-4827 tai liitä jakolinkki" maxlength="2000" autocomplete="off">
       <button class="btn full gold" style="margin-top:16px" id="codeGo">Avaa potilas</button>
-      <p class="code-hint">Demo-koodit: DEMO-4827, DEMO-3391, DEMO-5502 tai potilaan jakolinkki</p>
+      <p class="code-hint">Liitä potilaan jakolinkki tai koodi (HP-xxxx). Mallipotilaat: DEMO-4827, DEMO-3391, DEMO-5502.</p>
     </div>
   </div>
 
@@ -266,9 +258,9 @@ h2{font-size:19px;font-weight:700;letter-spacing:-.03em}
         <p class="note" style="margin-top:8px;font-size:12px;color:var(--mid)">⚠️ LUONNOS — ei allekirjoitettu, ei diagnoosia. Seuranta-muistiinpano potilastietoihin.</p>
       </div>
 
-      <div class="label">AI-TYÖKALUT (DEMO-LUONNOS)</div>
+      <div class="label">AI-TYÖKALUT (TULOSSA)</div>
       <div class="card">
-        <p class="sub" style="margin-bottom:14px">Luo luonnoksia paikallisesti — ei ulkoisia API-kutsuja.</p>
+        <p class="sub" style="margin-bottom:14px">Paikallinen malliluonnos nyt. Claude-API lisätään myöhemmin — ei ulkoisia kutsuja tässä versiossa.</p>
         <div class="ai-tools">
           <button class="btn sm sec" data-gen="letter">Vastaanottokirje</button>
           <button class="btn sm sec" data-gen="summary">Yhteenveto</button>
@@ -341,7 +333,11 @@ function decodeShare(s){
 }
 
 function snapToPatient(snap){
-  const bp=(snap.BP||[]).map(p=>({d:typeof p.d==='number'?p.d:TODAY-Math.round((Date.now()-new Date(p.d||Date.now()))/86400000),v:p.v||p.sys||0}));
+  const mapPts=arr=>(arr||[]).map(p=>({d:typeof p.d==='number'?p.d:TODAY,v:p.v||p.sys||0,dia:p.dia}));
+  const bp=mapPts(snap.BP);
+  const glu=mapPts(snap.GLU);
+  const wt=mapPts(snap.WT);
+  const labs=snap.LABS||[];
   const meds=(snap.MEDS||[]).map(m=>({n:m.n||m.name||'—',d:m.d||m.dose||'',s:m.s||''}));
   const syms=(snap.SYMS||[]).map(s=>s.n||s.name||String(s)).filter(Boolean);
   const ka=ka7(bp);
@@ -350,7 +346,7 @@ function snapToPatient(snap){
     code:snap.code||'',
     name:snap.name||'Potilas',
     age:null,diag:'Jaettu seuranta',
-    target:135,bp,meds,syms:syms.length?syms:['Ei oirekirjauksia'],
+    target:135,bp,glu,wt,labs,meds,syms:syms.length?syms:['Ei oirekirjauksia'],
     note:'Potilaan jakolinkki · '+new Date(snap.created||Date.now()).toLocaleDateString('fi-FI'),
     badge:ka===null?'mid':(ka<=135?'ok':'off'),
     priority:ka&&ka>140?3:1,
@@ -411,26 +407,27 @@ function openSnapshotPatient(snap){
   renderPatient(CUR);
 }
 
+function parseShareInput(raw){
+  const s=(raw||'').trim();
+  if(!s) return {code:'',hash:''};
+  try{
+    if(/https?:/i.test(s) || /laakaripro|koodi=|#d=/i.test(s)){
+      const u=new URL(s, location.href);
+      return {
+        code:(u.searchParams.get('koodi')||'').toUpperCase(),
+        hash:u.hash.startsWith('#d=')?u.hash.slice(3):''
+      };
+    }
+  }catch(e){}
+  const m=s.toUpperCase().match(/\b((?:HP|DEMO)-[A-Z0-9]{3,8})\b/);
+  return {code:m?m[1]:s.toUpperCase(),hash:''};
+}
 function openCode(){
-  const code=($('codeInput').value||'').trim().toUpperCase();
+  const typed=parseShareInput(($('codeInput').value||'').trim());
   const fromUrl=new URLSearchParams(location.search).get('koodi');
-  const c=(code||fromUrl||'').toUpperCase();
+  const c=(typed.code||fromUrl||'').toUpperCase();
+  const hash=typed.hash||(location.hash.startsWith('#d=')?location.hash.slice(3):'');
 
-  // Check localStorage snapshot first (live patient data)
-  if(c){
-    try{
-      const raw=localStorage.getItem('hoitopolku.share.'+c);
-      if(raw){
-        const snap=JSON.parse(raw);
-        if(snap.exp&&snap.exp<Date.now()){toast('Jakokoodi on vanhentunut');return;}
-        openSnapshotPatient(snap);
-        return;
-      }
-    }catch(e){}
-  }
-
-  // Check hash snapshot (from URL)
-  const hash=location.hash.startsWith('#d=')?location.hash.slice(3):'';
   if(hash){
     const snap=decodeShare(hash);
     if(snap){
@@ -443,11 +440,22 @@ function openCode(){
     }
   }
 
-  // Finally check demo patients
+  if(c){
+    try{
+      const raw=localStorage.getItem('hoitopolku.share.'+c);
+      if(raw){
+        const snap=JSON.parse(raw);
+        if(snap.exp&&snap.exp<Date.now()){toast('Jakokoodi on vanhentunut');return;}
+        openSnapshotPatient(snap);
+        return;
+      }
+    }catch(e){}
+  }
+
   const found=PATIENTS.find(x=>x.code===c);
   if(found){openPatient(found.id);return;}
 
-  toast('Koodia ei löytynyt — kokeile demo-koodeja tai pyydä potilaalta jakolinkki');
+  toast('Koodia ei löytynyt — liitä potilaan jakolinkki tai kokeile DEMO-koodeja');
 }
 
 function renderPatient(CUR){
@@ -538,10 +546,28 @@ function renderInsights(CUR){
 
 function renderMeas(CUR){
   const el=$('pMeas');
-  const recent=(CUR.bp||[]).slice(-8).reverse();
-  if(!recent.length){el.innerHTML='<p class="sub">Ei mittauksia.</p>';return;}
-  el.innerHTML=recent.map(p=>'<div class="row"><span class="k">Päivä '+p.d+'</span><span class="v">'+p.v+' mmHg</span></div>').join('')+
-    (CUR.glu?'<div class="label">VERENSOKERI</div>'+CUR.glu.map(g=>'<div class="row"><span class="k">Päivä '+g.d+'</span><span class="v">'+fmt(g.v,1)+' mmol/l</span></div>').join(''):'');
+  const parts=[];
+  const bp=(CUR.bp||[]).slice(-8).reverse();
+  if(bp.length){
+    parts.push('<div class="label" style="margin-top:0">VERENPAINE</div>'+
+      bp.map(p=>'<div class="row"><span class="k">Päivä '+p.d+'</span><span class="v">'+(p.dia?p.v+'/'+p.dia:p.v)+' mmHg</span></div>').join(''));
+  }
+  const glu=(CUR.glu||[]).slice(-8).reverse();
+  if(glu.length){
+    parts.push('<div class="label">VERENSOKERI</div>'+
+      glu.map(g=>'<div class="row"><span class="k">Päivä '+g.d+'</span><span class="v">'+fmt(g.v,1)+' mmol/l</span></div>').join(''));
+  }
+  const wt=(CUR.wt||[]).slice(-8).reverse();
+  if(wt.length){
+    parts.push('<div class="label">PAINO</div>'+
+      wt.map(p=>'<div class="row"><span class="k">Päivä '+p.d+'</span><span class="v">'+fmt(p.v,1)+' kg</span></div>').join(''));
+  }
+  const labs=(CUR.labs||[]).filter(l=>l&&l.to!=null);
+  if(labs.length){
+    parts.push('<div class="label">LABORATORIO</div>'+
+      labs.map(l=>'<div class="row"><span class="k">'+esc(l.n)+'</span><span class="v">'+fmt(l.to,l.dec||1)+' '+esc(l.u||'')+'</span></div>').join(''));
+  }
+  el.innerHTML=parts.length?parts.join(''):'<p class="sub">Ei mittauksia.</p>';
 }
 
 function renderMeds(CUR){
@@ -649,22 +675,7 @@ $('copyToClipboard').addEventListener('click',()=>{
   });
 });
 
-$('loginForm').addEventListener('submit',e=>{
-  e.preventDefault();
-  const em=$('li_email').value.trim(),pw=$('li_pw').value;
-  if(!em||!pw){$('loginNote').hidden=false;$('loginNote').textContent='Täytä sähköposti ja salasana.';$('loginNote').className='note bad';return;}
-  signIn();
-  toast('Tervetuloa, Dr. Lehtinen');
-});
-
-document.querySelectorAll('.demo-cred').forEach(b=>{
-  b.addEventListener('click',()=>{
-    $('li_email').value=b.dataset.email||'';
-    $('li_pw').value=b.dataset.pw||'';
-  });
-});
-
-$('demoSkip').addEventListener('click',()=>{signIn();toast('Demo-tila');});
+$('demoSkip').addEventListener('click',()=>{signIn();toast('Demo-työpöytä avattu');});
 $('btnLogout').addEventListener('click',()=>{signedIn=false;location.href='index.html';});
 $('btnCode').addEventListener('click',()=>showView('code'));
 $('openCodeBtn').addEventListener('click',()=>showView('code'));
