@@ -2,1072 +2,687 @@
 <html lang="fi">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>LääkäriPRO — Hoitopolku</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>LääkäriPRO — lääkärin työpöytä</title>
+<meta name="description" content="Lääkärin demo-työpöytä: potilaslista, SmartGraph-seuranta, lääkitys ja AI-työkalut. Avaa potilas jakokoodilla tai potilaan jakolinkillä. Ei diagnoosia.">
+<meta name="theme-color" content="#FBFAF7">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="LääkäriPRO">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+<link rel="apple-touch-icon" href="icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root{
-  --w:#FBFAF7; --k:#111110; --g:#A67C2E; --g0:#F4EFE5; --line:#E4DFD6;
-  --mid:#6B6860; --mid2:#8A867E;
-  --green:#4E7D3C; --green-t:#EDF3E9;
-  --red:#B3452C; --red-t:#FAEDE9;
-  --amber:#946A16; --amber-t:#FBF2E0;
-  --f:"Inter",-apple-system,sans-serif;
-  --mono:"JetBrains Mono",ui-monospace,monospace;
-  --r:14px; --sb:232px;
+  --w:#FBFAF7;--k:#111110;--g:#A67C2E;--g2:#C9A35C;--g0:#F4EFE5;--line:#E4DFD6;
+  --mid:#6B6860;--mid2:#8A867E;--green:#4E7D3C;--green-t:#EDF3E9;
+  --red:#B3452C;--red-t:#FAEDE9;--amber:#946A16;--amber-t:#FBF2E0;
+  --blue:#2F6690;--f:"Inter",-apple-system,BlinkMacSystemFont,sans-serif;--r:16px;
 }
 *{box-sizing:border-box;margin:0;padding:0;min-width:0}
 html,body{max-width:100vw;overflow-x:hidden}
-body{background:var(--w);color:var(--k);font-family:var(--f);font-size:15px;line-height:1.5;letter-spacing:-.01em;-webkit-font-smoothing:antialiased}
-button,input,select,textarea{font-family:var(--f);color:inherit}
-button{cursor:pointer;border:none;background:none}
-svg{display:block;max-width:100%}
-a{color:inherit;text-decoration:none}
+body{background:var(--w);color:var(--k);font-family:var(--f);font-size:16px;line-height:1.5;letter-spacing:-.01em;-webkit-font-smoothing:antialiased}
+button,input,textarea{font-family:var(--f)}
+button{cursor:pointer;border:none;background:none;color:inherit}
+a{color:var(--g);text-decoration:none}
+h1{font-size:clamp(26px,5.5vw,32px);font-weight:800;letter-spacing:-.04em;line-height:1.05}
+h2{font-size:19px;font-weight:700;letter-spacing:-.03em}
 ::selection{background:rgba(166,124,46,.22)}
-:focus-visible{outline:2px solid var(--g);outline-offset:2px;border-radius:6px}
-.num{font-family:var(--mono);font-variant-numeric:tabular-nums;letter-spacing:-.03em}
+:focus-visible{outline:2px solid var(--g);outline-offset:3px;border-radius:8px}
 
-.brand{display:flex;align-items:center;gap:10px;font-size:15.5px;font-weight:700;letter-spacing:-.03em;white-space:nowrap}
-.brand em{font-style:normal;color:var(--g)}
-
-/* login */
-.login{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:32px 22px}
-.login-card{width:100%;max-width:360px;text-align:center}
-.login .brand{justify-content:center;margin-bottom:26px}
-.login h1{font-size:26px;font-weight:800;letter-spacing:-.04em;margin-bottom:8px}
-.login p{font-size:14.5px;color:var(--mid);margin-bottom:24px;line-height:1.55}
-.field{text-align:left;margin-bottom:11px}
-.field label{display:block;font-size:12px;font-weight:600;color:var(--mid);margin-bottom:5px}
-.inp{width:100%;font-size:15px;padding:12px 14px;border-radius:10px;border:1.5px solid var(--line);background:#fff;transition:border-color .2s}
-.inp:focus{outline:none;border-color:var(--g)}
-.login .hint{font-size:12.5px;color:var(--mid2);margin-top:16px}
-
-/* shell */
-.shell{display:none;min-height:100vh}
-.shell.on{display:flex}
-.side{width:var(--sb);flex:none;border-right:1px solid var(--line);padding:18px 14px;position:sticky;top:0;height:100vh;display:flex;flex-direction:column;gap:4px;background:var(--w)}
-.side .brand{padding:4px 10px 20px}
-.nav-i{display:flex;align-items:center;gap:11px;width:100%;text-align:left;padding:10px 12px;border-radius:10px;font-size:14px;font-weight:500;color:var(--mid);transition:background .15s,color .15s}
-.nav-i:hover{background:var(--g0);color:var(--k)}
-.nav-i[aria-selected="true"]{background:var(--g0);color:var(--k);font-weight:600}
-.nav-i svg{flex:none;opacity:.85}
-.nav-sep{height:1px;background:var(--line);margin:12px}
-.side-foot{margin-top:auto;display:flex;align-items:center;gap:10px;padding:10px 12px;font-size:13px;color:var(--mid)}
-.avatar{width:30px;height:30px;border-radius:980px;background:var(--k);color:var(--w);display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:700;flex:none}
-.main{flex:1;min-width:0;padding:26px 30px 60px;max-width:1080px}
-.view{display:none}
-.view.on{display:block}
-.head{margin-bottom:22px}
-.head h1{font-size:27px;font-weight:800;letter-spacing:-.04em;line-height:1.1}
-.head .sub{font-size:14.5px;color:var(--mid);margin-top:5px}
-
-/* dashboard */
-.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:26px}
-.kpi{background:#fff;border-radius:var(--r);padding:16px 17px;box-shadow:0 1px 3px rgba(30,24,12,.05),0 0 0 1px rgba(30,24,12,.045)}
-.kpi b{display:block;font-family:var(--mono);font-size:27px;font-weight:600;letter-spacing:-.04em;line-height:1}
-.kpi span{display:block;font-size:12.5px;color:var(--mid);margin-top:6px;line-height:1.35}
-.kpi.alert b{color:var(--red)}
-.sec-h{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:26px 0 12px}
-.sec-h h2{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--mid)}
-.sec-h .act{font-size:13px;font-weight:600;color:var(--g)}
-.plist{background:#fff;border-radius:var(--r);box-shadow:0 1px 3px rgba(30,24,12,.05),0 0 0 1px rgba(30,24,12,.045);overflow:hidden}
-.plist-h{display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr auto;gap:14px;padding:11px 18px;border-bottom:1px solid var(--line);font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--mid2);background:#FCFBF9}
-.prow{display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr auto;gap:14px;align-items:center;width:100%;text-align:left;padding:14px 18px;border-bottom:1px solid var(--line);transition:background .15s}
-.prow:last-child{border-bottom:none}
-.prow:hover{background:var(--g0)}
-.p-n{font-size:14.5px;font-weight:600}
-.p-n span{display:block;font-size:12px;color:var(--mid2);font-weight:400;margin-top:1px}
-.p-v{font-family:var(--mono);font-size:14px;font-weight:600}
-.p-v span{display:block;font-family:var(--f);font-size:11.5px;color:var(--mid2);font-weight:400;letter-spacing:0;margin-top:1px}
-.p-note{font-size:13px;color:var(--mid)}
-.tag{font-size:11px;font-weight:700;padding:3px 9px;border-radius:980px;white-space:nowrap;display:inline-block}
-.tag.ok{background:var(--green-t);color:var(--green)}
-.tag.mid{background:var(--amber-t);color:var(--amber)}
-.tag.off{background:var(--red-t);color:var(--red)}
-.chev{color:var(--mid2)}
-.codebox{display:flex;gap:9px;align-items:flex-end;background:var(--g0);border-radius:var(--r);padding:16px 18px;flex-wrap:wrap}
-.codebox .field{flex:1;min-width:180px;margin:0}
-.codebox .inp{font-family:var(--mono);letter-spacing:.1em;text-transform:uppercase;background:#fff}
-.codebox .err{flex:1 0 100%;font-size:12.5px;color:var(--red);font-weight:500}
-
-/* buttons */
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font-size:14.5px;font-weight:600;padding:12px 20px;border-radius:10px;background:var(--k);color:var(--w);transition:background .2s,transform .12s}
-.btn:active{transform:scale(.98)}
+.gate{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px 18px}
+.gate-in{max-width:400px;width:100%}
+.brand{display:flex;align-items:center;gap:10px;font-size:17px;font-weight:800;letter-spacing:-.03em;margin-bottom:28px}
+.brand svg{flex:none}
+.brand span{color:var(--g)}
+.card{background:#fff;border-radius:var(--r);padding:20px 18px;margin-bottom:12px;box-shadow:0 1px 3px rgba(30,24,12,.05),0 0 0 1px rgba(30,24,12,.04)}
+.card.tight{padding:14px 16px}
+.label{font-size:11.5px;font-weight:700;letter-spacing:.09em;color:var(--mid2);margin:22px 0 10px;padding:0 2px}
+.sub{font-size:14px;color:var(--mid);margin-top:5px}
+.fld{margin-bottom:14px}
+.fld label{display:block;font-size:12.5px;font-weight:600;color:var(--mid);margin-bottom:6px}
+.fld input{width:100%;font-size:16px;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:var(--w)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;font-size:15px;font-weight:600;padding:13px 22px;border-radius:980px;background:var(--k);color:var(--w);transition:transform .15s}
+.btn:active{transform:scale(.97)}
 .btn.gold{background:var(--g);color:#fff}
 .btn.sec{background:#fff;color:var(--k);box-shadow:inset 0 0 0 1px var(--line)}
-.btn.sec:hover{background:var(--g0)}
-.btn.sm{font-size:13px;padding:9px 15px;border-radius:9px}
-.btn[disabled]{opacity:.5;pointer-events:none}
+.btn.full{width:100%}
+.btn.sm{font-size:13px;padding:10px 16px}
+.note{font-size:13px;margin-top:10px;color:var(--mid)}
+.note.bad{color:var(--red)}
+.demo-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.demo-row button{font-size:12px;font-weight:600;padding:7px 12px;border-radius:980px;background:var(--g0);color:var(--g)}
 
-/* patient */
-.back{font-size:13.5px;font-weight:600;color:var(--mid);margin-bottom:14px;display:inline-flex;gap:6px;align-items:center}
-.back:hover{color:var(--k)}
-.phead{background:var(--k);color:#F5F4F0;border-radius:var(--r);padding:20px 22px}
-.phead-top{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;align-items:flex-start}
-.phead h1{font-size:23px;font-weight:800;letter-spacing:-.035em;line-height:1.1}
-.phead .meta{font-size:13px;color:#A8A49E;margin-top:4px}
-.phead .actions{display:flex;gap:8px;flex-wrap:wrap}
-.phead .btn.sec{background:rgba(255,255,255,.12);color:#F5F4F0;box-shadow:none}
-.phead .btn.sec:hover{background:rgba(255,255,255,.2)}
-.flags{display:flex;gap:7px;flex-wrap:wrap;margin-top:15px}
-.flag{font-size:11.5px;font-weight:700;padding:4px 11px;border-radius:980px;background:rgba(255,255,255,.1);color:#E6E3DD}
-.flag.warn{background:rgba(179,69,44,.3);color:#F2C9BD}
-.flag.ok{background:rgba(78,125,60,.28);color:#CDE1C2}
-.tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin:18px 0 20px;overflow-x:auto;scrollbar-width:none}
-.tabs::-webkit-scrollbar{display:none}
-.tab{position:relative;flex:none;font-size:14px;font-weight:600;padding:12px 16px 14px;color:var(--mid);white-space:nowrap;transition:color .2s}
-.tab::after{content:"";position:absolute;left:16px;right:16px;bottom:-1px;height:2px;background:var(--k);border-radius:2px;transform:scaleX(0);transition:transform .22s}
-.tab:hover{color:var(--k)}
-.tab[aria-selected="true"]{color:var(--k)}
-.tab[aria-selected="true"]::after{transform:scaleX(1)}
-.pane{display:none}
-.pane.on{display:block;animation:fade .25s ease}
+.app{display:none;max-width:720px;margin:0 auto;padding:0 18px 34px}
+.app.on{display:block}
+.top{position:sticky;top:0;z-index:40;background:rgba(251,250,247,.9);backdrop-filter:blur(16px);border-bottom:1px solid var(--line);margin:0 -18px 0;padding:0 18px}
+.top-in{height:56px;display:flex;align-items:center;gap:10px}
+.top .brand{margin:0;font-size:15px}
+.top .brand span{font-weight:700}
+.top-actions{margin-left:auto;display:flex;gap:8px}
+.icon-btn{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--g0);color:var(--g)}
+
+.view{display:none;animation:fade .25s ease}
+.view.on{display:block}
 @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.head{padding:22px 2px 16px}
+.pill{display:inline-block;font-size:11px;font-weight:700;padding:3px 9px;border-radius:980px}
+.pill.ok{background:var(--green-t);color:var(--green)}
+.pill.mid{background:var(--amber-t);color:var(--amber)}
+.pill.off{background:var(--red-t);color:var(--red)}
 
-.card{background:#fff;border-radius:var(--r);padding:18px;margin-bottom:14px;box-shadow:0 1px 3px rgba(30,24,12,.05),0 0 0 1px rgba(30,24,12,.045)}
-.card-h{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}
-.card-h h2{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--mid)}
-.card-h .note{font-size:12px;color:var(--mid2)}
-.two{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start}
-.mrow{display:grid;grid-template-columns:150px 1fr 104px;gap:16px;align-items:center;padding:14px 0;border-bottom:1px solid var(--line)}
-.mrow:last-child{border-bottom:none}
-.mrow:first-child{padding-top:0}
-.m-name{font-size:14px;font-weight:600}
-.m-name span{display:block;font-size:11.5px;font-weight:400;color:var(--mid2);margin-top:1px}
-.m-spark{width:100%;height:auto}
-.m-val{text-align:right}
-.m-val b{font-family:var(--mono);font-size:20px;font-weight:600;letter-spacing:-.03em;display:block}
-.m-val .tag{margin-top:4px}
-.lab{width:100%;border-collapse:collapse}
-.lab th{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--mid2);text-align:left;padding-bottom:9px;border-bottom:1px solid var(--line)}
-.lab th:nth-child(n+2),.lab td:nth-child(n+2){text-align:right}
-.lab td{padding:11px 0;border-bottom:1px solid var(--line);font-size:13.5px}
-.lab tr:last-child td{border-bottom:none}
-.lab .v{font-family:var(--mono);font-weight:600;font-size:14.5px}
-.lab .ref{color:var(--mid2);font-size:12px;font-family:var(--mono)}
-.lab .d{font-family:var(--mono);font-size:12.5px;font-weight:600;color:var(--green)}
-.med{display:flex;justify-content:space-between;gap:12px;padding:13px 0;border-bottom:1px solid var(--line);flex-wrap:wrap}
-.med:last-child{border-bottom:none}
-.med:first-child{padding-top:0}
-.med-n{font-size:14.5px;font-weight:600}
-.med-n em{font-style:normal;font-family:var(--mono);font-weight:600;color:var(--mid);margin-left:8px;font-size:13.5px}
-.med-h{font-size:12.5px;color:var(--mid);margin-top:3px}
-.med-h .ch{color:var(--g);font-weight:600}
-.med-when{display:flex;gap:5px;align-self:center}
-.chip{font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:980px;background:var(--g0);color:#BDB8AF}
-.chip.on{background:var(--g);color:#fff}
-.sym-row{display:grid;grid-template-columns:84px 1fr;align-items:end;gap:11px;margin-bottom:9px}
-.sym-name{font-size:12.5px;color:var(--mid);text-align:right;padding-bottom:2px}
-.sym-bars{display:grid;grid-template-columns:repeat(14,1fr);gap:3px;align-items:end;height:34px}
-.sym-cell{position:relative;height:100%;display:flex;align-items:flex-end;justify-content:center}
-.sym-bar{width:100%;border-radius:3px;background:var(--sc)}
-.sym-zero{width:6px;height:6px;border-radius:50%;border:1.5px solid #CFCAC2;margin-bottom:1px}
-.sym-miss{width:8px;height:1.5px;border-radius:2px;background:#DFDAD2;margin-bottom:3px}
-.sym-cell[title]:hover::after{content:attr(title);position:absolute;bottom:calc(100% + 5px);left:50%;transform:translateX(-50%);background:var(--k);color:#FBFAF7;font-size:11px;font-weight:600;padding:4px 8px;border-radius:6px;white-space:nowrap;z-index:5}
-.sym-axis{display:grid;grid-template-columns:84px 1fr;gap:11px}
-.sym-days{grid-column:2;display:grid;grid-template-columns:repeat(14,1fr);gap:3px;font-size:9.5px;color:var(--mid2);text-align:center}
-.sym-key{display:flex;gap:14px;font-size:11.5px;color:var(--mid);margin-top:12px;padding-top:12px;border-top:1px solid var(--line);flex-wrap:wrap}
-.sym-key i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px}
-.sym-key .kn{border:1.5px solid #CFCAC2}
-.sym-key .km{width:8px;height:1.5px;border-radius:2px;background:#DFDAD2}
+.plist{display:flex;flex-direction:column;gap:2px}
+.prow{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:12px 4px;border-radius:12px;transition:background .15s}
+.prow:hover{background:var(--g0)}
+.prow .ph{width:42px;height:42px;border-radius:50%;background:var(--g0);color:var(--g);font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center;flex:none}
+.prow .n{display:block;font-size:15px;font-weight:600}
+.prow .d{display:block;font-size:12.5px;color:var(--mid);margin-top:1px}
+.prow .badge{margin-left:auto;font-size:11px;font-weight:700;padding:4px 10px;border-radius:980px;flex:none}
+.badge.ok{background:var(--green-t);color:var(--green)}
+.badge.mid{background:var(--amber-t);color:var(--amber)}
+.badge.off{background:var(--red-t);color:var(--red)}
 
-/* AI */
-.ai-grid{display:grid;grid-template-columns:300px 1fr;gap:18px;align-items:start}
-.tool{width:100%;text-align:left;display:flex;gap:12px;align-items:flex-start;padding:14px;border-radius:11px;transition:background .15s;margin-bottom:2px}
-.tool:hover{background:var(--g0)}
-.tool[aria-selected="true"]{background:var(--g0)}
-.tool .ic{width:34px;height:34px;border-radius:10px;flex:none;display:flex;align-items:center;justify-content:center;background:#fff;color:var(--g);box-shadow:inset 0 0 0 1px var(--line)}
-.tool .n{font-size:14.5px;font-weight:600;display:block}
-.tool .d{font-size:12.5px;color:var(--mid);display:block;margin-top:2px;line-height:1.4}
-.tool.soon{opacity:.5;pointer-events:none}
-.tool.soon .n::after{content:"tulossa";font-size:10px;font-weight:700;color:var(--mid2);margin-left:7px}
-.ctx{display:flex;align-items:center;gap:12px;background:var(--g0);border-radius:11px;padding:13px 16px;margin-bottom:16px;font-size:13.5px;flex-wrap:wrap}
-.ctx b{font-weight:600}
-.ctx .num{font-size:13px;color:var(--mid)}
-.f-lbl{font-size:12.5px;font-weight:600;color:var(--mid);margin:0 0 6px}
-select,.ta{width:100%;font-size:14.5px;padding:12px 14px;border-radius:10px;border:1.5px solid var(--line);background:#fff;transition:border-color .2s}
-select:focus,.ta:focus{outline:none;border-color:var(--g)}
-.ta{font-family:var(--f);line-height:1.55;resize:vertical;min-height:80px}
-.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px}
-.out{background:#fff;border-radius:var(--r);padding:22px;font-size:14px;line-height:1.65;white-space:pre-wrap;box-shadow:0 1px 3px rgba(30,24,12,.05),0 0 0 1px rgba(30,24,12,.045)}
-.out.empty{color:var(--mid);text-align:center;padding:44px 22px;white-space:normal;line-height:1.6}
-.out h4{font-size:11.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--g);margin:18px 0 5px}
-.out h4:first-child{margin-top:0}
-.out-bar{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
-.disc{font-size:12px;color:var(--mid2);line-height:1.55;margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
-.spin{display:inline-block;width:13px;height:13px;border:2px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;animation:sp .7s linear infinite}
-@keyframes sp{to{transform:rotate(360deg)}}
+.codebox{text-align:center;padding:24px 18px}
+.codebox .code-val{font-size:28px;font-weight:800;letter-spacing:.12em;color:var(--g);margin:10px 0 6px;font-variant-numeric:tabular-nums}
+.codebox input{text-align:center;font-size:20px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;max-width:220px;margin:0 auto;display:block}
+.code-hint{font-size:12.5px;color:var(--mid);margin-top:12px;line-height:1.5}
 
-@media(max-width:1000px){
-  .ai-grid{grid-template-columns:1fr}
-  .kpis{grid-template-columns:repeat(2,1fr)}
-  .two{grid-template-columns:1fr}
-}
-@media(max-width:860px){
-  .shell.on{flex-direction:column}
-  .side{
-    width:100%;height:auto;position:sticky;top:0;z-index:40;
-    display:flex;flex-direction:row;align-items:center;gap:6px;
-    padding:9px 14px;border-right:none;border-bottom:1px solid var(--line);
-    background:rgba(251,250,247,.94);backdrop-filter:blur(18px);
-  }
-  .side .brand{padding:0;font-size:0;gap:0;flex:none}
-  .side .brand svg{width:26px;height:26px}
-  .side .brand em{display:none}
-  .nav-i{
-    width:auto;flex:1 1 0;justify-content:center;white-space:nowrap;
-    padding:9px 6px;font-size:12.5px;gap:6px;min-width:0;
-  }
-  .nav-i svg{width:16px;height:16px}
-  .nav-sep,.side-foot{display:none}
-  .nav-i[onclick]{flex:none;padding:9px 10px}
-  .nav-i[onclick] span,.nav-i[onclick]{font-size:0;gap:0}
-  .nav-i[onclick] svg{width:18px;height:18px}
-  .main{padding:20px 18px 50px}
-  .plist-h{display:none}
-  .prow{grid-template-columns:1fr auto;gap:8px 10px;padding:14px 16px;align-items:center}
-  .prow .p-v{display:none}
-  .prow .p-note{grid-column:1 / -1;order:3;font-size:12.5px;color:var(--mid2);
-    padding-top:2px;border-top:1px dashed var(--line);margin-top:2px}
-  .prow .chev{display:none}
-  .form-row{grid-template-columns:1fr}
-}
-@media(max-width:520px){
-  .kpis{grid-template-columns:1fr 1fr;gap:9px}
-  .kpi{padding:13px 14px}
-  .kpi b{font-size:22px}
-  .mrow{grid-template-columns:106px 1fr 84px;gap:10px}
-  .sym-row,.sym-axis{grid-template-columns:64px 1fr}
-  .head h1{font-size:23px}
-}
-@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+.backlink{font-size:14px;font-weight:600;color:var(--g);padding:14px 2px 0;display:inline-flex;align-items:center;gap:4px}
 
-@media(max-width:560px){
-  .nav-i{font-size:11.5px;padding:8px 4px;gap:5px}
-  .nav-i svg{width:15px;height:15px}
-}
-@media(max-width:420px){
-  .side{gap:3px;padding:8px 12px}
-  .nav-i{font-size:0;gap:0;padding:9px 0}
-  .nav-i svg{width:19px;height:19px}
-}
+.seg{display:flex;gap:3px;background:var(--g0);padding:3px;border-radius:980px;margin-bottom:14px;overflow-x:auto;scrollbar-width:none}
+.seg::-webkit-scrollbar{display:none}
+.seg button{flex:1 0 auto;font-size:13px;font-weight:600;padding:8px 12px;border-radius:980px;color:var(--mid);white-space:nowrap}
+.seg button[aria-selected="true"]{background:#fff;color:var(--k);box-shadow:0 1px 3px rgba(30,24,12,.1)}
 
-@media(max-width:420px){
-  .prow{padding:13px 14px}
-  .p-n{font-size:14px}
-  .tag{font-size:10.5px;padding:3px 8px}
-}
+.tab-panel{display:none}
+.tab-panel.on{display:block}
 
-/* mittauksen tarkastelu */
-.g-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;gap:12px}
-.g-name{font-size:16px;font-weight:700;letter-spacing:-.02em}
-.g-sub{font-size:12.5px;color:var(--mid);margin-top:1px}
-.g-val{text-align:right;font-family:var(--mono);font-size:26px;font-weight:600;letter-spacing:-.03em;line-height:1.1}
-.g-val small{font-family:var(--f);font-size:12px;font-weight:400;color:var(--mid);letter-spacing:0}
-.g-wrap{position:relative;margin-top:14px}
-#lpGraph{width:100%;height:auto;cursor:crosshair;touch-action:pan-y}
-.g-tip{
-  position:absolute;pointer-events:none;opacity:0;transition:opacity .12s;
-  background:var(--k);color:#fff;border-radius:9px;padding:7px 10px;
-  font-size:12px;line-height:1.35;white-space:nowrap;z-index:6;
-  transform:translate(-50%,-115%);box-shadow:0 4px 16px rgba(0,0,0,.25);
-}
-.g-tip.on{opacity:1}
-.g-tip b{font-weight:700;font-size:13px;display:block}
-.g-tip span{color:#A8A49E;font-size:10.5px}
-.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11.5px;color:var(--mid);padding-top:12px;margin-top:12px;border-top:1px solid var(--line)}
-.legend span{display:flex;align-items:center;gap:6px}
-.lg-dot{width:6px;height:6px;border-radius:50%;background:#C9CDD2;flex:none}
-.lg-line{width:14px;height:2.5px;border-radius:2px;background:#B3452C;flex:none}
-.lg-dash{width:14px;height:0;border-top:2px dashed #4E7D3C;flex:none}
-.stats{display:flex;gap:20px;flex-wrap:wrap;margin-top:14px}
+.g-val{font-size:32px;font-weight:800;letter-spacing:-.04em}
+.g-val small{font-size:13px;font-weight:400;color:var(--mid)}
+.g-sub{font-size:13px;color:var(--mid);margin:4px 0 12px}
+#pChart{width:100%;height:auto;display:block}
+.stats{display:flex;gap:18px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
 .stats div{font-size:12px;color:var(--mid)}
-.stats b{display:block;font-family:var(--mono);font-size:16px;font-weight:600;color:var(--k);letter-spacing:-.02em;margin-bottom:1px}
-.mrow{cursor:pointer}
-.mrow:hover{background:var(--g0);border-radius:8px;margin:0 -8px;padding-left:8px;padding-right:8px}
+.stats b{display:block;font-size:16px;font-weight:700;color:var(--k)}
+
+.ins{display:flex;gap:11px;padding:12px 0;border-bottom:1px solid var(--line)}
+.ins:last-child{border-bottom:none;padding-bottom:0}
+.ins .ic{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:none}
+.ins.good .ic{background:var(--green-t);color:var(--green)}
+.ins.warn .ic{background:var(--red-t);color:var(--red)}
+.ins.info .ic{background:var(--amber-t);color:var(--amber)}
+.ins .t{display:block;font-size:14px;font-weight:600}
+.ins .d{display:block;font-size:13px;color:var(--mid);margin-top:2px}
+
+.row{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--line);font-size:14px}
+.row:last-child{border-bottom:none}
+.row .k{color:var(--mid)}
+.row .v{font-weight:600;text-align:right}
+
+.ai-tools{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.ai-out{min-height:120px;font-size:14px;line-height:1.55;color:var(--k);white-space:pre-wrap;background:var(--g0);border-radius:12px;padding:14px}
+
+.alert{display:flex;gap:11px;padding:14px;border-radius:12px;background:var(--g0)}
+.alert.good{background:var(--green-t)}
+.alert.warn{background:var(--red-t)}
+.alert.info{background:var(--amber-t)}
+.alert .t{display:block;font-size:14px;font-weight:700}
+.alert .d{display:block;font-size:13px;color:var(--mid);margin-top:3px}
+
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--k);color:#fff;font-size:13.5px;font-weight:600;padding:11px 18px;border-radius:980px;opacity:0;transition:.3s;z-index:99;max-width:90vw;text-align:center}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+
+.foot-link{text-align:center;margin-top:20px;font-size:13px;color:var(--mid)}
+.foot-link a{font-weight:600}
 </style>
 </head>
 <body>
 
-<div class="login" id="login">
-  <div class="login-card">
-    <span class="brand">
-      <svg width="24" height="24" viewBox="0 0 40 40" aria-hidden="true">
-        <circle cx="20" cy="20" r="14.5" fill="none" stroke="#E4DFD6" stroke-width="4.5"/>
-        <circle cx="20" cy="20" r="14.5" fill="none" stroke="#A67C2E" stroke-width="4.5" stroke-dasharray="63 91" stroke-linecap="round" transform="rotate(-90 20 20)"/>
-        <circle cx="20" cy="5.5" r="3" fill="#A67C2E"/>
-      </svg>
-      Lääkäri<em>PRO</em>
-    </span>
-    <h1>Kirjaudu sisään</h1>
-    <p>Hoitopolun lääkärityökalu. Potilaan mittaukset, laboratorioarvot, lääkitys ja oireet yhdessä näkymässä.</p>
-    <div class="field"><label for="lgUser">Sähköposti</label><input class="inp" id="lgUser" value="anna.lehtinen@hoitopolku.fi" autocomplete="off"></div>
-    <div class="field"><label for="lgPass">Salasana</label><input class="inp" id="lgPass" type="password" value="demo1234"></div>
-    <button class="btn gold" style="width:100%;margin-top:6px" onclick="signIn()">Kirjaudu</button>
-    <p class="hint">Demo — kentät täytetty valmiiksi</p>
+<!-- KIRJAUTUMINEN -->
+<div class="gate" id="gate">
+  <div class="gate-in">
+    <div class="brand">
+      <svg width="28" height="28" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="8" fill="#A67C2E"/><path d="M8 16h16M16 8v16" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/></svg>
+      Hoitopolku <span>LääkäriPRO</span>
+    </div>
+    <div class="card">
+      <h2>Kirjaudu sisään</h2>
+      <p class="sub" style="margin-bottom:16px">Demo-kirjautuminen (ei oikeaa authia) · lääkärin työpöytä · ei diagnoosia</p>
+      <form id="loginForm">
+        <div class="fld"><label for="li_email">Sähköposti</label><input id="li_email" type="email" autocomplete="username" placeholder="anna.lehtinen@hoitopolku.fi" value="anna.lehtinen@hoitopolku.fi"></div>
+        <div class="fld"><label for="li_pw">Salasana</label><input id="li_pw" type="password" autocomplete="current-password" placeholder="••••••••" value="demo1234"></div>
+        <button class="btn full gold" type="submit" id="loginBtn">Kirjaudu</button>
+        <p class="note" id="loginNote" hidden></p>
+      </form>
+      <div class="demo-row">
+        <button type="button" class="demo-cred" data-email="anna.lehtinen@hoitopolku.fi" data-pw="demo1234">Anna Lehtinen (demo)</button>
+        <button type="button" id="demoSkip">Ohita kirjautuminen (demo)</button>
+      </div>
+    </div>
+    <p class="foot-link"><a href="index.html">← Takaisin etusivulle</a> · <a href="hoitopolku-demo.html">Potilasdemo</a></p>
   </div>
 </div>
 
-<div class="shell" id="shell">
-  <nav class="side">
-    <a class="brand" href="hoitopolku-landing.html">
-      <svg width="22" height="22" viewBox="0 0 40 40" aria-hidden="true">
-        <circle cx="20" cy="20" r="14.5" fill="none" stroke="#E4DFD6" stroke-width="4.5"/>
-        <circle cx="20" cy="20" r="14.5" fill="none" stroke="#A67C2E" stroke-width="4.5" stroke-dasharray="63 91" stroke-linecap="round" transform="rotate(-90 20 20)"/>
-        <circle cx="20" cy="5.5" r="3" fill="#A67C2E"/>
-      </svg>
-      Lääkäri<em>PRO</em>
-    </a>
-    <button class="nav-i" aria-selected="true" data-v="dash">
-      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
-      Työpöytä
-    </button>
-    <button class="nav-i" data-v="patients">
-      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M16 4.5a3.2 3.2 0 010 7M18 20c0-2.5-1-4.3-2.5-5.3"/></svg>
-      Potilaat
-    </button>
-    <button class="nav-i" data-v="ai">
-      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.7 4.8L18.5 9.5l-4.8 1.7L12 16l-1.7-4.8L5.5 9.5l4.8-1.7z"/><path d="M18 15l.8 2.2L21 18l-2.2.8L18 21l-.8-2.2L15 18l2.2-.8z"/></svg>
-      AI-työkalut
-    </button>
-    <div class="nav-sep"></div>
-    <button class="nav-i" onclick="signOut()">
-      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M15 17l5-5-5-5M20 12H9M12 20H6a2 2 0 01-2-2V6a2 2 0 012-2h6"/></svg>
-      Kirjaudu ulos
-    </button>
-    <div class="side-foot"><span class="avatar">AL</span>Anna Lehtinen, LL</div>
-  </nav>
-
-  <main class="main">
-
-    <section class="view on" id="v-dash">
-      <div class="head">
-        <h1 id="greet">Hyvää päivää, Anna</h1>
-        <div class="sub" id="today">—</div>
+<!-- SOVELLUS -->
+<div class="app" id="app">
+  <header class="top">
+    <div class="top-in">
+      <a class="brand" href="index.html" style="text-decoration:none;color:inherit">
+        <svg width="22" height="22" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="8" fill="#A67C2E"/><path d="M8 16h16M16 8v16" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/></svg>
+        Hoitopolku <span>LääkäriPRO</span>
+      </a>
+      <div class="top-actions">
+        <button class="icon-btn" id="btnCode" title="Avaa potilas koodilla" aria-label="Avaa koodi">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="7" width="18" height="14" rx="2"/><path d="M7 7V5a2 2 0 012-2h6a2 2 0 012 2v2"/></svg>
+        </button>
+        <button class="icon-btn" id="btnLogout" title="Kirjaudu ulos" aria-label="Ulos">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+        </button>
       </div>
+    </div>
+  </header>
 
-      <div class="kpis">
-        <div class="kpi"><b class="num">28</b><span>potilasta hoitopolussa</span></div>
-        <div class="kpi alert"><b class="num" id="kAlert">3</b><span>vaatii huomiota</span></div>
-        <div class="kpi"><b class="num" id="kToday">4</b><span>vastaanottoa tänään</span></div>
-        <div class="kpi"><b class="num">61 %</b><span>tavoitteessa</span></div>
+  <!-- DASHBOARD -->
+  <div class="view on" id="v-dash">
+    <div class="head">
+      <h1 id="docHello">Potilaasi</h1>
+      <p class="sub" id="docSub">5 potilasta · priorisoitu seurannan mukaan</p>
+    </div>
+    <div class="label">HOIDOSSASI</div>
+    <div class="card tight"><div class="plist" id="patientList"></div></div>
+    <div class="label">PIKATOIMINNOT</div>
+    <div class="card">
+      <button class="btn sec full" id="openCodeBtn">Avaa potilas jakokoodilla tai jakolinkillä</button>
+    </div>
+  </div>
+
+  <!-- KOODI -->
+  <div class="view" id="v-code">
+    <div class="head">
+      <button class="backlink" id="codeBack">‹ Takaisin</button>
+      <h1 style="margin-top:8px">Avaa potilas</h1>
+      <p class="sub">Syötä potilaan jakokoodi tai avaa jakolinkki</p>
+    </div>
+    <div class="card codebox">
+      <div class="label" style="margin-top:0">POTILAAN JAKOKOODI TAI JAKOLINKKI</div>
+      <input id="codeInput" type="text" placeholder="DEMO-4827" maxlength="12" autocomplete="off">
+      <button class="btn full gold" style="margin-top:16px" id="codeGo">Avaa potilas</button>
+      <p class="code-hint">Demo-koodit: DEMO-4827, DEMO-3391, DEMO-5502 tai potilaan jakolinkki</p>
+    </div>
+  </div>
+
+  <!-- POTILAS -->
+  <div class="view" id="v-patient">
+    <button class="backlink" id="patBack">‹ Potilaat</button>
+    <div class="head" style="padding-top:10px">
+      <h1 id="pName">—</h1>
+      <p class="sub" id="pSub">—</p>
+    </div>
+
+    <div class="seg" id="pTabs" role="tablist">
+      <button aria-selected="true" data-tab="sum">Yhteenveto</button>
+      <button aria-selected="false" data-tab="meas">Mittaukset</button>
+      <button aria-selected="false" data-tab="meds">Lääkitys</button>
+      <button aria-selected="false" data-tab="sym">Oireet</button>
+      <button aria-selected="false" data-tab="ai">AI-työkalut</button>
+    </div>
+
+    <div class="tab-panel on" id="tab-sum">
+      <div class="card" id="pNext"></div>
+      <div class="label">SMARTGRAPH · VERENPAINE</div>
+      <div class="card">
+        <div class="g-val" id="gVal">— <small>mmHg</small></div>
+        <div class="g-sub" id="gSub">—</div>
+        <span class="pill ok" id="gPill">—</span>
+        <svg id="pChart" viewBox="0 0 560 200" role="img" aria-label="Verenpaineen kehitys"></svg>
+        <div class="stats" id="gStats"></div>
       </div>
+      <div class="card" id="pInsights"></div>
+    </div>
 
-      <div class="sec-h"><h2>Avaa potilaan koodilla</h2></div>
-      <div class="codebox">
-        <div class="field">
-          <label for="codeIn">Hoitopolku-koodi</label>
-          <input class="inp" id="codeIn" placeholder="HP-0000" maxlength="7" autocomplete="off" spellcheck="false">
+    <div class="tab-panel" id="tab-meas">
+      <div class="card" id="pMeas"></div>
+    </div>
+
+    <div class="tab-panel" id="tab-meds">
+      <div class="card" id="pMeds"></div>
+    </div>
+
+    <div class="tab-panel" id="tab-sym">
+      <div class="card" id="pSym"></div>
+    </div>
+
+    <div class="tab-panel" id="tab-ai">
+      <div class="label" style="margin-top:0">LÄÄKÄRIN MUISTIINPANO (LUONNOS)</div>
+      <div class="card">
+        <p class="sub" style="margin-bottom:12px">Kirjoita tai sanelee lausunto/epikriisi. Ei allekirjoitettua hoitopäätöstä — ihminen päättää.</p>
+        <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+          <button class="btn sm sec" id="draftFromContext">Luo luonnos potilaskontekstista</button>
+          <button class="btn sm sec" id="copyToClipboard">Kopioi leikepöydälle</button>
         </div>
-        <button class="btn" onclick="openCode()">Avaa</button>
-        <div class="err" id="codeErr"></div>
+        <textarea id="physicianNote" placeholder="Kirjoita tai sanelee lääkärin muistiinpano tähän... Tämä on luonnos, ei allekirjoitettua dokumenttia." style="width:100%;min-height:280px;font-size:14px;line-height:1.55;padding:14px;border-radius:12px;border:1px solid var(--line);background:var(--w);resize:vertical;font-family:var(--f)"></textarea>
+        <p class="note" style="margin-top:8px;font-size:12px;color:var(--mid)">⚠️ LUONNOS — ei allekirjoitettu, ei diagnoosia. Seuranta-muistiinpano potilastietoihin.</p>
       </div>
 
-      <div class="sec-h"><h2>Huomiota vaativat</h2><button class="act" onclick="go('patients')">Kaikki potilaat →</button></div>
-      <div class="plist" id="alertList"></div>
-
-      <div class="sec-h"><h2>Tänään vastaanotolla</h2></div>
-      <div class="plist" id="todayList"></div>
-    </section>
-
-    <section class="view" id="v-patients">
-      <div class="head">
-        <h1>Potilaat</h1>
-        <div class="sub">Hoitopolussa olevat, huomiota vaativat ensin</div>
-      </div>
-      <div class="plist">
-        <div class="plist-h"><span>Potilas</span><span>Verenpaine</span><span>Huomio</span><span>Tila</span><span></span></div>
-        <div id="allList"></div>
-      </div>
-    </section>
-
-    <section class="view" id="v-patient">
-      <button class="back" onclick="go('dash')">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg>
-        Työpöytä
-      </button>
-      <div class="phead">
-        <div class="phead-top">
-          <div>
-            <h1 id="pName">—</h1>
-            <div class="meta" id="pMeta">—</div>
-          </div>
-          <div class="actions">
-            <button class="btn sec sm" onclick="toAI()">AI-luonnos</button>
-            <button class="btn gold sm" onclick="alert('Demo — ajanvaraus tapahtuisi vastaanotto.fi:ssä')">Varaa kontrolli</button>
-          </div>
+      <div class="label">AI-TYÖKALUT (DEMO-LUONNOS)</div>
+      <div class="card">
+        <p class="sub" style="margin-bottom:14px">Luo luonnoksia paikallisesti — ei ulkoisia API-kutsuja.</p>
+        <div class="ai-tools">
+          <button class="btn sm sec" data-gen="letter">Vastaanottokirje</button>
+          <button class="btn sm sec" data-gen="summary">Yhteenveto</button>
+          <button class="btn sm sec" data-gen="plan">Hoitosuunnitelma</button>
         </div>
-        <div class="flags" id="pFlags"></div>
+        <div class="ai-out" id="aiOut">Valitse työkalu yllä.</div>
       </div>
-
-      <div class="tabs" id="pTabs">
-        <button class="tab" aria-selected="true">Yhteenveto</button>
-        <button class="tab">Mittaukset</button>
-        <button class="tab">Laboratorio</button>
-        <button class="tab">Lääkitys</button>
-        <button class="tab">Oireet</button>
-      </div>
-
-      <div class="pane on" id="pane0">
-        <div class="card">
-          <div class="card-h"><h2>Kotimittaukset</h2><span class="note">7 vrk keskiarvo</span></div>
-          <div id="sumMetrics"></div>
-        </div>
-        <div class="two">
-          <div class="card">
-            <div class="card-h"><h2>Turvakokeet</h2><span class="note">viimeisin</span></div>
-            <table class="lab"><tbody id="sumSafety"></tbody></table>
-          </div>
-          <div class="card">
-            <div class="card-h"><h2>Lääkitys</h2><span class="note" id="medCount">—</span></div>
-            <div id="sumMeds"></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="pane" id="pane1">
-        <div id="p1List">
-          <div class="card">
-            <div class="card-h"><h2>Kotimittaukset</h2><span class="note">12 viikkoa · avaa käyrä painamalla</span></div>
-            <div id="metrics"></div>
-          </div>
-        </div>
-
-        <div id="p1Detail" style="display:none">
-          <button class="back" onclick="closeMetricDetail()">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg>
-            Kotimittaukset
-          </button>
-          <div class="card">
-            <div class="g-head">
-              <div>
-                <div class="g-name" id="dTitle">Verenpaine</div>
-                <div class="g-sub" id="dSub">kotimittaus</div>
-              </div>
-              <div class="g-val"><span id="dVal">—</span> <small id="dUnit"></small></div>
-            </div>
-            <div class="g-wrap">
-              <svg id="lpGraph" viewBox="0 0 520 190"></svg>
-              <div class="g-tip" id="lpTip"></div>
-            </div>
-            <div class="legend">
-              <span><i class="lg-dot"></i>Yksittäinen mittaus</span>
-              <span><i class="lg-line" id="lgLineLP"></i>7 vrk keskiarvo</span>
-              <span><i class="lg-dash"></i>Tavoite</span>
-            </div>
-            <div class="stats" id="dStats"></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="pane" id="pane2">
-        <div class="card">
-          <div class="card-h"><h2>Laboratorio</h2><span class="note">kaksi mittauskertaa</span></div>
-          <table class="lab">
-            <thead><tr><th>Tutkimus</th><th>Aiempi</th><th>Nyt</th><th>Muutos</th><th>Viite</th><th></th></tr></thead>
-            <tbody id="labBody"></tbody>
-          </table>
-        </div>
-      </div>
-
-      <div class="pane" id="pane3">
-        <div class="card">
-          <div class="card-h"><h2>Lääkitys</h2><span class="note">potilaan kirjaama</span></div>
-          <div id="meds"></div>
-        </div>
-      </div>
-
-      <div class="pane" id="pane4">
-        <div class="card">
-          <div class="card-h"><h2>Oireet</h2><span class="note">14 vrk</span></div>
-          <div id="symGrid"></div>
-          <div class="sym-axis" id="symAxis"></div>
-          <div class="sym-key">
-            <span><i class="kn"></i>ei oiretta</span>
-            <span><i class="km"></i>ei kirjausta</span>
-            <span style="margin-left:auto">pylvään korkeus = voimakkuus 1–5</span>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section class="view" id="v-ai">
-      <div class="head">
-        <h1>AI-työkalut</h1>
-        <div class="sub">Koostavat luonnoksen potilaan kirjaamista tiedoista — lääkäri tarkistaa ja hyväksyy</div>
-      </div>
-
-      <div class="ctx" id="aiCtx"></div>
-
-      <div class="ai-grid">
-        <div class="card" style="margin:0">
-          <div class="card-h"><h2>Työkalut</h2></div>
-          <button class="tool" aria-selected="true">
-            <span class="ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg></span>
-            <span><span class="n">Lausuntoapuri</span><span class="d">Hoitoyhteenveto, lähete tai todistus luonnoksena</span></span>
-          </button>
-          <button class="tool soon"><span class="ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M3 17l5-6 4 3 5-8"/></svg></span><span><span class="n">Vasteanalyysi</span><span class="d">Vertaa hoidon vastetta annosmuutoksiin</span></span></button>
-          <button class="tool soon"><span class="ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M12 8v5M12 16v.5"/><circle cx="12" cy="12" r="9"/></svg></span><span><span class="n">Turvatarkistus</span><span class="d">Laboratorioarvot ja lääkitys ristiin</span></span></button>
-        </div>
-
-        <div>
-          <div class="card" style="margin-bottom:14px">
-            <div class="form-row">
-              <div>
-                <div class="f-lbl">Asiakirjan tyyppi</div>
-                <select id="docType">
-                  <option value="yhteenveto">Hoitoyhteenveto käynnistä</option>
-                  <option value="seuranta">Seurantajakson yhteenveto</option>
-                  <option value="lahete">Lähetteen taustatiedot</option>
-                  <option value="A">A-todistuksen luonnos</option>
-                </select>
-              </div>
-              <div>
-                <div class="f-lbl">Laajuus</div>
-                <select id="tone">
-                  <option value="tiivis">Tiivis</option>
-                  <option value="laaja">Laajempi</option>
-                </select>
-              </div>
-            </div>
-            <div class="f-lbl">Lisätiedot lääkäriltä <span style="font-weight:400;color:var(--mid2)">— valinnainen</span></div>
-            <textarea class="ta" id="extra" placeholder="esim. potilas kertoi kuivasta yskästä; harkitaan vaihtoa ATR-salpaajaan"></textarea>
-            <button class="btn gold" style="width:100%;margin-top:14px" id="genBtn" onclick="generate()">Luo luonnos</button>
-          </div>
-
-          <div class="out empty" id="out">Valitse potilas ja asiakirjan tyyppi.<br>Luonnos perustuu vain potilaan kirjaamiin tietoihin.</div>
-          <div class="out-bar" id="outBar" style="display:none">
-            <button class="btn sec sm" onclick="copyOut(this)">Kopioi</button>
-            <button class="btn sec sm" onclick="editOut()">Muokkaa</button>
-            <button class="btn sec sm" onclick="generate()">Luo uudelleen</button>
-          </div>
-          <p class="disc">Luonnos ei ole lääketieteellinen kannanotto. Tarkista jokainen luku ja päätelmä ennen kirjaamista potilastietojärjestelmään. Vastuu sisällöstä on hoitavalla lääkärillä.</p>
-        </div>
-      </div>
-    </section>
-
-  </main>
+    </div>
+  </div>
 </div>
+
+<div class="toast" id="toast"></div>
 
 <script>
 const $=id=>document.getElementById(id);
-const NS='http://www.w3.org/2000/svg';
-const el=(n,a)=>{const e=document.createElementNS(NS,n);for(const k in a)e.setAttribute(k,a[k]);return e;};
-const fmt=(v,d)=>d?Number(v).toFixed(d).replace('.',','):String(Math.round(v));
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const fmt=(v,d)=>d?v.toFixed(1).replace('.',','):String(Math.round(v));
+const ini=n=>(n||'?').split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase();
 
-/* ══ DATA ══ */
-function mk(seed){let s=seed;return()=>{s=(s*1103515245+12345)&0x7fffffff;return s/0x7fffffff;};}
-function genSeries(c){
-  const rnd=mk(c.seed),DAYS=84,BP=[],GLU=[],WT=[];
-  for(let d=0;d<DAYS;d++){
-    const gap=c.gap&&d>=28&&d<=37;
-    let b=c.bp0;
-    if(d>=14)b-=Math.min(c.drop1,(d-14)*.5);
-    if(d>=42)b-=Math.min(c.drop2,(d-42)*.35);
-    if(!(gap?rnd()<0.95:rnd()<0.12))BP.push({d:d,v:Math.round(b+3+(rnd()-0.5)*22)});
-    if(!(gap?rnd()<0.95:rnd()<0.16))BP.push({d:d,v:Math.round(b-2+(rnd()-0.5)*22)});
-    if(rnd()<0.8)GLU.push({d:d,v:+(c.glu0-Math.min(1.4,d*0.017)+(rnd()-0.5)*1.1).toFixed(1)});
-  }
-  for(let w=0;w<12;w++)WT.push({d:w*7,v:+(c.wt0-w*c.wtd+(rnd()-0.5)*.4).toFixed(1)});
-  return {BP:BP,GLU:GLU,WT:WT};
-}
-const PATIENTS=[
-  {id:'HP-4827',name:'Matti Virtanen',age:58,sex:'mies',start:'2.9.2026',seed:42,bp0:152,drop1:8,drop2:5,glu0:8.1,wt0:94.2,wtd:.56,gap:true,
-   today:'9.00',alert:'Uusi oire annosmuutoksen jälkeen',
-   labs:[{n:'LDL-kolesteroli',u:'mmol/l',prev:4.6,now:3.1,ref:'< 3,0',dec:1,st:'mid',stl:'Lähellä'},
-         {n:'HbA1c',u:'mmol/mol',prev:51,now:49,ref:'< 48',dec:0,st:'mid',stl:'Lähellä'},
-         {n:'Kalium',u:'mmol/l',prev:4.1,now:4.2,ref:'3,5–5,0',dec:1,st:'ok',stl:'Normaali'},
-         {n:'Kreatiniini',u:'µmol/l',prev:78,now:82,ref:'60–100',dec:0,st:'ok',stl:'Normaali'},
-         {n:'eGFR',u:'ml/min',prev:88,now:84,ref:'> 60',dec:0,st:'ok',stl:'Normaali'},
-         {n:'Natrium',u:'mmol/l',prev:140,now:139,ref:'137–145',dec:0,st:'ok',stl:'Normaali'}],
-   meds:[{n:'Ramipriili',dose:'10 mg',am:true,pm:false,hist:'5 mg → 10 mg',when:'14.10.'},
-         {n:'Atorvastatiini',dose:'20 mg',am:false,pm:true,hist:'Aloitettu',when:'2.9.'},
-         {n:'Metformiini',dose:'500 mg × 2',am:true,pm:true,hist:'Ennallaan',when:'8 kk'}],
-   syms:[{n:'Huimaus',c:'#B3452C',v:[0,0,1,2,3,3,2,1,-1,0,0,0,0,0]},
-         {n:'Päänsärky',c:'#946A16',v:[1,0,0,1,2,2,1,0,0,1,-1,0,0,0]},
-         {n:'Väsymys',c:'#6B5B95',v:[2,2,1,2,3,2,2,1,1,1,1,0,1,0]},
-         {n:'Yskä',c:'#2F6690',v:[0,0,0,0,0,1,2,3,3,4,3,2,2,1]}],
-   flags:[{t:'Verenpaine ei tavoitteessa',c:'warn'},{t:'Turvakokeet normaalit',c:'ok'},{t:'Annosmuutos 14.10.',c:''},{t:'Uusi oire: yskä',c:'warn'}]},
-
-  {id:'HP-3391',name:'Leena Koskinen',age:64,sex:'nainen',start:'12.8.2026',seed:77,bp0:161,drop1:4,drop2:2,glu0:6.2,wt0:78.4,wtd:.18,gap:false,
-   today:'9.40',alert:'Ei laskua kahdeksaan viikkoon',
-   labs:[{n:'LDL-kolesteroli',u:'mmol/l',prev:3.9,now:3.6,ref:'< 3,0',dec:1,st:'off',stl:'Koholla'},
-         {n:'Kalium',u:'mmol/l',prev:4.4,now:4.5,ref:'3,5–5,0',dec:1,st:'ok',stl:'Normaali'},
-         {n:'Kreatiniini',u:'µmol/l',prev:71,now:74,ref:'50–90',dec:0,st:'ok',stl:'Normaali'},
-         {n:'eGFR',u:'ml/min',prev:81,now:79,ref:'> 60',dec:0,st:'ok',stl:'Normaali'}],
-   meds:[{n:'Amlodipiini',dose:'5 mg',am:true,pm:false,hist:'Ennallaan',when:'4 kk'},
-         {n:'Hydroklooritiatsidi',dose:'12,5 mg',am:true,pm:false,hist:'Aloitettu',when:'20.9.'}],
-   syms:[{n:'Nilkkaturvotus',c:'#B3452C',v:[0,0,0,1,1,2,2,3,3,3,2,2,2,2]},
-         {n:'Päänsärky',c:'#946A16',v:[0,1,0,0,0,-1,-1,0,1,0,0,0,0,0]},
-         {n:'Väsymys',c:'#6B5B95',v:[1,1,2,1,1,1,2,2,1,1,2,1,1,1]}],
-   flags:[{t:'Ei vastetta 8 vk',c:'warn'},{t:'Nilkkaturvotus lisääntynyt',c:'warn'},{t:'Turvakokeet normaalit',c:'ok'}]},
-
-  {id:'HP-5502',name:'Pekka Nieminen',age:51,sex:'mies',start:'1.7.2026',seed:19,bp0:146,drop1:9,drop2:4,glu0:5.8,wt0:101.5,wtd:.72,gap:false,
-   today:null,alert:'Mittaukset katkenneet 11 vrk',
-   labs:[{n:'LDL-kolesteroli',u:'mmol/l',prev:5.1,now:3.4,ref:'< 3,0',dec:1,st:'mid',stl:'Lähellä'},
-         {n:'HbA1c',u:'mmol/mol',prev:46,now:44,ref:'< 42',dec:0,st:'mid',stl:'Lähellä'},
-         {n:'Kalium',u:'mmol/l',prev:4.0,now:4.1,ref:'3,5–5,0',dec:1,st:'ok',stl:'Normaali'},
-         {n:'Kreatiniini',u:'µmol/l',prev:84,now:86,ref:'60–100',dec:0,st:'ok',stl:'Normaali'}],
-   meds:[{n:'Losartaani',dose:'50 mg',am:true,pm:false,hist:'25 mg → 50 mg',when:'3.10.'},
-         {n:'Rosuvastatiini',dose:'10 mg',am:false,pm:true,hist:'Aloitettu',when:'1.7.'}],
-   syms:[{n:'Väsymys',c:'#6B5B95',v:[1,1,1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1]},
-         {n:'Lihaskrampit',c:'#2F6690',v:[0,0,1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1]}],
-   flags:[{t:'Mittauskatko 11 vrk',c:'warn'},{t:'Verenpaine tavoitteessa',c:'ok'},{t:'Paino laskenut',c:'ok'}]},
-
-  {id:'HP-2214',name:'Sirpa Mäkelä',age:69,sex:'nainen',start:'20.6.2026',seed:8,bp0:143,drop1:10,drop2:3,glu0:5.4,wt0:69.8,wtd:.12,gap:false,
-   today:'13.20',alert:null,
-   labs:[{n:'LDL-kolesteroli',u:'mmol/l',prev:3.2,now:2.4,ref:'< 2,6',dec:1,st:'ok',stl:'Tavoitteessa'},
-         {n:'Kalium',u:'mmol/l',prev:4.2,now:4.3,ref:'3,5–5,0',dec:1,st:'ok',stl:'Normaali'},
-         {n:'Kreatiniini',u:'µmol/l',prev:69,now:70,ref:'50–90',dec:0,st:'ok',stl:'Normaali'},
-         {n:'eGFR',u:'ml/min',prev:76,now:75,ref:'> 60',dec:0,st:'ok',stl:'Normaali'}],
-   meds:[{n:'Enalapriili',dose:'10 mg',am:true,pm:false,hist:'Ennallaan',when:'6 kk'},
-         {n:'Simvastatiini',dose:'20 mg',am:false,pm:true,hist:'Ennallaan',when:'2 v'}],
-   syms:[{n:'Huimaus',c:'#B3452C',v:[0,0,0,0,0,0,0,0,0,0,0,0,0,0]},
-         {n:'Väsymys',c:'#6B5B95',v:[0,0,1,0,0,0,1,0,0,0,0,0,0,0]}],
-   flags:[{t:'Kaikki tavoitteessa',c:'ok'},{t:'Loppuarvio 6 kk kohdalla',c:''}]},
-
-  {id:'HP-7746',name:'Jussi Rantanen',age:45,sex:'mies',start:'5.8.2026',seed:31,bp0:149,drop1:7,drop2:4,glu0:6.6,wt0:88.1,wtd:.34,gap:false,
-   today:'14.00',alert:null,
-   labs:[{n:'LDL-kolesteroli',u:'mmol/l',prev:4.1,now:3.3,ref:'< 3,0',dec:1,st:'mid',stl:'Lähellä'},
-         {n:'HbA1c',u:'mmol/mol',prev:44,now:43,ref:'< 42',dec:0,st:'mid',stl:'Lähellä'},
-         {n:'Kalium',u:'mmol/l',prev:4.3,now:4.2,ref:'3,5–5,0',dec:1,st:'ok',stl:'Normaali'},
-         {n:'Kreatiniini',u:'µmol/l',prev:79,now:80,ref:'60–100',dec:0,st:'ok',stl:'Normaali'}],
-   meds:[{n:'Kandesartaani',dose:'8 mg',am:true,pm:false,hist:'Aloitettu',when:'5.8.'}],
-   syms:[{n:'Päänsärky',c:'#946A16',v:[1,1,0,0,1,0,0,0,0,0,1,0,0,0]},
-         {n:'Väsymys',c:'#6B5B95',v:[1,0,1,1,0,0,1,0,0,1,0,0,0,0]}],
-   flags:[{t:'Laskusuunnassa',c:'ok'},{t:'Ensimmäinen kontrolli tulossa',c:''}]}
-];
-PATIENTS.forEach(p=>{const g=genSeries(p);p.BP=g.BP;p.GLU=g.GLU;p.WT=g.WT;});
-const SYMDAYS=['1.10','2.','3.','4.','5.','6.','7.','8.','9.','10.','11.','12.','13.','14.'];
-
-/* ══ APURIT ══ */
-function rolling(pts){
+const DAYS=84,TODAY=DAYS-1;
+function genBP(base,trend,noise,medDay){
   const out=[];
-  for(let d=6;d<84;d++){const w=pts.filter(p=>p.d>d-7&&p.d<=d);if(w.length>=5)out.push({d:d,v:w.reduce((a,p)=>a+p.v,0)/w.length});}
+  for(let d=0;d<DAYS;d++){
+    const v=base+trend*(d/DAYS)*-18+(Math.sin(d/5)*noise)+(d<medDay?8:0);
+    if(Math.random()>0.12)out.push({d,v:Math.round(v+(Math.random()-.5)*6)});
+  }
   return out;
 }
-function metricsOf(p){
-  return [
-    {n:'Verenpaine',sub:'kotimittaus 2×/vrk',u:'mmHg',dec:0,target:135,color:'#B3452C',data:p.BP,roll:true},
-    {n:'Paastoglukoosi',sub:'sormimittaus aamuisin',u:'mmol/l',dec:1,target:6.0,color:'#2F6690',data:p.GLU,roll:true},
-    {n:'Paino',sub:'viikkopunnitus',u:'kg',dec:1,target:Math.round(p.wt0*0.95*10)/10,color:'#6B5B95',data:p.WT,roll:false}
-  ];
+function ka7(bp){
+  const w=bp.filter(p=>p.d>TODAY-7);
+  return w.length?w.reduce((a,p)=>a+p.v,0)/w.length:null;
 }
-function smooth(P){
-  if(P.length<2)return '';
-  let d='M'+P[0].x.toFixed(1)+' '+P[0].y.toFixed(1);
-  for(let i=0;i<P.length-1;i++){
-    const a=P[i-1]||P[i],b=P[i],c=P[i+1],e=P[i+2]||P[i+1];
-    d+=' C'+(b.x+(c.x-a.x)/6).toFixed(1)+' '+(b.y+(c.y-a.y)/6).toFixed(1)+','+
-        (c.x-(e.x-b.x)/6).toFixed(1)+' '+(c.y-(e.y-b.y)/6).toFixed(1)+','+c.x.toFixed(1)+' '+c.y.toFixed(1);
+function rolling(bp){
+  const out=[];
+  for(let d=6;d<DAYS;d++){
+    const w=bp.filter(p=>p.d>d-7&&p.d<=d);
+    if(w.length>=3)out.push({d,v:w.reduce((a,p)=>a+p.v,0)/w.length});
   }
-  return d;
-}
-let sid=0;
-function spark(vals,color,target,W,H){
-  const pad=7,svg=el('svg',{viewBox:'0 0 '+W+' '+H,class:'m-spark'});
-  const all=vals.concat([target]);
-  const mn=Math.min(...all),mx=Math.max(...all),rg=(mx-mn)||1;
-  const X=i=>pad+i*(W-pad*2)/((vals.length-1)||1);
-  const Y=v=>pad+(1-(v-mn)/rg)*(H-pad*2);
-  const P=vals.map((v,i)=>({x:X(i),y:Y(v)}));
-  const ty=Y(target);
-  svg.appendChild(el('rect',{x:0,y:ty,width:W,height:Math.max(0,H-ty),fill:'#4E7D3C','fill-opacity':'.08'}));
-  svg.appendChild(el('line',{x1:0,y1:ty,x2:W,y2:ty,stroke:'#4E7D3C','stroke-width':1.4,'stroke-dasharray':'5 4','stroke-opacity':'.65'}));
-  const gid='g'+(sid++),defs=el('defs'),lg=el('linearGradient',{id:gid,x1:0,y1:0,x2:0,y2:1});
-  lg.appendChild(el('stop',{offset:'0%','stop-color':color,'stop-opacity':'.18'}));
-  lg.appendChild(el('stop',{offset:'100%','stop-color':color,'stop-opacity':'0'}));
-  defs.appendChild(lg);svg.appendChild(defs);
-  const d=smooth(P);
-  svg.appendChild(el('path',{d:d+' L'+P[P.length-1].x+' '+H+' L'+P[0].x+' '+H+' Z',fill:'url(#'+gid+')'}));
-  svg.appendChild(el('path',{d:d,fill:'none',stroke:color,'stroke-width':2.2,'stroke-linecap':'round','stroke-linejoin':'round'}));
-  const l=P[P.length-1];
-  svg.appendChild(el('circle',{cx:l.x,cy:l.y,r:3.6,fill:'#fff',stroke:color,'stroke-width':2.2}));
-  return svg;
-}
-const bpNow=p=>{const r=rolling(p.BP);return r.length?Math.round(r[r.length-1].v):0;};
-// kliinisesti merkitsevä lasku: yli 5 mmHg (mittausvaihtelu on ±5)
-function statusOf(p){
-  const r=rolling(p.BP),now=Math.round(r[r.length-1].v),first=Math.round(r[0].v);
-  if(now<=135)return['ok','Tavoitteessa'];
-  if(first-now>5)return['mid','Laskusuunnassa'];
-  return['off','Ei laskua'];
+  // Ennen 7 vrk keskiarvoa näytetään raakalukemat, jotta ensimmäinen jakolinkin mittaus näkyy.
+  return out.length?out:bp.map(p=>({d:p.d,v:p.v}));
 }
 
-/* ══ LISTAT ══ */
-function prow(p,note){
-  const st=statusOf(p);
-  return '<button class="prow" onclick="openPatient(\''+p.id+'\')">'+
-    '<span class="p-n">'+p.name+'<span>'+p.age+' v · '+p.id+'</span></span>'+
-    '<span class="p-v">'+bpNow(p)+' <span>mmHg</span></span>'+
-    '<span class="p-note">'+(note||'—')+'</span>'+
-    '<span><span class="tag '+st[0]+'">'+st[1]+'</span></span>'+
-    '<span class="chev"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg></span></button>';
-}
-function renderLists(){
-  const al=PATIENTS.filter(p=>p.alert),td=PATIENTS.filter(p=>p.today);
-  $('alertList').innerHTML=al.map(p=>prow(p,p.alert)).join('');
-  $('todayList').innerHTML=td.map(p=>prow(p,'klo '+p.today)).join('');
-  $('allList').innerHTML=PATIENTS.slice().sort((a,b)=>(b.alert?1:0)-(a.alert?1:0)).map(p=>prow(p,p.alert||'—')).join('');
-  $('kAlert').textContent=al.length;
-  $('kToday').textContent=td.length;
+const PATIENTS=[
+  {id:'p1',code:'DEMO-4827',name:'Matti Korhonen',age:58,diag:'Verenpainetauti',
+   target:135,bp:genBP(158,-1,4,28),meds:[{n:'Ramipril',d:'5 mg',s:'viikko 4'}],
+   syms:['Ei uusia oireita'],note:'Laskusuunta Ramiprililla',badge:'ok',priority:1},
+  {id:'p2',code:'DEMO-3391',name:'Liisa Virtanen',age:52,diag:'Korkea verenpaine',
+   target:135,bp:genBP(162,0,5,999),meds:[],
+   syms:['Päänsärky aamuisin'],note:'Ei lääkitystä — tarkista trendi',badge:'off',priority:4},
+  {id:'p3',code:'DEMO-5502',name:'Pekka Nieminen',age:61,diag:'Verenpainetauti',
+   target:135,bp:genBP(154,-.3,5,21),meds:[{n:'Amlodipiini',d:'10 mg',s:'5 vk'}],
+   syms:['Nilkkojen turvotus','Väsymys'],note:'Vaste osittainen + oireet',badge:'mid',priority:3},
+  {id:'p4',code:'DEMO-6104',name:'Sari Laine',age:49,diag:'Verenpainetauti',
+   target:135,bp:genBP(142,-.5,3,40),meds:[{n:'Losartan',d:'50 mg',s:'6 kk'}],
+   syms:['Ei oireita'],note:'Tavoitteessa, hyvä vaste',badge:'ok',priority:0},
+  {id:'p5',code:'DEMO-2846',name:'Kaisa Mäkelä',age:55,diag:'Verenpaine + diabetes',
+   target:135,bp:genBP(148,-.2,4,35),meds:[{n:'Metformiini',d:'1000 mg',s:'2x vrk'},{n:'Bisoprolol',d:'2,5 mg',s:'aamu'}],
+   syms:['Janoisuus'],note:'HbA1c 6,8 % — seuraa painoa',badge:'mid',priority:2,
+   glu:[{d:TODAY-2,v:7.2},{d:TODAY-5,v:6.8},{d:TODAY-8,v:8.1}]}
+];
+
+let signedIn=false,CUR=null;
+
+function decodeShare(s){
+  try{
+    s=s.replace(/-/g,'+').replace(/_/g,'/');
+    while(s.length%4)s+='=';
+    return JSON.parse(decodeURIComponent(escape(atob(s))));
+  }catch(e){return null;}
 }
 
-/* ══ POTILAS ══ */
-let CUR=null;
-function openPatient(id){
-  CUR=PATIENTS.find(p=>p.id===id);
-  if(!CUR)return;
-  $('pName').textContent=CUR.name;
-  $('pMeta').textContent=CUR.age+' v · '+CUR.sex+' · '+CUR.id+' · hoitopolku alkoi '+CUR.start;
-  $('pFlags').innerHTML=CUR.flags.map(f=>'<span class="flag '+f.c+'">'+f.t+'</span>').join('');
+function snapToPatient(snap){
+  const bp=(snap.BP||[]).map(p=>({d:typeof p.d==='number'?p.d:TODAY-Math.round((Date.now()-new Date(p.d||Date.now()))/86400000),v:p.v||p.sys||0}));
+  const meds=(snap.MEDS||[]).map(m=>({n:m.n||m.name||'—',d:m.d||m.dose||'',s:m.s||''}));
+  const syms=(snap.SYMS||[]).map(s=>s.n||s.name||String(s)).filter(Boolean);
+  const ka=ka7(bp);
+  return{
+    id:'share-'+(snap.code||'x'),
+    code:snap.code||'',
+    name:snap.name||'Potilas',
+    age:null,diag:'Jaettu seuranta',
+    target:135,bp,meds,syms:syms.length?syms:['Ei oirekirjauksia'],
+    note:'Potilaan jakolinkki · '+new Date(snap.created||Date.now()).toLocaleDateString('fi-FI'),
+    badge:ka===null?'mid':(ka<=135?'ok':'off'),
+    priority:ka&&ka>140?3:1,
+    fromShare:true,
+    snap
+  };
+}
 
-  const rows=metricsOf(CUR).map(m=>{
-    const s=m.roll?rolling(m.data):m.data.map(x=>({d:x.d,v:x.v}));
-    const vals=s.slice(-12).map(x=>x.v);
-    const last=vals[vals.length-1],first=s[0].v;
-    const change=m.dec?(first-last):(Math.round(first)-Math.round(last));
-    const thr=m.dec?0.4:5;
-    const ok=last<=m.target,cls=ok?'ok':(change>thr?'mid':'off');
-    return {m:m,vals:vals,last:last,first:first,change:change,cls:cls,
-            lbl:ok?'Tavoitteessa':(change>thr?'Laskusuunnassa':'Ei laskua')};
+function toast(t){
+  const el=$('toast');el.textContent=t;el.classList.add('on');
+  clearTimeout(toast._t);toast._t=setTimeout(()=>el.classList.remove('on'),2800);
+}
+
+function showView(v){
+  ['dash','code','patient'].forEach(x=>{
+    $('v-'+x).classList.toggle('on',x===v);
   });
-  CUR._sum=rows;
-  [['sumMetrics',260,46],['metrics',420,58]].forEach(([target,W,H])=>{
-    const box=$(target);box.innerHTML='';
-    rows.forEach(r=>{
-      const row=document.createElement('div');
-      row.className='mrow';
-      row.innerHTML='<div class="m-name">'+r.m.n+'<span>'+r.m.sub+'</span></div><div></div>'+
-        '<div class="m-val"><b class="num">'+fmt(r.last,r.m.dec)+'</b><span class="tag '+r.cls+'">'+r.lbl+'</span></div>';
-      row.children[1].appendChild(spark(r.vals,r.m.color,r.m.target,W,H));
-      row.addEventListener('click',()=>openMetricDetail(rows.indexOf(r)));
-      box.appendChild(row);
-    });
-  });
-
-  $('labBody').innerHTML=CUR.labs.map(l=>{
-    const d=l.now-l.prev,ds=(d>0?'+':'−')+fmt(Math.abs(d),l.dec);
-    return '<tr><td>'+l.n+'</td><td class="ref">'+fmt(l.prev,l.dec)+'</td><td class="v">'+fmt(l.now,l.dec)+
-      '</td><td class="d">'+ds+'</td><td class="ref">'+l.ref+'</td><td><span class="tag '+l.st+'">'+l.stl+'</span></td></tr>';
-  }).join('');
-  const safety=CUR.labs.filter(l=>['Kalium','Kreatiniini','eGFR','Natrium'].indexOf(l.n)>=0);
-  $('sumSafety').innerHTML=(safety.length?safety:CUR.labs.slice(0,3)).map(l=>
-    '<tr><td>'+l.n+'</td><td class="v">'+fmt(l.now,l.dec)+'</td><td class="ref">'+l.ref+'</td>'+
-    '<td><span class="tag '+l.st+'">'+l.stl+'</span></td></tr>').join('');
-
-  const medHtml=CUR.meds.map(m=>
-    '<div class="med"><div><div class="med-n">'+m.n+'<em>'+m.dose+'</em></div>'+
-    '<div class="med-h"><span class="ch">'+m.hist+'</span> · '+m.when+'</div></div>'+
-    '<div class="med-when"><span class="chip'+(m.am?' on':'')+'">Aamu</span>'+
-    '<span class="chip'+(m.pm?' on':'')+'">Ilta</span></div></div>').join('');
-  $('meds').innerHTML=medHtml;$('sumMeds').innerHTML=medHtml;
-  $('medCount').textContent=CUR.meds.length+' lääkettä';
-
-  $('symGrid').innerHTML=CUR.syms.map(sy=>{
-    const bars=sy.v.map((v,i)=>{
-      const day=SYMDAYS[i].replace(/\.$/,'')+'.10.';
-      if(v<0)return '<span class="sym-cell" title="'+day+' ei kirjausta"><span class="sym-miss"></span></span>';
-      if(v===0)return '<span class="sym-cell" title="'+day+' ei oiretta"><span class="sym-zero"></span></span>';
-      return '<span class="sym-cell" title="'+day+' '+sy.n.toLowerCase()+' '+v+'/5"><span class="sym-bar" style="--sc:'+sy.c+';height:'+(v/5*100)+'%;opacity:'+(0.45+v*0.11)+'"></span></span>';
-    }).join('');
-    return '<div class="sym-row"><span class="sym-name">'+sy.n+'</span><span class="sym-bars">'+bars+'</span></div>';
-  }).join('');
-  $('symAxis').innerHTML='<span class="sym-days">'+SYMDAYS.map((d,i)=>'<span>'+(i===0||i===13||i===6?d:'')+'</span>').join('')+'</span>';
-
-  selPane(0);go('patient');updateAiCtx();
 }
-function selPane(i){
-  document.querySelectorAll('#pTabs .tab').forEach((t,j)=>t.setAttribute('aria-selected',j===i));
-  document.querySelectorAll('#v-patient .pane').forEach((p,j)=>p.classList.toggle('on',j===i));
-}
-document.querySelectorAll('#pTabs .tab').forEach((t,i)=>t.addEventListener('click',()=>selPane(i)));
 
-/* ══ NAV ══ */
-function go(v){
-  document.querySelectorAll('.view').forEach(n=>n.classList.toggle('on',n.id==='v-'+v));
-  document.querySelectorAll('.nav-i[data-v]').forEach(b=>b.setAttribute('aria-selected',b.dataset.v===v));
-  window.scrollTo(0,0);
-}
-document.querySelectorAll('.nav-i[data-v]').forEach(b=>b.addEventListener('click',()=>go(b.dataset.v)));
-function toAI(){go('ai');updateAiCtx();}
 function signIn(){
-  $('login').style.display='none';
-  $('shell').classList.add('on');
-  const h=new Date().getHours();
-  $('greet').textContent=(h<10?'Hyvää huomenta':h<17?'Hyvää päivää':'Hyvää iltaa')+', Anna';
-  const d=new Date(),wd=['sunnuntai','maanantai','tiistai','keskiviikko','torstai','perjantai','lauantai'][d.getDay()];
-  $('today').textContent=wd.charAt(0).toUpperCase()+wd.slice(1)+' '+d.getDate()+'.'+(d.getMonth()+1)+'.'+d.getFullYear();
-  renderLists();updateAiCtx();
+  signedIn=true;
+  $('gate').style.display='none';
+  $('app').classList.add('on');
+  $('docHello').textContent='Dr. Anna Lehtinen';
+  renderDash();
 }
-function signOut(){
-  $('shell').classList.remove('on');
-  $('login').style.display='flex';
-  CUR=null;go('dash');
-}
-function openCode(){
-  const v=($('codeIn').value||'').trim().toUpperCase();
-  if(!/^HP-\d{4}$/.test(v)){$('codeErr').textContent='Koodin muoto on HP-0000.';return;}
-  const p=PATIENTS.find(x=>x.id===v);
-  if(!p){$('codeErr').textContent='Koodia ei löytynyt tai se on vanhentunut.';return;}
-  $('codeErr').textContent='';$('codeIn').value='';
-  openPatient(p.id);
-}
-$('codeIn').addEventListener('keydown',e=>{if(e.key==='Enter')openCode();});
-$('codeIn').addEventListener('input',e=>{
-  let v=e.target.value.toUpperCase().replace(/[^A-Z0-9-]/g,'');
-  if(/^\d/.test(v))v='HP-'+v;
-  e.target.value=v;
-});
 
-/* ══ AI ══ */
-function updateAiCtx(){
-  const c=$('aiCtx');
-  if(!CUR){
-    c.innerHTML='<b>Ei potilasta valittuna</b><span class="num">Avaa potilas työpöydältä tai koodilla</span>'+
-      '<button class="btn sec sm" style="margin-left:auto" onclick="go(\'dash\')">Valitse potilas</button>';
+function renderDash(){
+  const list=$('patientList');
+  list.innerHTML='';
+  const sorted=PATIENTS.slice().sort((a,b)=>b.priority-a.priority);
+  let alerts=0;
+  sorted.forEach(p=>{
+    const ka=ka7(p.bp);
+  const tri=p.badge;
+    if(p.priority>=2)alerts++;
+    const b=document.createElement('button');
+    b.className='prow';
+    b.innerHTML='<span class="ph">'+esc(ini(p.name))+'</span>'+
+      '<span style="min-width:0;flex:1"><span class="n">'+esc(p.name)+'</span>'+
+      '<span class="d">'+esc(p.note)+(ka?' · 7 vrk '+Math.round(ka)+' mmHg':'')+'</span></span>'+
+      '<span class="badge '+tri+'">'+(tri==='ok'?'OK':tri==='mid'?'Seuraa':'Huomio')+'</span>';
+    b.onclick=()=>openPatient(p.id);
+    list.appendChild(b);
+  });
+  $('docSub').textContent=sorted.length+' potilasta'+(alerts?' · '+alerts+' vaatii huomiota':'');
+}
+
+function openPatient(id){
+  const p=PATIENTS.find(x=>x.id===id);
+  if(!p)return;
+  CUR=p;
+  renderPatient(CUR);
+}
+
+function openSnapshotPatient(snap){
+  CUR=snapToPatient(snap);
+  renderPatient(CUR);
+}
+
+function openCode(){
+  const code=($('codeInput').value||'').trim().toUpperCase();
+  const fromUrl=new URLSearchParams(location.search).get('koodi');
+  const c=(code||fromUrl||'').toUpperCase();
+
+  // Check localStorage snapshot first (live patient data)
+  if(c){
+    try{
+      const raw=localStorage.getItem('hoitopolku.share.'+c);
+      if(raw){
+        const snap=JSON.parse(raw);
+        if(snap.exp&&snap.exp<Date.now()){toast('Jakokoodi on vanhentunut');return;}
+        openSnapshotPatient(snap);
+        return;
+      }
+    }catch(e){}
+  }
+
+  // Check hash snapshot (from URL)
+  const hash=location.hash.startsWith('#d=')?location.hash.slice(3):'';
+  if(hash){
+    const snap=decodeShare(hash);
+    if(snap){
+      if(snap.exp && snap.exp < Date.now()){
+        toast('Jakokoodi on vanhentunut');
+        return;
+      }
+      openSnapshotPatient(snap);
+      return;
+    }
+  }
+
+  // Finally check demo patients
+  const found=PATIENTS.find(x=>x.code===c);
+  if(found){openPatient(found.id);return;}
+
+  toast('Koodia ei löytynyt — kokeile demo-koodeja tai pyydä potilaalta jakolinkki');
+}
+
+function renderPatient(CUR){
+  if(!CUR)return;
+  showView('patient');
+  $('pName').textContent=CUR.name+(CUR.code?' · '+CUR.code:'');
+  const ka=ka7(CUR.bp);
+  const tgt=CUR.target||135;
+  $('pSub').textContent=(CUR.diag||'Seuranta')+(ka?' · 7 vrk keskiarvo '+Math.round(ka)+' mmHg':'');
+
+  const next=$('pNext');
+  let nt='Jatka seurantaa',nd='Tarkista SmartGraph ja viimeisimmät mittaukset.';
+  let nk='info';
+  if(ka&&ka>tgt+5){nk='warn';nt='Tarkista trendi';nd='Keskiarvo '+Math.round(ka)+' mmHg on tavoitteen yläpuolella — vie käynnille.';}
+  else if(ka&&ka<=tgt){nk='good';nt='Tavoitteessa';nd='Verenpaineen keskiarvo on hyväksyttävällä tasolla.';}
+  else if(!CUR.meds||!CUR.meds.length){nk='warn';nt='Ei lääkitystä';nd='Korkea paine ilman lääkitystä — vie käynnille arvioon.';}
+  next.innerHTML='<div class="alert '+nk+'"><span><span class="t">'+esc(nt)+'</span><span class="d">'+esc(nd)+'</span></span></div>';
+
+  drawChart(CUR);
+  renderInsights(CUR);
+  renderMeas(CUR);
+  renderMeds(CUR);
+  renderSym(CUR);
+  $('aiOut').textContent='Valitse työkalu yllä.';
+  $('physicianNote').value='';
+  setTab('sum');
+}
+
+function drawChart(CUR){
+  const bp=CUR.bp||[];
+  const line=rolling(bp);
+  const svg=$('pChart');
+  const W=560,H=200,PL=8,PR=8,PT=20,PB=24;
+  const tgt=CUR.target||135;
+  if(!line.length){
+    $('gVal').innerHTML='— <small>mmHg</small>';
+    $('gSub').textContent='Ei mittauksia';
+    $('gPill').textContent='—';$('gPill').className='pill mid';
+    $('gStats').innerHTML='';
+    svg.innerHTML='';
     return;
   }
-  c.innerHTML='<b>'+CUR.name+'</b><span class="num">'+CUR.id+' · verenpaine '+bpNow(CUR)+' mmHg · '+CUR.meds.length+' lääkettä</span>'+
-    '<button class="btn sec sm" style="margin-left:auto" onclick="openPatient(\''+CUR.id+'\')">Avaa tiedot</button>';
-}
-function ctxText(){
-  const r=CUR._sum||[],g=n=>r.filter(x=>x.m.n===n)[0];
-  const bp=g('Verenpaine'),gl=g('Paastoglukoosi'),wt=g('Paino');
-  const labs=CUR.labs.map(l=>l.n+' '+fmt(l.now,l.dec)+' '+l.u+' (aiempi '+fmt(l.prev,l.dec)+', viite '+l.ref+')').join('; ');
-  const meds=CUR.meds.map(m=>m.n+' '+m.dose+' ('+m.hist+' '+m.when+')').join('; ');
-  const sym=CUR.syms.map(s=>{
-    const rec=s.v.filter(v=>v>0);
-    return s.n+(rec.length?' esiintynyt '+rec.length+' pv, voimakkuus enintään '+Math.max.apply(null,s.v):' ei oireita');
-  }).join('; ');
-  return 'Potilas: '+CUR.age+'-vuotias '+CUR.sex+', hoitopolku alkanut '+CUR.start+'.\n'+
-    'Kotiverenpaine: 7 vrk keskiarvo '+fmt(bp.last,0)+' mmHg (lähtötaso '+fmt(bp.first,0)+', muutos −'+fmt(bp.change,0)+'), tavoite alle 135. Tila: '+bp.lbl+'.\n'+
-    'Paastoglukoosi: '+fmt(gl.last,1)+' mmol/l (lähtötaso '+fmt(gl.first,1)+').\n'+
-    'Paino: '+fmt(wt.last,1)+' kg (lähtötaso '+fmt(wt.first,1)+', muutos −'+fmt(wt.change,1)+' kg).\n'+
-    'Laboratorio: '+labs+'\nLääkitys: '+meds+'\nOireet 14 vrk: '+sym+'\n'+
-    'Huomiot: '+CUR.flags.map(f=>f.t).join(', ')+'.';
-}
-const TPL={
-  yhteenveto:{t:'HOITOYHTEENVETO',s:['Käynnin syy','Nykytila','Laboratorio','Lääkitys','Arvio','Suunnitelma']},
-  seuranta:{t:'SEURANTAJAKSON YHTEENVETO',s:['Seurantajakso','Mittaustulokset','Laboratorio','Lääkitys ja muutokset','Oireet','Yhteenveto']},
-  lahete:{t:'LÄHETTEEN TAUSTATIEDOT',s:['Lähettämisen syy','Nykytila','Tehdyt tutkimukset','Kokeiltu hoito','Kysymyksenasettelu']},
-  A:{t:'A-TODISTUKSEN LUONNOS',s:['Diagnoosi','Löydökset','Hoito','Arvio työkyvystä']}
-};
-function localDraft(type,extra){
-  const T=TPL[type],r=CUR._sum||[],g=n=>r.filter(x=>x.m.n===n)[0];
-  const bp=g('Verenpaine'),gl=g('Paastoglukoosi'),wt=g('Paino');
-  const d=new Date(),pv=d.getDate()+'.'+(d.getMonth()+1)+'.'+d.getFullYear();
-  const symTxt=CUR.syms.filter(s=>s.v.some(v=>v>0)).map(s=>
-    s.n.toLowerCase()+' (voimakkuus enintään '+Math.max.apply(null,s.v)+'/5)').join('; ')||'ei kirjattuja oireita';
-  const B={
-    'Käynnin syy':'Kohonneen verenpaineen seurantakäynti hoitopolussa. Potilas on kirjannut kotimittauksia '+CUR.start+' alkaen.',
-    'Seurantajakso':'Hoitopolku alkoi '+CUR.start+'. Kotimittauksia '+CUR.BP.length+' kirjausta.',
-    'Lähettämisen syy':'Kohonnut verenpaine, joka ei ole saavuttanut tavoitetta nykyisellä lääkityksellä.',
-    'Diagnoosi':'I10 Essentiaalinen verenpainetauti',
-    'Nykytila':'Kotiverenpaineen seitsemän vuorokauden keskiarvo '+fmt(bp.last,0)+' mmHg, lähtötaso '+fmt(bp.first,0)+
-      ' mmHg, muutos −'+fmt(bp.change,0)+' mmHg. Tavoite alle 135 mmHg '+(bp.last<=135?'saavutettu':'ei vielä saavutettu')+
-      '.\nPaastoglukoosi '+fmt(gl.last,1)+' mmol/l. Paino '+fmt(wt.last,1)+' kg, muutos −'+fmt(wt.change,1)+' kg.',
-    'Mittaustulokset':'Verenpaine '+fmt(bp.first,0)+' → '+fmt(bp.last,0)+' mmHg (−'+fmt(bp.change,0)+').\n'+
-      'Paastoglukoosi '+fmt(gl.first,1)+' → '+fmt(gl.last,1)+' mmol/l.\nPaino '+fmt(wt.first,1)+' → '+fmt(wt.last,1)+' kg.',
-    'Löydökset':'Kotiverenpaine '+fmt(bp.last,0)+' mmHg (7 vrk keskiarvo).',
-    'Laboratorio':CUR.labs.map(l=>l.n+' '+fmt(l.now,l.dec)+' '+l.u+' (viite '+l.ref+')').join('\n'),
-    'Tehdyt tutkimukset':'Kotiverenpaineseuranta. Laboratorio: '+CUR.labs.map(l=>l.n+' '+fmt(l.now,l.dec)).join(', ')+'.',
-    'Lääkitys':CUR.meds.map(m=>'• '+m.n+' '+m.dose+' — '+m.hist.toLowerCase()+' '+m.when).join('\n'),
-    'Lääkitys ja muutokset':CUR.meds.map(m=>'• '+m.n+' '+m.dose+' — '+m.hist.toLowerCase()+' '+m.when).join('\n'),
-    'Kokeiltu hoito':CUR.meds.map(m=>m.n+' '+m.dose).join(', ')+'. Elintapaohjaus annettu.',
-    'Hoito':CUR.meds.map(m=>m.n+' '+m.dose).join(', ')+'.',
-    'Oireet':symTxt.charAt(0).toUpperCase()+symTxt.slice(1)+'.',
-    'Arvio':'Verenpaine on '+(bp.change>0?'laskenut '+fmt(bp.change,0)+' mmHg':'pysynyt ennallaan')+
-      (bp.last<=135?' ja tavoite on saavutettu.':' mutta jää tavoitteesta.')+' Turvakokeet eivät rajoita hoidon jatkamista.',
-    'Yhteenveto':'Verenpaine '+fmt(bp.first,0)+' → '+fmt(bp.last,0)+' mmHg. Paino −'+fmt(wt.change,1)+' kg. '+CUR.flags.map(f=>f.t).join('. ')+'.',
-    'Kysymyksenasettelu':'Pyydetään arviota jatkohoidosta ja sekundaarisen verenpainetaudin selvittelyn tarpeesta.',
-    'Arvio työkyvystä':'Sairaus ei aiheuta työkyvyn rajoitusta. Seuranta jatkuu avohoidossa.',
-    'Suunnitelma':'• Kotimittausten jatko, uusi seitsemän vuorokauden sarja\n• Kontrollikäynti 6 viikon kuluttua\n• Laboratorio 2–4 vk mahdollisen lääkemuutoksen jälkeen: kreatiniini, kalium'
-  };
-  let out=T.t+'\n'+pv+' · '+CUR.name+' ('+CUR.id+')\n\n';
-  T.s.forEach(sec=>{out+='## '+sec+'\n'+(B[sec]||'—')+'\n\n';});
-  if(extra&&extra.trim())out+='## Lääkärin lisätiedot\n'+extra.trim()+'\n\n';
-  return out+'—\nLuonnos koottu potilaan kirjaamista tiedoista. Tarkistettava ennen käyttöä.';
-}
-function renderOut(text){
-  const o=$('out');
-  o.className='out';
-  o.innerHTML=text.split('\n').map(l=>l.indexOf('## ')===0?'<h4>'+l.slice(3)+'</h4>':l).join('\n');
-  $('outBar').style.display='flex';
-}
-async function generate(){
-  if(!CUR){$('out').className='out empty';$('out').innerHTML='Valitse ensin potilas työpöydältä.';return;}
-  const btn=$('genBtn'),type=$('docType').value,extra=$('extra').value,tone=$('tone').value,T=TPL[type];
-  btn.innerHTML='<span class="spin"></span> Koostetaan…';btn.disabled=true;
-  try{
-    const r=await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1000,messages:[{role:'user',content:
-'Olet suomalaisen yleislääkärin kirjaamisen apuri. Kirjoita '+T.t+' suomeksi potilastietojärjestelmään kopioitavaksi.\n\n'+
-'Osiot täsmälleen näin, kukin muodossa "## Otsikko":\n'+T.s.join('\n')+'\n\n'+
-'Säännöt:\n- Käytä vain alla annettuja tietoja. Älä keksi lukuja, diagnooseja tai löydöksiä.\n'+
-'- '+(tone==='tiivis'?'Kirjoita tiivistä kliinistä suomea, lyhyitä lauseita.':'Kirjoita perusteellisemmin, mutta pysy annetuissa tiedoissa.')+'\n'+
-'- Älä esitä hoitopäätöksiä varmoina — muotoile harkintana.\n- Älä toista otsikkoa tekstissä.\n\n'+
-'POTILAAN TIEDOT:\n'+ctxText()+
-(extra&&extra.trim()?'\n\nLÄÄKÄRIN LISÄTIEDOT:\n'+extra.trim():'')}]})
-    });
-    if(!r.ok)throw new Error('http');
-    const data=await r.json();
-    const text=(data.content||[]).filter(c=>c.type==='text').map(c=>c.text).join('\n').trim();
-    if(!text)throw new Error('empty');
-    renderOut(T.t+'\n'+CUR.name+' ('+CUR.id+')\n\n'+text+'\n\n—\nLuonnos koottu potilaan kirjaamista tiedoista. Tarkistettava ennen käyttöä.');
-  }catch(e){
-    renderOut(localDraft(type,extra));
-  }
-  btn.textContent='Luo luonnos';btn.disabled=false;
-}
-function copyOut(b){
-  const t=$('out').innerText;
-  if(navigator.clipboard)navigator.clipboard.writeText(t).then(function(){
-    const o=b.textContent;b.textContent='Kopioitu';setTimeout(function(){b.textContent=o;},1600);
-  });
-}
-function editOut(){
-  const o=$('out');
-  if(o.querySelector('textarea'))return;
-  const t=o.innerText;o.innerHTML='';
-  const ta=document.createElement('textarea');
-  ta.className='ta';ta.style.minHeight='360px';ta.value=t;
-  o.appendChild(ta);ta.focus();
-}
-
-
-/* ══ ISO KÄYRÄ ══ */
-const reduceLP=matchMedia('(prefers-reduced-motion:reduce)').matches;
-function project(r,n){
-  const L=r.slice(-n);if(L.length<5)return null;
-  const mx=L.reduce((a,p)=>a+p.d,0)/L.length,my=L.reduce((a,p)=>a+p.v,0)/L.length;
-  let num=0,den=0;L.forEach(p=>{num+=(p.d-mx)*(p.v-my);den+=(p.d-mx)**2;});
-  return den?{slope:num/den,at:d=>num/den*d+(my-num/den*mx)}:null;
-}
-let curMetric=0,lpHits=[],lpGeom=null;
-function openMetricDetail(i){
-  curMetric=i;
-  selPane(1);
-  $('p1List').style.display='none';
-  $('p1Detail').style.display='';
-  const m=metricsOf(CUR)[i];
-  $('dTitle').textContent=m.n;
-  $('dSub').textContent=m.sub;
-  $('lgLineLP').style.background=m.color;
-  drawBigGraphLP();
-}
-function closeMetricDetail(){
-  $('p1Detail').style.display='none';
-  $('p1List').style.display='';
-}
-function drawBigGraphLP(){
-  const m=metricsOf(CUR)[curMetric];
-  const svg=$('lpGraph'),tip=$('lpTip');
-  svg.innerHTML='';lpHits=[];
-  const W=520,H=190,PL=6,PR=6,PT=16,PB=22;
-  const DAYS=84,TODAY=83;
-  const raw=m.data;
-  const line=m.roll?rolling(m.data):m.data.map(p=>({d:p.d,v:p.v}));
-  const proj=m.roll?project(rolling(m.data),28):null;
-  let projEnd=null;
-  if(proj&&proj.slope<-0.002)for(let d=TODAY+1;d<=TODAY+56;d++){if(proj.at(d)<=m.target){projEnd=d;break;}}
-  const xEnd=projEnd||TODAY;
-
-  const all=raw.map(p=>p.v).concat([m.target]);
-  const mn=Math.min(...all),mx=Math.max(...all),pad=(mx-mn)*.14||1;
+  const last=line[line.length-1].v;
+  const dMin=Math.max(0,TODAY-56);
+  const pts=line.filter(p=>p.d>=dMin);
+  const vals=pts.map(p=>p.v).concat([tgt]);
+  const mn=Math.min(...vals),mx=Math.max(...vals),pad=(mx-mn)*.12||1;
   const vMin=mn-pad,vMax=mx+pad;
-  const X=d=>PL+d/(xEnd||1)*(W-PL-PR);
-  const Y=v=>PT+(vMax-v)/((vMax-vMin)||1)*(H-PT-PB);
-
-  const ty=Y(m.target);
-  svg.appendChild(el('rect',{x:0,y:ty,width:W,height:Math.max(0,H-PB-ty),fill:'#4E7D3C','fill-opacity':'.08'}));
-  svg.appendChild(el('line',{x1:0,y1:ty,x2:W,y2:ty,stroke:'#4E7D3C','stroke-width':1.6,'stroke-dasharray':'6 5','stroke-opacity':'.75'}));
-
-  raw.forEach(p=>{
-    svg.appendChild(el('circle',{cx:X(p.d),cy:Y(p.v),r:2,fill:'#C9CDD2'}));
-    lpHits.push({x:X(p.d),y:Y(p.v),d:p.d,v:p.v,kind:'raw'});
+  const X=d=>PL+(d-dMin)/((TODAY-dMin)||1)*(W-PL-PR);
+  const Y=v=>PT+(vMax-v)/(vMax-vMin||1)*(H-PT-PB);
+  let d='';
+  pts.forEach((p,i)=>{
+    const x=X(p.d),y=Y(p.v);
+    d+=(i?' L':'M')+x.toFixed(1)+' '+y.toFixed(1);
   });
-
-  let seg=[],segs=[];
-  line.forEach((p,i)=>{
-    if(i&&p.d-line[i-1].d>(m.roll?2:14)){segs.push(seg);seg=[];}
-    seg.push(p);
-  });
-  if(seg.length)segs.push(seg);
-  segs.forEach(sg=>{
-    if(sg.length<2)return;
-    const P=sg.map(p=>({x:X(p.d),y:Y(p.v)}));
-    const path=el('path',{d:smooth(P),fill:'none',stroke:m.color,'stroke-width':2.6,'stroke-linecap':'round','stroke-linejoin':'round'});
-    svg.appendChild(path);
-    if(!reduceLP){
-      const len=path.getTotalLength();
-      path.style.strokeDasharray=len;path.style.strokeDashoffset=len;
-      path.style.transition='stroke-dashoffset 1s cubic-bezier(.4,0,.2,1)';
-      requestAnimationFrame(()=>requestAnimationFrame(()=>path.style.strokeDashoffset=0));
-    }
-  });
-  line.forEach(p=>lpHits.push({x:X(p.d),y:Y(p.v),d:p.d,v:p.v,kind:'avg'}));
-
-  if(m.roll)for(let i=1;i<line.length;i++){
-    if(line[i].d-line[i-1].d>2){
-      const xa=X(line[i-1].d),xb=X(line[i].d);
-      svg.appendChild(el('rect',{x:xa,y:PT,width:xb-xa,height:H-PB-PT,fill:'#8A867E','fill-opacity':'.07'}));
-    }
-  }
-
-  if(projEnd){
-    const lp=line[line.length-1];
-    svg.appendChild(el('path',{d:'M'+X(lp.d)+' '+Y(lp.v)+' L'+X(projEnd)+' '+Y(m.target),
-      fill:'none',stroke:'#A67C2E','stroke-width':1.8,'stroke-dasharray':'6 5','stroke-linecap':'round'}));
-    svg.appendChild(el('circle',{cx:X(projEnd),cy:Y(m.target),r:4,fill:'#fff',stroke:'#A67C2E','stroke-width':2.2}));
-  }
-  if(line.length){
-    const l=line[line.length-1];
-    svg.appendChild(el('circle',{cx:X(l.d),cy:Y(l.v),r:4.5,fill:'#fff',stroke:m.color,'stroke-width':2.6}));
-  }
-  lpGeom={W:W,H:H,PT:PT,PB:PB};
-
-  const last=line[line.length-1].v,first=line[0].v,change=first-last;
-  $('dVal').textContent=fmt(last,m.dec);
-  $('dUnit').textContent=m.u;
-  const st=$('dStats');st.innerHTML='';
-  const add=(b,t)=>{const d=document.createElement('div');d.innerHTML='<b>'+b+'</b>'+t;st.appendChild(d);};
-  add('−'+fmt(change,m.dec)+' '+m.u,'muutos alusta');
-  if(proj)add('−'+Math.abs(proj.slope*7).toFixed(m.dec?2:1),'viikkovauhti');
-  add(m.data.length,'mittausta');
-  if(projEnd)add('vk '+(Math.floor(projEnd/7)+1),'tavoite arviolta');
+  const ty=Y(tgt);
+  svg.innerHTML=
+    '<rect x="0" y="'+ty.toFixed(1)+'" width="'+W+'" height="'+(H-PB-ty).toFixed(1)+'" fill="#4E7D3C" fill-opacity=".08"/>'+
+    '<line x1="0" y1="'+ty.toFixed(1)+'" x2="'+W+'" y2="'+ty.toFixed(1)+'" stroke="#4E7D3C" stroke-width="1.5" stroke-dasharray="5 4"/>'+
+    '<path d="'+d+'" fill="none" stroke="#A67C2E" stroke-width="2.5" stroke-linecap="round"/>'+
+    '<circle cx="'+X(pts[pts.length-1].d).toFixed(1)+'" cy="'+Y(pts[pts.length-1].v).toFixed(1)+'" r="5" fill="#fff" stroke="#A67C2E" stroke-width="2.5"/>';
+  $('gVal').innerHTML=fmt(last,0)+' <small>mmHg</small>';
+  $('gSub').textContent='7 vrk liukuva keskiarvo · tavoite ≤'+tgt;
+  const ok=last<=tgt;
+  $('gPill').textContent=ok?'Tavoitteessa':(last<=tgt+5?'Laskusuunnassa':'Ylitavoite');
+  $('gPill').className='pill '+(ok?'ok':(last<=tgt+8?'mid':'off'));
+  const ch=pts.length?pts[0].v-last:0;
+  $('gStats').innerHTML=
+    '<div><b>−'+fmt(ch,0)+'</b>muutos</div>'+
+    '<div><b>'+bp.length+'</b>mittausta</div>'+
+    '<div><b>'+(CUR.meds&&CUR.meds[0]?esc(CUR.meds[0].n):'—')+'</b>lääkitys</div>';
 }
-function hideTipLP(){$('lpTip').classList.remove('on');}
-function showTipLP(cx,cy){
-  if(!lpHits.length||!lpGeom)return;
-  const svg=$('lpGraph'),tip=$('lpTip');
-  const r=svg.getBoundingClientRect();
-  const px=(cx-r.left)*(lpGeom.W/r.width),py=(cy-r.top)*(lpGeom.H/r.height);
-  let best=null,bd=1e9;
-  lpHits.forEach(h=>{
-    const w=h.kind==='avg'?0.45:1;
-    const d=((h.x-px)**2+(h.y-py)**2)*w;
-    if(d<bd){bd=d;best=h;}
-  });
-  if(!best||bd>2600){hideTipLP();return;}
-  const m=metricsOf(CUR)[curMetric];
-  tip.innerHTML='<b>'+fmt(best.v,m.dec)+' '+m.u+'</b><span>viikko '+(Math.floor(best.d/7)+1)+' · '+(best.kind==='avg'?'keskiarvo':'mittaus')+'</span>';
-  tip.style.left=(best.x*(r.width/lpGeom.W))+'px';
-  tip.style.top=(best.y*(r.height/lpGeom.H))+'px';
-  tip.classList.add('on');
+
+function renderInsights(CUR){
+  const ins=$('pInsights');
+  const ka=ka7(CUR.bp);
+  const items=[];
+  if(ka)items.push({k:ka<=135?'good':'warn',t:'7 vrk keskiarvo',d:Math.round(ka)+' mmHg — tavoite ≤135.'});
+  if(CUR.meds&&CUR.meds.length)items.push({k:'info',t:'Lääkitys käynnissä',d:CUR.meds.map(m=>m.n+' '+m.d).join(', ')+'.'});
+  if(CUR.syms&&CUR.syms.length&&CUR.syms[0]!=='Ei oireita'&&CUR.syms[0]!=='Ei oirekirjauksia')
+    items.push({k:'warn',t:'Oirekirjaukset',d:CUR.syms.join(' · ')+'.'});
+  if(CUR.fromShare)items.push({k:'info',t:'Jakolinkki',d:'Näytät potilaan jakamaa seurantaa — ei diagnoosia.'});
+  ins.innerHTML=items.map(i=>{
+    const ic=i.k==='good'?'<path d="M5 13l4 4L19 7"/>':(i.k==='warn'?'<path d="M12 7v6M12 16.5v.5"/><circle cx="12" cy="12" r="9"/>':'<circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/>');
+    return '<div class="ins '+i.k+'"><span class="ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">'+ic+'</svg></span><span><span class="t">'+esc(i.t)+'</span><span class="d">'+esc(i.d)+'</span></span></div>';
+  }).join('');
 }
-document.addEventListener('DOMContentLoaded',()=>{});
-(function(){
-  const svg=$('lpGraph');
-  if(!svg)return;
-  svg.addEventListener('mousemove',e=>showTipLP(e.clientX,e.clientY));
-  svg.addEventListener('mouseleave',hideTipLP);
-  svg.addEventListener('touchstart',e=>showTipLP(e.touches[0].clientX,e.touches[0].clientY),{passive:true});
-  svg.addEventListener('touchmove',e=>showTipLP(e.touches[0].clientX,e.touches[0].clientY),{passive:true});
-  svg.addEventListener('touchend',()=>setTimeout(hideTipLP,1600));
+
+function renderMeas(CUR){
+  const el=$('pMeas');
+  const recent=(CUR.bp||[]).slice(-8).reverse();
+  if(!recent.length){el.innerHTML='<p class="sub">Ei mittauksia.</p>';return;}
+  el.innerHTML=recent.map(p=>'<div class="row"><span class="k">Päivä '+p.d+'</span><span class="v">'+p.v+' mmHg</span></div>').join('')+
+    (CUR.glu?'<div class="label">VERENSOKERI</div>'+CUR.glu.map(g=>'<div class="row"><span class="k">Päivä '+g.d+'</span><span class="v">'+fmt(g.v,1)+' mmol/l</span></div>').join(''):'');
+}
+
+function renderMeds(CUR){
+  const el=$('pMeds');
+  if(!CUR.meds||!CUR.meds.length){el.innerHTML='<p class="sub">Ei lääkitystä kirjattuna.</p>';return;}
+  el.innerHTML=CUR.meds.map(m=>'<div class="row"><span class="k">'+esc(m.n)+' '+esc(m.d)+'</span><span class="v">'+esc(m.s||'käynnissä')+'</span></div>').join('');
+}
+
+function renderSym(CUR){
+  const el=$('pSym');
+  el.innerHTML=(CUR.syms||[]).map(s=>'<div class="row"><span class="k">'+esc(s)+'</span><span class="v">14 vrk</span></div>').join('')||'<p class="sub">Ei oireita.</p>';
+}
+
+function localDraft(CUR,type){
+  const name=CUR.name||'Potilas';
+  const ka=ka7(CUR.bp);
+  const meds=(CUR.meds||[]).map(m=>m.n+' '+m.d).join(', ')||'ei lääkitystä';
+  const syms=(CUR.syms||[]).join(', ')||'ei oireita';
+  if(type==='letter'){
+    return '═══ DEMO-LUONNOS ═══\n\nVASTAANOTTOKIRJE (malli)\n\nPotilas: '+name+(CUR.code?' (koodi '+CUR.code+')':'')+'\n\n'+
+      'Verenpaineen 7 vrk keskiarvo: '+(ka?Math.round(ka)+' mmHg':'ei dataa')+'.\n'+
+      'Lääkitys: '+meds+'.\nOireet: '+syms+'.\n\n'+
+      'Tämä on paikallinen demo-malli. Ei hoitosuositusta, ei diagnoosia.\n\n'+
+      '— Dr. Anna Lehtinen (demo, ei allekirjoitettu)';
+  }
+  if(type==='summary'){
+    return '═══ DEMO-LUONNOS ═══\n\nYHTEENVETO — '+name+'\n\n'+
+      '• Verenpaine: '+(ka?Math.round(ka)+' mmHg (7 vrk)':'ei mittauksia')+'\n'+
+      '• Lääkitys: '+meds+'\n'+
+      '• Oireet: '+syms+'\n'+
+      (CUR.fromShare?'• Lähde: potilaan jakolinkki\n':'')+
+      '\nTämä on seurantatyökalun demo-yhteenveto. Ei diagnoosia, ei hoitopäätöstä.';
+  }
+  return '═══ DEMO-LUONNOS ═══\n\nSEURANTAMUISTIO (malli) — '+name+'\n\n'+
+    '1. Jatka kotimittausta\n'+
+    '2. Tarkista mittausten trendi ja lääkityksen vaste\n'+
+    '3. Arvioi jatkotoimet seuraavalla käynnillä\n\n'+
+    'Tämä on paikallinen demo-malli, ei hoitosuunnitelma.';
+}
+
+function generate(type){
+  if(!CUR){toast('Avaa ensin potilas');return;}
+  $('aiOut').textContent='Luodaan luonnos…';
+  setTimeout(function(){
+    $('aiOut').textContent=localDraft(CUR,type);
+  },350);
+}
+
+function setTab(t){
+  $('pTabs').querySelectorAll('button').forEach(b=>{
+    b.setAttribute('aria-selected',b.dataset.tab===t);
+  });
+  ['sum','meas','meds','sym','ai'].forEach(x=>{
+    $('tab-'+x).classList.toggle('on',x===t);
+  });
+}
+
+$('pTabs').addEventListener('click',e=>{
+  const b=e.target.closest('button[data-tab]');
+  if(b)setTab(b.dataset.tab);
+});
+
+document.querySelectorAll('[data-gen]').forEach(b=>{
+  b.addEventListener('click',()=>generate(b.dataset.gen));
+});
+
+$('draftFromContext').addEventListener('click',()=>{
+  if(!CUR){toast('Avaa ensin potilas');return;}
+  const name=CUR.name||'Potilas';
+  const code=CUR.code||'—';
+  const ka=ka7(CUR.bp);
+  const meds=(CUR.meds||[]).map(m=>m.n+' '+m.d).join(', ')||'ei lääkitystä';
+  const syms=(CUR.syms||[]).join(', ')||'ei oireita';
+  const bpData=ka?Math.round(ka)+' mmHg (7 vrk keskiarvo)':'ei mittauksia';
+  
+  const draft='SEURANTA-MUISTIINPANO (LUONNOS)\n\n'+
+    'Potilas: '+name+'\n'+
+    'Koodi: '+code+'\n'+
+    'Pvm: '+new Date().toLocaleDateString('fi-FI')+'\n\n'+
+    'VERENPAINE\n'+
+    bpData+'\n\n'+
+    'LÄÄKITYS\n'+
+    meds+'\n\n'+
+    'OIREET\n'+
+    syms+'\n\n'+
+    'ARVIO JA SUUNNITELMA\n'+
+    '[Kirjoita arvio tähän]\n\n'+
+    '────────────────────────────────\n'+
+    '⚠️ LUONNOS — ei allekirjoitettu\n'+
+    'Ei diagnoosia. Seuranta-muistiinpano.\n'+
+    'Lääkäri: Dr. Anna Lehtinen (demo)';
+  
+  $('physicianNote').value=draft;
+  toast('Luonnos luotu potilaskontekstista');
+});
+
+$('copyToClipboard').addEventListener('click',()=>{
+  const text=$('physicianNote').value;
+  if(!text.trim()){toast('Ei kopioitavaa tekstiä');return;}
+  
+  navigator.clipboard.writeText(text).then(()=>{
+    toast('Kopioitu leikepöydälle');
+  }).catch(()=>{
+    toast('Kopiointi epäonnistui');
+  });
+});
+
+$('loginForm').addEventListener('submit',e=>{
+  e.preventDefault();
+  const em=$('li_email').value.trim(),pw=$('li_pw').value;
+  if(!em||!pw){$('loginNote').hidden=false;$('loginNote').textContent='Täytä sähköposti ja salasana.';$('loginNote').className='note bad';return;}
+  signIn();
+  toast('Tervetuloa, Dr. Lehtinen');
+});
+
+document.querySelectorAll('.demo-cred').forEach(b=>{
+  b.addEventListener('click',()=>{
+    $('li_email').value=b.dataset.email||'';
+    $('li_pw').value=b.dataset.pw||'';
+  });
+});
+
+$('demoSkip').addEventListener('click',()=>{signIn();toast('Demo-tila');});
+$('btnLogout').addEventListener('click',()=>{signedIn=false;location.href='index.html';});
+$('btnCode').addEventListener('click',()=>showView('code'));
+$('openCodeBtn').addEventListener('click',()=>showView('code'));
+$('codeBack').addEventListener('click',()=>showView('dash'));
+$('patBack').addEventListener('click',()=>{showView('dash');CUR=null;});
+$('codeGo').addEventListener('click',openCode);
+$('codeInput').addEventListener('keydown',e=>{if(e.key==='Enter')openCode();});
+
+(function boot(){
+  const q=new URLSearchParams(location.search);
+  const code=(q.get('koodi')||'').toUpperCase();
+  const hasShare=code||(location.hash||'').startsWith('#d=');
+  if(hasShare){
+    signIn();
+    showView('code');
+    if(code)$('codeInput').value=code;
+    setTimeout(openCode,80);
+  }
 })();
 </script>
 </body>
