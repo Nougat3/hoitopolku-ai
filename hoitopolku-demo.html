@@ -206,6 +206,21 @@ h3{font-size:16px;font-weight:700;letter-spacing:-.025em}
 .code-lbl{font-size:11.5px;font-weight:700;letter-spacing:.1em;color:var(--mid);margin-bottom:12px}
 .code-val{font-size:clamp(32px,10vw,44px);font-weight:800;letter-spacing:.1em;font-variant-numeric:tabular-nums;margin-bottom:10px}
 .code-exp{font-size:12.5px;color:var(--mid);line-height:1.5}
+.paper{
+  background:#fff;border:1px solid var(--line);border-radius:2px;
+  box-shadow:0 18px 40px rgba(17,17,16,.08),0 1px 0 rgba(17,17,16,.04);
+  padding:22px 20px 18px;margin-bottom:14px;
+}
+.paper-top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:14px;padding-bottom:12px;border-bottom:1.5px solid var(--k)}
+.paper-brand{font-size:13px;font-weight:800;letter-spacing:-.02em}
+.paper-kind{font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--mid2);margin-top:3px}
+.paper-id{font-size:15px;font-weight:800;letter-spacing:.04em;font-variant-numeric:tabular-nums;text-align:right}
+.paper-id small{display:block;font-size:10.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--mid2);margin-bottom:2px}
+.paper h3{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--mid2);margin:14px 0 6px}
+.paper table{width:100%;border-collapse:collapse}
+.paper th,.paper td{font-size:12.5px;padding:5px 0;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+.paper th{color:var(--mid);font-weight:600;width:42%}
+.paper .fine{font-size:11px;color:var(--mid);line-height:1.45;margin-top:12px}
 
 /* ── calendar ── */
 .cal-week{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:14px}
@@ -545,6 +560,7 @@ body.sheet-open{overflow:hidden}
   .fab{display:none}
   .desk-home{display:grid;grid-template-columns:minmax(300px,.85fr) minmax(0,1.35fr);gap:24px;align-items:start}
   .desk-split{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(260px,.75fr);gap:24px;align-items:start}
+  .paper{max-width:640px}
   .desk-col .label:first-child{margin-top:0}
   .pro-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
   .tiles{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -581,7 +597,7 @@ body.sheet-open{overflow:hidden}
 </head>
 <body>
 
-<div class="offline-bar" id="offlineBar" role="status">Olet offline — kirjaukset tallentuvat laitteelle, jakolinkki vaatii verkon.</div>
+<div class="offline-bar" id="offlineBar" role="status">Olet offline — kirjaukset ja PDF-yhteenveto toimivat tällä laitteella.</div>
 
 <div class="top" id="topBar">
   <div class="top-in">
@@ -594,7 +610,7 @@ body.sheet-open{overflow:hidden}
       Hoitopolku
     </a>
     <div class="top-actions">
-      <button class="code-btn" onclick="go('koodi')" type="button" title="Lääkärikoodi" aria-label="Lääkärikoodi">
+      <button class="code-btn" onclick="go('koodi')" type="button" title="PDF-yhteenveto" aria-label="PDF-yhteenveto">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3M20 14v3M14 20h3M20 20v.01"/></svg>
         <span id="codeChip">HP-····</span>
       </button>
@@ -794,7 +810,7 @@ body.sheet-open{overflow:hidden}
       <div class="sub">AI-ohjattu, lääkkeetön elintapaohjaus · 19,90 €/kk</div>
     </div>
     <div class="card" style="background:var(--g0);margin-bottom:14px">
-      <p style="font-size:14px;line-height:1.55;color:var(--mid)">Liikunta, ravitsemus ja uni — yleiseen hyvinvointiin. <strong>Ei hoitoa, ei diagnoosia, ei lääkkeitä.</strong> Suosituksia ei sidota mittausarvoihin. Turvaviestit ja seuranta pysyvät ilmaisia. Lääkäriyhteys (jakokoodi, LääkäriPRO) tulee myöhemmin omaksi kerrokseksi.</p>
+      <p style="font-size:14px;line-height:1.55;color:var(--mid)">Liikunta, ravitsemus ja uni — yleiseen hyvinvointiin. <strong>Ei hoitoa, ei diagnoosia, ei lääkkeitä.</strong> Suosituksia ei sidota mittausarvoihin. Turvaviestit ja seuranta pysyvät ilmaisia. Omalle lääkärille voit viedä PDF-yhteenvedon. LääkäriPRO on kehitystauolla.</p>
     </div>
     <div id="proGate" class="card">
       <h3 style="margin-bottom:8px">Kokeile Prota demossa</h3>
@@ -807,46 +823,34 @@ body.sheet-open{overflow:hidden}
     </div>
   </div>
 
-  <!-- KOODI (yläpalkista) -->
+  <!-- YHTEENVETO / PDF -->
   <div class="view" id="v-koodi">
     <div class="head">
-      <h1>Jaa lääkärille</h1>
-      <div class="sub">Anna koodi vastaanotolla — lääkäri näkee yhteenvedon selaimessaan</div>
+      <h1>Yhteenveto</h1>
+      <div class="sub">PDF-tyylinen asiakirja omalle lääkärille</div>
     </div>
 
     <div class="desk-split">
     <div>
-    <div class="code-hero">
-      <div class="code-lbl">LÄÄKÄRIKOODI</div>
-      <div class="code-val" id="codeVal">HP-····</div>
-      <div class="code-exp" id="codeExp" style="color:var(--mid);font-weight:500">Luodaan koodi…</div>
-    </div>
-    
-    <div class="card" style="background:#FBF2E0;border:1px solid #EBD9A8;margin-bottom:12px">
-      <div style="font-size:13.5px;line-height:1.6;color:#8A6B16">
-        <strong style="display:block;margin-bottom:6px;color:#946A16">Paikallinen jakolinkki — ei pilveä</strong>
-        Tiedot pysyvät tässä selaimessa. Jakolinkki sisältää seurantayhteenvedon (mittaukset, lääkkeet, oireet) — ei henkilötunnusta, ei diagnoosia. Lääkäri avaa linkin tai koodin LääkäriPROssa. <strong>Koodi vanhenee 7 vrk:ssa.</strong>
-      </div>
-    </div>
-
+    <div class="paper" id="sharePaper"></div>
+    <span id="codeVal" hidden>HP-····</span>
+    <span id="codeExp" hidden></span>
+    <span id="cntBp" hidden></span>
+    <span id="cntGlu" hidden></span>
+    <span id="cntWt" hidden></span>
+    <span id="cntChol" hidden></span>
+    <span id="cntLab" hidden></span>
+    <span id="cntMed" hidden></span>
+    <span id="cntSym" hidden></span>
     </div>
     <div>
-    <div class="card">
-      <div class="row"><span class="k">Verenpaine</span><span class="v" id="cntBp">—</span></div>
-      <div class="row"><span class="k">Verensokeri</span><span class="v" id="cntGlu">—</span></div>
-      <div class="row"><span class="k">Paino</span><span class="v" id="cntWt">—</span></div>
-      <div class="row"><span class="k">Kolesteroli</span><span class="v" id="cntChol">—</span></div>
-      <div class="row"><span class="k">Laboratorio</span><span class="v" id="cntLab">—</span></div>
-      <div class="row"><span class="k">Lääkkeet</span><span class="v" id="cntMed">—</span></div>
-      <div class="row"><span class="k">Oireet</span><span class="v" id="cntSym">—</span></div>
+    <div class="card" style="background:var(--g0);margin-bottom:12px">
+      <p style="font-size:14px;line-height:1.55;color:var(--mid)">Vie A4-yhteenveto vastaanotolle tai sähköpostiin. <strong>Ei henkilötunnusta, ei diagnoosia.</strong> LääkäriPRO on kehitystauolla — tiedosto riittää toistaiseksi.</p>
     </div>
-
-    <button class="btn full" type="button" onclick="copyShareLink()" style="margin-top:4px">Kopioi jakolinkki leikepöydälle</button>
-    <button class="btn sec full" type="button" onclick="openDoctorPreview()" style="margin-top:8px">Esikatsele lääkärin näkymä</button>
-    <button class="btn sec full" type="button" onclick="newCode()" style="margin-top:8px">Luo uusi koodi (vanha lakkaa)</button>
-    <p style="font-size:12.5px;color:var(--mid);margin-top:14px;text-align:center;line-height:1.6;padding:0 8px">
-      <strong>Turvallisuus:</strong> Linkki sisältää vain seurantayhteenvedon — ei henkilötunnusta, ei muokkausoikeuksia. Voit luoda uuden koodin milloin tahansa (vanha vanhenee). Tiedot eivät korvaa lääkärin arviota.
-    </p>
+    <button class="btn gold full" type="button" onclick="printSharePdf()">Tulosta tai tallenna PDF</button>
+    <button class="btn sec full" type="button" onclick="openSharePdfPreview()" style="margin-top:8px">Avaa koko asiakirja</button>
+    <button class="btn sec full" type="button" onclick="newCode()" style="margin-top:8px">Uusi asiakirjan tunnus</button>
+    <p class="disc" style="margin-top:14px">Asiakirja syntyy tämän laitteen tiedoista. Se ei ole virallinen potilaskertomus eikä korvaa lääkärin arviota. Äkillisissä oireissa soita 112.</p>
     </div>
     </div>
   </div>
@@ -922,7 +926,7 @@ body.sheet-open{overflow:hidden}
     <input type="file" id="importFile" accept="application/json,.json" aria-label="Palauta varmuuskopio">
   </label>
   <button class="btn sec full" type="button" style="margin-top:8px" onclick="clearToOwn()">Tyhjennä ja aloita alusta</button>
-  <p class="disc" style="margin:14px 2px 8px">Tiedot tallentuvat tämän selaimen localStorageen. Ei pilvisynkronointia tässä versiossa — jaa lääkärille koodilla tai varmuuskopioi JSON.</p>
+  <p class="disc" style="margin:14px 2px 8px">Tiedot tallentuvat tämän selaimen localStorageen. Ei pilvisynkronointia tässä versiossa — vie PDF-yhteenveto lääkärille tai varmuuskopioi JSON.</p>
   <div class="card flat" style="margin:8px 0 12px;padding:14px 14px">
     <div style="font-size:13px;font-weight:700;margin-bottom:4px">Pro-valmennus · 19,90 €/kk</div>
     <p class="disc" style="margin:0">Liikunta, ravitsemus, uni — lääkkeetön hyvinvointi. Stripe myöhemmin. Turva ja seuranta ilmaisia. <button type="button" class="btn sec sm" style="margin-top:10px" onclick="closeAccount();go('pro')">Avaa Pro</button></p>
@@ -1203,11 +1207,8 @@ function syncCodeUI(){
   const val=$('codeVal'); if(val) val.textContent=code;
   const exp=$('codeExp');
   if(exp){
-    if(!profile.shareExp){ exp.textContent='Luo tai kopioi jakolinkki'; return; }
-    const d=new Date(profile.shareExp);
-    const pad=x=>String(x).padStart(2,'0');
-    exp.innerHTML='Voimassa 7 vuorokautta<br>Vanhenee '+d.getDate()+'.'+(d.getMonth()+1)+'.'+d.getFullYear()+
-      ' klo '+pad(d.getHours())+'.'+pad(d.getMinutes());
+    if(!profile.shareCode){ exp.textContent='Asiakirjan tunnus luodaan yhteenvedolle'; return; }
+    exp.textContent='Asiakirjan tunnus tälle PDF-yhteenvedolle';
   }
 }
 function buildShareSnapshot(){
@@ -1251,6 +1252,142 @@ function shareUrl(){
   u.searchParams.set('koodi', profile.shareCode);
   u.hash='d='+encodeShare(snap);
   return u.toString();
+}
+function fiDate(d){
+  return d.getDate()+'.'+(d.getMonth()+1)+'.'+d.getFullYear();
+}
+function fiDateTime(d){
+  const pad=x=>String(x).padStart(2,'0');
+  return fiDate(d)+' klo '+pad(d.getHours())+'.'+pad(d.getMinutes());
+}
+function dayToDate(d){
+  return new Date(startOfDay(new Date()).getTime()+(d-TODAY)*864e5);
+}
+function lastOf(arr){ return arr.length?arr[arr.length-1]:null; }
+function shareDocModel(){
+  ensureShareCode(false);
+  const bp=lastOf(BP), glu=lastOf(GLU), wt=lastOf(WT);
+  const ldl=LABS.find(l=>l.n==='LDL-kolesteroli');
+  const rows=[];
+  if(bp){
+    rows.push({k:'Verenpaine (viimeisin)',v:(bp.dia!=null?(Math.round(bp.v)+'/'+Math.round(bp.dia)):fmt(bp.v,0))+' mmHg · '+fiDate(dayToDate(bp.d))+(bp.t==='pm'?' · ilta':bp.t==='am'?' · aamu':'')});
+    rows.push({k:'Verenpaine (kirjauksia)',v:String(BP.length)});
+  } else rows.push({k:'Verenpaine',v:'Ei kirjauksia'});
+  if(glu) rows.push({k:'Verensokeri (viimeisin)',v:fmt(glu.v,1)+' mmol/l · '+fiDate(dayToDate(glu.d))});
+  else rows.push({k:'Verensokeri',v:'Ei kirjauksia'});
+  if(wt) rows.push({k:'Paino (viimeisin)',v:fmt(wt.v,1)+' kg · '+fiDate(dayToDate(wt.d))});
+  else rows.push({k:'Paino',v:'Ei kirjauksia'});
+  if(ldl&&ldl.to!=null) rows.push({k:'LDL-kolesteroli',v:fmt(ldl.to,1)+' mmol/l'});
+  else rows.push({k:'LDL-kolesteroli',v:'Ei tulosta'});
+  const labs=LABS.filter(l=>l.to!=null).map(l=>{
+    const prev=l.from!=null?fmt(l.from,l.dec)+' → ':'';
+    return {k:l.n,v:prev+fmt(l.to,l.dec)+' '+l.u+(l.tgtLbl?' · tavoite '+l.tgtLbl:'')};
+  });
+  const meds=MEDS.map(m=>{
+    const when=[m.am?'aamu':'',m.pm?'ilta':''].filter(Boolean).join(' + ')||'—';
+    return {k:m.n,v:((m.dose||'')+' · '+when+(m.hist?' · '+m.hist:'')).replace(/^\s·\s/,'')};
+  });
+  const sev=n=>{
+    if(n==null||n<0) return '—';
+    return n+'/5';
+  };
+  const syms=SYMS.map(s=>{
+    const last=Array.isArray(s.v)&&s.v.length?s.v[s.v.length-1]:null;
+    return {k:s.n,v:'viimeisin '+sev(last)+' (14 vrk)'};
+  });
+  const events=(EVENTS||[]).slice(-6).map(e=>({k:fiDate(dayToDate(e.d)),v:e.l||''}));
+  return {
+    code:profile.shareCode||'HP-····',
+    name:(profile.name||'').trim()||'—',
+    created:new Date(),
+    rows, labs, meds, syms, events
+  };
+}
+function shareDocTables(m){
+  const table=(title,items)=>{
+    if(!items.length) return '<h3>'+esc(title)+'</h3><p class="fine">Ei merkitty.</p>';
+    return '<h3>'+esc(title)+'</h3><table>'+items.map(r=>
+      '<tr><th>'+esc(r.k)+'</th><td>'+esc(r.v)+'</td></tr>'
+    ).join('')+'</table>';
+  };
+  return table('Kotimittaukset', m.rows)+
+    table('Laboratorio', m.labs)+
+    table('Lääkelista', m.meds)+
+    table('Oireet', m.syms)+
+    table('Merkinnät', m.events);
+}
+function renderSharePaper(){
+  const host=$('sharePaper'); if(!host) return;
+  const m=shareDocModel();
+  host.innerHTML=
+    '<div class="paper-top"><div><div class="paper-brand">Hoitopolku</div><div class="paper-kind">Seurantayhteenveto · A4</div></div>'+
+    '<div class="paper-id"><small>Asiakirja</small>'+esc(m.code)+'</div></div>'+
+    '<table><tr><th>Nimi</th><td>'+esc(m.name)+'</td></tr>'+
+    '<tr><th>Laadittu</th><td>'+esc(fiDateTime(m.created))+'</td></tr></table>'+
+    shareDocTables(m)+
+    '<p class="fine">Potilaan kirjaama yhteenveto — ei diagnoosia, ei virallista potilaskertomusta. Ei henkilötunnusta. Äkillisissä oireissa 112.</p>';
+}
+function buildSharePdfHtml(){
+  const m=shareDocModel();
+  return '<!DOCTYPE html><html lang="fi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">'+
+    '<title>Hoitopolku-yhteenveto '+esc(m.code)+'</title>'+
+    '<style>'+
+    '@page{size:A4;margin:16mm}'+
+    'html,body{margin:0;background:#eceae4;color:#111;font-family:Georgia,"Times New Roman",serif}'+
+    '.bar{position:sticky;top:0;display:flex;gap:8px;justify-content:center;padding:12px;background:#111;}'+
+    '.bar button{font:600 14px Inter,system-ui,sans-serif;border:0;border-radius:980px;padding:10px 16px;cursor:pointer}'+
+    '.bar .p{background:#A67C2E;color:#fff}'+
+    '.sheet{max-width:210mm;margin:18px auto;background:#fff;padding:18mm 16mm;box-shadow:0 12px 40px rgba(0,0,0,.12)}'+
+    'h1{font-size:22px;margin:0 0 4px;letter-spacing:-.03em}'+
+    '.kind{font:700 11px Inter,system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#6B6860;margin-bottom:16px}'+
+    '.id{float:right;text-align:right;font:800 18px Inter,system-ui,sans-serif}'+
+    '.id small{display:block;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:#8A867E;font-weight:700}'+
+    'h2{font:700 11px Inter,system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#8A867E;margin:18px 0 6px}'+
+    'table{width:100%;border-collapse:collapse}'+
+    'th,td{font-size:13px;padding:6px 0;border-bottom:1px solid #E4DFD6;text-align:left;vertical-align:top}'+
+    'th{width:40%;color:#6B6860;font-weight:600}'+
+    '.fine{font:12px/1.45 Inter,system-ui,sans-serif;color:#6B6860;margin-top:18px;clear:both}'+
+    '@media print{body{background:#fff}.bar{display:none}.sheet{margin:0;box-shadow:none;max-width:none;padding:0}}'+
+    '</style></head><body>'+
+    '<div class="bar"><button class="p" type="button" onclick="window.print()">Tulosta tai tallenna PDF</button></div>'+
+    '<article class="sheet">'+
+    '<div class="id"><small>Asiakirja</small>'+esc(m.code)+'</div>'+
+    '<h1>Hoitopolku</h1><div class="kind">Seurantayhteenveto</div>'+
+    '<table><tr><th>Nimi</th><td>'+esc(m.name)+'</td></tr>'+
+    '<tr><th>Laadittu</th><td>'+esc(fiDateTime(m.created))+'</td></tr></table>'+
+    shareDocTables(m).replace(/<h3>/g,'<h2>').replace(/<\/h3>/g,'</h2>').replace(/class="fine"/g,'class="fine"')+
+    '<p class="fine">Potilaan kirjaama yhteenveto — ei diagnoosia, ei virallista potilaskertomusta, ei henkilötunnusta. Ei korvaa lääkärin arviota. Äkillisissä oireissa soita 112. LääkäriPRO on kehitystauolla.</p>'+
+    '</article></body></html>';
+}
+function printSharePdf(){
+  ensureShareCode(false);
+  saveState();
+  renderSharePaper();
+  const html=buildSharePdfHtml();
+  const old=$('sharePdfFrame'); if(old) old.remove();
+  const iframe=document.createElement('iframe');
+  iframe.id='sharePdfFrame';
+  iframe.title='PDF-yhteenveto';
+  iframe.style.cssText='position:fixed;right:0;bottom:0;width:0;height:0;border:0';
+  document.body.appendChild(iframe);
+  const doc=iframe.contentDocument;
+  if(!doc){ openSharePdfPreview(); return; }
+  doc.open(); doc.write(html); doc.close();
+  const run=()=>{
+    try{ iframe.contentWindow.focus(); iframe.contentWindow.print(); }
+    catch(e){ openSharePdfPreview(); }
+  };
+  setTimeout(run, 80);
+}
+function openSharePdfPreview(){
+  ensureShareCode(false);
+  saveState();
+  const html=buildSharePdfHtml();
+  const w=window.open('','_blank');
+  if(!w){ toast('Salli ponnahdusikkunat esikatselua varten'); return; }
+  w.document.open();
+  w.document.write(html);
+  w.document.close();
 }
 
 /* ══ HELPERS ══ */
@@ -1701,6 +1838,7 @@ function go(v){
   if(v==='kayra')drawGraph();
   if(v==='kalenteri')renderCalendar();
   if(v==='pro')renderPro();
+  if(v==='koodi')renderSharePaper();
 }
 document.querySelectorAll('.tabbar button[data-v]').forEach(b=>b.addEventListener('click',()=>go(b.dataset.v)));
 const topBar=$('topBar');
@@ -2154,14 +2292,14 @@ $('entSave').onclick=()=>{
       addLog(SYMS[idx].n,'voimakkuus '+symSev,'/ 5','#B3452C');
     });
     renderSyms();
-    msg('Oireet kirjattu. Lääkärisi näkee ne koodilla.','ok');
+    msg('Oireet kirjattu. Ne tulevat PDF-yhteenvetoon.','ok');
     toast('Oireet kirjattu');
     return refresh(true);
   }else if(k===10){
     savePlanEdit();
     return;
   }
-  msg('Tallennettu. Lääkärisi näkee kirjauksen koodilla.','ok');
+  msg('Tallennettu. Kirjaus tulee PDF-yhteenvetoon.','ok');
   toast('Kirjaus tallennettu');
   refresh(true);
 };
@@ -2295,7 +2433,8 @@ addEventListener('orientationchange',()=>setTimeout(()=>{hideTip();drawGraph();}
 function newCode(){
   ensureShareCode(true);
   saveState();
-  toast('Uusi koodi luotu — vanha koodi lakkasi toimimasta ja vanhenee');
+  renderSharePaper();
+  toast('Uusi asiakirjan tunnus luotu');
 }
 async function copyShareLink(){
   const url=shareUrl();
@@ -2449,6 +2588,7 @@ function bootUI(){
   if(typeof selMetric==='function') selMetric(0);
   if(typeof renderCalendar==='function' && $('v-kalenteri') && $('v-kalenteri').classList.contains('on')) renderCalendar();
   renderPro();
+  renderSharePaper();
   const ban=$('seedBanner');
   if(ban) ban.hidden=!(profile.seeded && !profile.bannerDismissed) || document.body.classList.contains('doctor-mode');
 }
@@ -2487,7 +2627,7 @@ addEventListener('keydown',e=>{
 function openAddMed(){
   entCur={i:7};
   $('entT').textContent='Lisää lääke';
-  $('entS').textContent='Näkyy lääkärille jakokoodilla';
+  $('entS').textContent='Näkyy PDF-yhteenvedossa';
   $('entDot').style.background='#A67C2E';
   $('entMsg').textContent='';$('entMsg').className='msg';
   const w=$('entFields');w.innerHTML='';
