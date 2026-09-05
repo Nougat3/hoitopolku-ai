@@ -307,7 +307,8 @@ function rolling(bp){
     const w=bp.filter(p=>p.d>d-7&&p.d<=d);
     if(w.length>=3)out.push({d,v:w.reduce((a,p)=>a+p.v,0)/w.length});
   }
-  return out;
+  // Ennen 7 vrk keskiarvoa näytetään raakalukemat, jotta ensimmäinen jakolinkin mittaus näkyy.
+  return out.length?out:bp.map(p=>({d:p.d,v:p.v}));
 }
 
 const PATIENTS=[

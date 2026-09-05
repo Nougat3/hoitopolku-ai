@@ -1174,8 +1174,10 @@ function spark(vals,color,target,w,h){
     svg.appendChild(el('line',{x1:0,y1:ty,x2:w,y2:ty,stroke:'#4E7D3C','stroke-width':2,'stroke-dasharray':'6 5','stroke-opacity':'.7','stroke-linecap':'round'}));
   }
   const d=smooth(P);
-  svg.appendChild(el('path',{d:d+' L'+P[P.length-1].x+' '+h+' L'+P[0].x+' '+h+' Z',fill:'url(#'+id+')'}));
-  svg.appendChild(el('path',{d:d,fill:'none',stroke:color,'stroke-width':3,'stroke-linecap':'round','stroke-linejoin':'round'}));
+  if(d){
+    svg.appendChild(el('path',{d:d+' L'+P[P.length-1].x+' '+h+' L'+P[0].x+' '+h+' Z',fill:'url(#'+id+')'}));
+    svg.appendChild(el('path',{d:d,fill:'none',stroke:color,'stroke-width':3,'stroke-linecap':'round','stroke-linejoin':'round'}));
+  }
   const l=P[P.length-1];
   svg.appendChild(el('circle',{cx:l.x,cy:l.y,r:5,fill:'#fff',stroke:color,'stroke-width':3}));
   return svg;
