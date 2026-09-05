@@ -56,6 +56,16 @@ h2{font-size:19px;font-weight:700;letter-spacing:-.03em}
 .demo-row button{font-size:12px;font-weight:600;padding:7px 12px;border-radius:980px;background:var(--g0);color:var(--g)}
 
 .app{display:none;max-width:720px;margin:0 auto;padding:0 18px 34px}
+.desk-hint{display:none;background:var(--amber-t);color:#8A6B16;border-radius:12px;padding:10px 14px;font-size:13px;line-height:1.45;margin-bottom:14px}
+@media(max-width:719px){
+  .desk-hint{display:block}
+}
+@media(min-width:960px){
+  .app{max-width:1120px;padding:0 28px 48px}
+  .top{margin:0 -28px 0;padding:0 28px}
+  .dash-split{display:grid;grid-template-columns:1.2fr .8fr;gap:22px;align-items:start}
+  #pChart{min-height:240px}
+}
 .app.on{display:block}
 .top{position:sticky;top:0;z-index:40;background:rgba(251,250,247,.9);backdrop-filter:blur(16px);border-bottom:1px solid var(--line);margin:0 -18px 0;padding:0 18px}
 .top-in{height:56px;display:flex;align-items:center;gap:10px}
@@ -153,6 +163,7 @@ h2{font-size:19px;font-weight:700;letter-spacing:-.03em}
       <svg width="28" height="28" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="8" fill="#A67C2E"/><path d="M8 16h16M16 8v16" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/></svg>
       Hoitopolku <span>LääkäriPRO</span>
     </div>
+    <p class="desk-hint">Tämä työpöytä on suunniteltu tietokoneen selaimelle.</p>
     <div class="card">
       <h2>Lääkärin demo-työpöytä</h2>
       <p class="sub" style="margin-bottom:16px">Ei oikeaa kirjautumista vielä. Vahva tunnistus (Telia) lisätään myöhemmin. Potilaan jakolinkki avaa seurantanäkymän suoraan.</p>
@@ -188,11 +199,18 @@ h2{font-size:19px;font-weight:700;letter-spacing:-.03em}
       <h1 id="docHello">Potilaasi</h1>
       <p class="sub" id="docSub">5 potilasta · priorisoitu seurannan mukaan</p>
     </div>
+    <p class="desk-hint">LääkäriPRO on suunniteltu tietokoneen selaimelle. Puhelimella käytä potilaan Hoitopolku-sovellusta.</p>
+    <div class="dash-split">
+    <div>
       <div class="label">MALLIPOTILAAT (DEMO)</div>
     <div class="card tight"><div class="plist" id="patientList"></div></div>
+    </div>
+    <div>
     <div class="label">PIKATOIMINNOT</div>
     <div class="card">
       <button class="btn sec full" id="openCodeBtn">Avaa potilas jakokoodilla tai jakolinkillä</button>
+    </div>
+    </div>
     </div>
   </div>
 
