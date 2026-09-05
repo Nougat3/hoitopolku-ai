@@ -500,15 +500,23 @@ body.sheet-open{overflow:hidden}
 .tabbar .nav-add{display:none}
 
 @media (min-width:960px){
-  body{padding-bottom:28px;background:
-    radial-gradient(ellipse 80% 50% at 80% -10%,rgba(166,124,46,.07),transparent 55%),
+  html,body{max-width:none;overflow-x:hidden}
+  body{padding-bottom:0;min-height:100vh;background:
+    radial-gradient(ellipse 70% 40% at 90% -8%,rgba(166,124,46,.07),transparent 50%),
     var(--w)}
-  .top-in{max-width:none;padding:0 28px 0 248px;height:62px}
-  .app{max-width:none;margin:0;padding:0 36px 40px 248px}
+  .top{width:100%}
+  .top-in{max-width:none;width:100%;padding:0 28px 0 236px;height:62px}
+  .banner{padding-left:236px;padding-right:28px}
+  .app{
+    max-width:none;width:100%;margin:0;
+    padding:8px 28px 40px 236px;
+    min-height:calc(100vh - 62px);
+    box-sizing:border-box;
+  }
   .tabbar{
-    top:0;bottom:0;right:auto;width:220px;
+    top:0;bottom:0;right:auto;width:208px;
     border-top:none;border-right:1px solid var(--line);
-    padding:78px 14px 20px;display:flex;flex-direction:column;
+    padding:78px 12px 24px;display:flex;flex-direction:column;
   }
   .tabbar-in{
     display:flex;flex-direction:column;height:auto;max-width:none;
@@ -525,9 +533,13 @@ body.sheet-open{overflow:hidden}
   }
   .nav-add svg{stroke:#fff}
   .fab{display:none}
-  .desk-home,.desk-split{display:grid;grid-template-columns:1fr 1fr;gap:22px;align-items:start}
+  .desk-home{display:grid;grid-template-columns:minmax(300px,.85fr) minmax(0,1.35fr);gap:24px;align-items:start}
+  .desk-split{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(260px,.75fr);gap:24px;align-items:start}
   .desk-col .label:first-child{margin-top:0}
-  .tiles{grid-template-columns:1fr 1fr}
+  .tiles{grid-template-columns:repeat(2,minmax(0,1fr))}
+  #v-kayra .desk-split > .card{min-height:420px}
+  #bigGraph{width:100%;min-height:280px}
+  .g-val{font-size:42px}
   .sheet{
     left:50%;right:auto;bottom:auto;top:50%;
     width:min(460px,calc(100vw - 48px));
@@ -539,6 +551,11 @@ body.sheet-open{overflow:hidden}
   .toast{bottom:36px}
   .top.hidden{transform:none}
   body.doctor-mode .app,body.doctor-mode .top-in{padding-left:28px}
+  body.doctor-mode .banner{padding-left:28px}
+}
+@media (min-width:1280px){
+  .tiles{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .desk-home{grid-template-columns:minmax(340px,.7fr) minmax(0,1.5fr)}
 }
 
 @media print{
