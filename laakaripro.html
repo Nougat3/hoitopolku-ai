@@ -191,11 +191,20 @@ h2{font-size:19px;font-weight:700;letter-spacing:-.03em}
       <div class="card" id="pInsights"></div>
     </div>
 
+      <div class="sec-h"><h2>Huomiota vaativat</h2></div>
+      <div id="alertList"></div>
+      <div class="sec-h"><h2>Tänään vastaanotolla</h2></div>
+      <div id="todayList"></div>
+      <div class="sec-h"><h2>Kaikki avatut</h2></div>
+      <div id="allList"></div>
+
       <div class="sec-h"><h2>Avaa potilaan koodilla</h2></div>
       <div class="codebox">
         <div class="field">
           <label for="codeIn">Hoitopolku-koodi</label>
           <input class="inp" id="codeIn" placeholder="ABCD-1234" maxlength="9" autocomplete="off" spellcheck="false">
+          <div class="lg-err" id="codeErr" style="display:none;margin-top:8px"></div>
+          <button class="btn" type="button" onclick="openCode()" style="margin-top:10px">Avaa</button>
         </div>
         <textarea id="physicianNote" placeholder="Kirjoita tai sanelee lääkärin muistiinpano tähän... Tämä on luonnos, ei allekirjoitettua dokumenttia." style="width:100%;min-height:280px;font-size:14px;line-height:1.55;padding:14px;border-radius:12px;border:1px solid var(--line);background:var(--w);resize:vertical;font-family:var(--f)"></textarea>
         <p class="note" style="margin-top:8px;font-size:12px;color:var(--mid)">⚠️ LUONNOS — ei allekirjoitettu, ei diagnoosia. Seuranta-muistiinpano potilastietoihin.</p>
@@ -228,6 +237,12 @@ h2{font-size:19px;font-weight:700;letter-spacing:-.03em}
         <div class="ai-out" id="aiOut">Valitse työkalu yllä.</div>
       </div>
 
+      <div class="head" id="pHead">
+        <h1 id="pName">—</h1>
+        <div class="sub" id="pMeta">—</div>
+        <div id="pFlags"></div>
+      </div>
+      <div id="metrics"></div>
       <div class="tabs" id="pTabs">
         <button class="tab" aria-selected="true">Yhteenveto</button>
         <button class="tab">Mittaukset</button>
@@ -398,6 +413,27 @@ const fmt=(v,d)=>d?Number(v).toFixed(d).replace('.',','):String(Math.round(v));
    jakokoodin han on lunastanut ja joiden hoitoistunto on viela voimassa. */
 const PATIENTS=[];
 let ME=null;
+const DAYS=84;
+
+function smooth(P){
+  if(P.length<2)return '';
+  if(P.length===2)return 'M'+P[0].x.toFixed(1)+' '+P[0].y.toFixed(1)+' L'+P[1].x.toFixed(1)+' '+P[1].y.toFixed(1);
+  let d='M'+P[0].x.toFixed(1)+' '+P[0].y.toFixed(1);
+  for(let i=0;i<P.length-1;i++){
+    const a=P[i-1]||P[i],b=P[i],c=P[i+1],e=P[i+2]||P[i+1];
+    d+=' C'+(b.x+(c.x-a.x)/6).toFixed(1)+' '+(b.y+(c.y-a.y)/6).toFixed(1)+','
+        +(c.x-(e.x-b.x)/6).toFixed(1)+' '+(c.y-(e.y-b.y)/6).toFixed(1)+','
+        +c.x.toFixed(1)+' '+c.y.toFixed(1);
+  }
+  return d;
+}
+function selPane(i){
+  document.querySelectorAll('.tab').forEach((b,n)=>b.setAttribute('aria-selected',n===i?'true':'false'));
+  document.querySelectorAll('.pane').forEach((p,n)=>p.classList.toggle('on',n===i));
+}
+function updateAiCtx(){}
+function showTipLP(){}
+function hideTipLP(){}
 
 /* Laboratorioarvojen viitealueet ovat kayttoliittyman tietoa; arvot tulevat
    metric_measurements-taulusta. */
@@ -516,14 +552,6 @@ const SYMDAYS=(()=>{
 })();
 
 /* ══ APURIT ══ */
-function rolling(pts){
-  const out=[];
-  for(let d=0;d<DAYS;d++){
-    const v=base+trend*(d/DAYS)*-18+(Math.sin(d/5)*noise)+(d<medDay?8:0);
-    if(Math.random()>0.12)out.push({d,v:Math.round(v+(Math.random()-.5)*6)});
-  }
-  return out;
-}
 function metricsOf(p){
   const wt=p.target.wt||(p.WT.length?Math.round(p.WT[0].v*0.95*10)/10:null);
   return [
@@ -538,7 +566,7 @@ function rolling(bp){
     const w=bp.filter(p=>p.d>d-7&&p.d<=d);
     if(w.length>=3)out.push({d,v:w.reduce((a,p)=>a+p.v,0)/w.length});
   }
-  return d;
+  return out;
 }
 let sid=0;
 function spark(vals,color,target,W,H){
@@ -612,6 +640,12 @@ function renderLists(){
 
 /* ══ POTILAS ══ */
 let CUR=null;
+function toast(t){
+  const el=$('toast');if(!el)return;
+  el.textContent=t;el.classList.add('on');
+  clearTimeout(toast._t);toast._t=setTimeout(()=>el.classList.remove('on'),2800);
+}
+
 function openPatient(id){
   CUR=PATIENTS.find(p=>p.id===id);
   if(!CUR)return;
@@ -620,23 +654,20 @@ function openPatient(id){
     .filter(Boolean).join(' · ');
   $('pFlags').innerHTML=CUR.flags.map(f=>'<span class="flag '+f.c+'">'+esc(f.t)+'</span>').join('');
 
-function toast(t){
-  const el=$('toast');el.textContent=t;el.classList.add('on');
-  clearTimeout(toast._t);toast._t=setTimeout(()=>el.classList.remove('on'),2800);
-}
-
-function showView(v){
-  ['dash','code','patient'].forEach(x=>{
-    $('v-'+x).classList.toggle('on',x===v);
-  });
-  CUR._sum=rows;
+  const rows=metricsOf(CUR).map(m=>{
+    const s=m.roll?rolling(m.data):m.data;
+    const vals=s.slice(-10).map(p=>p.v);
+    const last=vals[vals.length-1];
+    const [cls,lbl]=statusOf(CUR);
+    return {m,vals,last,cls,lbl};
+  }).filter(r=>r.vals.length);
   [['sumMetrics',260,46],['metrics',420,58]].forEach(([target,W,H])=>{
-    const box=$(target);box.innerHTML='';
+    const box=$(target);if(!box)return;box.innerHTML='';
     rows.forEach(r=>{
       const row=document.createElement('div');
       row.className='mrow';
-      row.innerHTML='<div class="m-name">'+r.m.n+'<span>'+r.m.sub+'</span></div><div></div>'+
-        '<div class="m-val"><b class="num">'+fmt(r.last,r.m.dec)+'</b><span class="tag '+r.cls+'">'+r.lbl+'</span></div>';
+      row.innerHTML='<div class="m-name">'+esc(r.m.n)+'<span>'+esc(r.m.sub)+'</span></div><div></div>'+
+        '<div class="m-val"><b class="num">'+fmt(r.last,r.m.dec)+'</b><span class="tag '+r.cls+'">'+esc(r.lbl)+'</span></div>';
       row.children[1].appendChild(spark(r.vals,r.m.color,r.m.target,W,H));
       row.addEventListener('click',()=>openMetricDetail(rows.indexOf(r)));
       box.appendChild(row);
@@ -668,7 +699,7 @@ function showView(v){
 
   $('symGrid').innerHTML=CUR.syms.map(sy=>{
     const bars=sy.v.map((v,i)=>{
-      const day=SYMDAYS[i].replace(/\.$/,'')+'.10.';
+      const day=SYMDAYS[i];
       if(v<0)return '<span class="sym-cell" title="'+day+' ei kirjausta"><span class="sym-miss"></span></span>';
       if(v===0)return '<span class="sym-cell" title="'+day+' ei oiretta"><span class="sym-zero"></span></span>';
       return '<span class="sym-cell" title="'+day+' '+sy.n.toLowerCase()+' '+v+'/5"><span class="sym-bar" style="--sc:'+sy.c+';height:'+(v/5*100)+'%;opacity:'+(0.45+v*0.11)+'"></span></span>';
@@ -742,16 +773,18 @@ async function signOut(){
 }
 async function openCode(){
   const raw=($('codeIn').value||'').trim().toUpperCase().replace(/[^A-Z0-9]/g,'');
-  if(raw.length!==8){$('codeErr').textContent='Koodissa on kahdeksan merkkiä, esim. ABCD-1234.';return;}
-  $('codeErr').textContent='Avataan…';
+  const err=$('codeErr');
+  const show=(t)=>{if(!err)return;err.textContent=t||'';err.style.display=t?'block':'none';};
+  if(raw.length!==8){show('Koodissa on kahdeksan merkkiä, esim. ABCD-1234.');return;}
+  show('Avataan…');
   try{
     const res=await HP.redeemShareCode(raw);
-    $('codeErr').textContent='';$('codeIn').value='';
+    show('');$('codeIn').value='';
     await loadPatients();
     renderLists();
     if(PATIENTS.some(p=>p.id===res.patient_id))openPatient(res.patient_id);
-  }catch(err){
-    $('codeErr').textContent=err.message||'Koodia ei löytynyt tai se on vanhentunut.';
+  }catch(e){
+    show(e.message||'Koodia ei löytynyt tai se on vanhentunut.');
   }
 }
 $('codeIn').addEventListener('keydown',e=>{if(e.key==='Enter')openCode();});
@@ -759,36 +792,6 @@ $('codeIn').addEventListener('input',e=>{
   const raw=e.target.value.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,8);
   e.target.value=raw.length>4?raw.slice(0,4)+'-'+raw.slice(4):raw;
 });
-
-  if(hash){
-    const snap=decodeShare(hash);
-    if(snap){
-      if(snap.exp && snap.exp < Date.now()){
-        toast('Jakokoodi on vanhentunut');
-        return;
-      }
-      openSnapshotPatient(snap);
-      return;
-    }
-  }
-
-  if(c){
-    try{
-      const raw=localStorage.getItem('hoitopolku.share.'+c);
-      if(raw){
-        const snap=JSON.parse(raw);
-        if(snap.exp&&snap.exp<Date.now()){toast('Jakokoodi on vanhentunut');return;}
-        openSnapshotPatient(snap);
-        return;
-      }
-    }catch(e){}
-  }
-
-  const found=PATIENTS.find(x=>x.code===c);
-  if(found){openPatient(found.id);return;}
-
-  toast('Koodia ei löytynyt — liitä potilaan jakolinkki tai kokeile DEMO-koodeja');
-}
 
 function renderPatient(CUR){
   if(!CUR)return;

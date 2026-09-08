@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://tvkxzczwepfzlbocxqwd.supabase.co; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
 <title>Hoitopolku — seuranta</title>
 <meta name="description" content="Seuraa verenpainetta, verensokeria ja painoa. Jaa yhteenveto lääkärille koodilla. Seurantatyökalu — ei diagnoosia.">
 <meta name="theme-color" content="#FBFAF7">
@@ -208,6 +208,18 @@ h3{font-size:16px;font-weight:700;letter-spacing:-.025em}
 .code-exp{font-size:12.5px;color:var(--mid);line-height:1.5}
 
 /* ── calendar ── */
+.cal-nav{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+.cal-nav h2{font-size:18px;font-weight:700;margin:0}
+.cal-nav button{width:36px;height:36px;border:0;border-radius:10px;background:#fff;box-shadow:0 0 0 1px var(--line);font-size:20px;cursor:pointer}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:16px}
+.cal-day.blank{background:transparent;box-shadow:none}
+.cal-day .dots{display:flex;gap:3px;height:6px}
+.cal-day .dots i{width:5px;height:5px;border-radius:50%;display:block}
+.evt-row{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--line)}
+.evt-dot{width:8px;height:8px;border-radius:50%;flex:none;margin-top:6px}
+.evt-dot.past,.evt-title.past{opacity:.5}
+.evt-date{display:block;font-size:12px;color:var(--mid)}
+.evt-title{display:block;font-weight:600}
 .cal-week{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:14px}
 .cal-day{
   display:flex;flex-direction:column;align-items:center;gap:4px;
@@ -740,6 +752,14 @@ body.doctor-mode{padding-bottom:24px}
       <div class="sub">Mittaukset, lääkeotto ja oireseuranta — aikatauluta päiväsi</div>
     </div>
 
+    <div class="cal-nav">
+      <button type="button" onclick="calShift(-1)" aria-label="Edellinen kuukausi">‹</button>
+      <h2 id="calMonth">—</h2>
+      <button type="button" onclick="calShift(1)" aria-label="Seuraava kuukausi">›</button>
+    </div>
+    <div class="cal-grid" id="calGrid"></div>
+    <div class="next" id="nextEventCard"></div>
+    <div class="card" id="eventList"></div>
     <div class="cal-week" id="calWeek"></div>
 
     <div class="cal-prog">
@@ -898,6 +918,7 @@ const LABS=[
   {metric:'creatinine',n:'Kreatiniini',    u:'µmol/l',from:null,to:null,min:40,max:130,lo:60,hi:100,tgtLbl:'60–100',dec:0,dir:'range'}
 ];
 const MEDS=[];
+const LOG=[];
 // −1 = ei kirjausta, 0 = ei oiretta, 1–5 = voimakkuus
 const SYMS=[];
 const SYM_SUGG=['Päänsärky','Huimaus','Väsymys','Yskä','Turvotus','Rintakipu','Hengenahdistus','Lihaskrampit','Unettomuus','Pahoinvointi'];
@@ -1243,7 +1264,7 @@ function updateSummary(m,line,proj,projEnd){
     const sdv=Math.sqrt(rec.reduce((a,v)=>a+(v-mean)**2,0)/(rec.length||1));
     items.push({k:'info',t:'Vaihtelu kuuluu asiaan',d:'Mittauksesi heittelevät ±'+fmt(sdv,m.dec)+' '+m.unit+'. Yksittäinen lukema ei kerro suuntaa — keskiarvo auttaa hahmottamaan trendiä.'});
   }
-  if(m.key==='bp' && profile.seeded){
+  if(m.key==='bp' && typeof profile!=='undefined' && profile.seeded){
     items.push({k:'warn',t:'Mittauskatko viikoilla 5–6',d:'Kymmeneltä päivältä puuttuu mittauksia. Katko näkyy käyrällä harmaana.'});
     items.push({k:'info',t:'Muutos käyrällä',d:'Viikolla 7 merkitty tapahtuma osuu samaan aikaan käyrän taittumisen kanssa. Tämä on havainto, ei hoitosuositus.'});
   }
@@ -1559,17 +1580,6 @@ $('entSave').onclick=async()=>{
   }
 };
 function refresh(close){
-  if(window._calPending){
-    setDone(dayKey(new Date()), window._calPending, true);
-    window._calPending=null;
-  }else if(entCur){
-    const today=dayKey(new Date());
-    if(entCur.i===0) setDone(today, entTime==='Aamu'?'bp-am':'bp-pm', true);
-    else if(entCur.i===1) setDone(today,'glu-am',true);
-    else if(entCur.i===2) setDone(today,'wt',true);
-    else if(entCur.i===9) setDone(today,'sym-eve',true);
-  }
-  saveState();
   renderTiles();drawGraph();updateCounts();
   renderLabs();renderMeds();renderSyms();renderLog();
   if($('v-kalenteri')&&$('v-kalenteri').classList.contains('on')) renderCalendar();
@@ -1815,7 +1825,8 @@ function importDataFile(file){
   reader.onerror=()=>toast('Tiedoston luku epäonnistui');
   reader.readAsText(file);
 }
-$('acctBg').addEventListener('click', closeAccount);
+const acctBg=$('acctBg');
+if(acctBg) acctBg.addEventListener('click', closeAccount);
 const importEl=$('importFile');
 if(importEl) importEl.addEventListener('change',e=>{
   const f=e.target.files&&e.target.files[0];
@@ -1997,8 +2008,10 @@ function measuredOn(d){
 }
 
 function renderCalendar(){
-  $('calMonth').textContent=MONTHS[calView.getMonth()].charAt(0).toUpperCase()+MONTHS[calView.getMonth()].slice(1)+' '+calView.getFullYear();
-  const grid=$('calGrid');grid.innerHTML='';
+  const month=$('calMonth'),grid=$('calGrid');
+  if(!month||!grid)return;
+  month.textContent=MONTHS[calView.getMonth()].charAt(0).toUpperCase()+MONTHS[calView.getMonth()].slice(1)+' '+calView.getFullYear();
+  grid.innerHTML='';
   const first=new Date(calView.getFullYear(),calView.getMonth(),1);
   const startOffset=(first.getDay()+6)%7; // ma=0
   const daysInMonth=new Date(calView.getFullYear(),calView.getMonth()+1,0).getDate();
@@ -2024,6 +2037,7 @@ function renderCalendar(){
 function renderEvents(){
   const upcoming=CAL_EVENTS.filter(e=>!e.past).sort((a,b)=>a.date-b.date);
   const nc=$('nextEventCard');
+  if(!nc)return;
   if(upcoming.length){
     const e=upcoming[0];
     nc.innerHTML='<div class="kick">'+fmtDate(e.date)+(e.time?' klo '+e.time:'')+'</div>'+
@@ -2035,6 +2049,7 @@ function renderEvents(){
   }
 
   const list=$('eventList');
+  if(!list)return;
   const all=CAL_EVENTS.slice().sort((a,b)=>b.date-a.date);
   list.innerHTML=all.map(e=>
     '<div class="evt-row"><span class="evt-dot'+(e.past?' past':'')+'" style="background:'+EVT_COLOR[e.type]+'"></span>'+
@@ -2071,8 +2086,6 @@ function downloadIcs(idx){
   toast('Kalenteritiedosto ladattu');
 }
 
-renderCalendar();renderEvents();
-
 /* ══ HOITOPOLKU-AIKAJANA ══ */
 /* Vaiheet tulevat care_events-taulusta; status kertoo tehty / nyt / tulossa. */
 const PATH_CLASS={done:'is-done',now:'is-now',next:'is-next'};
@@ -2080,7 +2093,8 @@ function renderPath(){
   const box=$('pathLine');
   if(!box)return;
   const next=PATH.find(s=>s.status==='now')||PATH.find(s=>s.status==='next');
-  $('pathSub').textContent=next?'Seuraavaksi: '+next.title+' · '+next.when_label:'Hoitopolku';
+  const sub=$('pathSub');
+  if(sub)sub.textContent=next?'Seuraavaksi: '+next.title+' · '+next.when_label:'Hoitopolku';
   box.innerHTML=PATH.map(s=>{
     const st=PATH_CLASS[s.status]||'is-next';
     const check=st==='is-done'?'<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>':'';
@@ -2115,7 +2129,8 @@ function renderTasks(){
   if(!box)return;
   __TASKS=TASKS;
   const doneCount=__TASKS.filter(t=>t.done).length;
-  $('taskSub').textContent=doneCount+' / '+__TASKS.length+' tehty';
+  const sub=$('taskSub');
+  if(sub)sub.textContent=doneCount+' / '+__TASKS.length+' tehty';
   box.innerHTML=__TASKS.map((t,i)=>
     '<div class="chk-row'+(t.done?' done':'')+'" onclick="taskClick('+i+')">'+
     '<span class="chk-box">'+(t.done?'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>':'')+'</span>'+
