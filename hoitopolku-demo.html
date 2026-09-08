@@ -670,20 +670,12 @@ body.doctor-mode{padding-bottom:24px}
         <button aria-selected="true" data-r="999">Koko jakso</button>
       </div>
 
-      <div class="label">OIREET</div>
-      <div class="card">
-        <div class="sym-top">
-          <span class="sym-title">Oireet · 14 vrk</span>
-          <span class="sym-key"><i class="k-none"></i>ei oiretta &nbsp;<i class="k-miss"></i>ei kirjausta</span>
+      <div class="g-head">
+        <div>
+          <div class="g-val"><span id="gVal">—</span> <small id="gUnit"></small></div>
+          <div class="g-sub" id="gSub">—</div>
         </div>
-        <div class="sym-grid" id="symGridM"></div>
-        <div class="sym-axis" id="symAxisM"></div>
-        <div class="sym-note" id="symNote" hidden></div>
-        <div class="sym-actions">
-          <button class="btn sec sm" onclick="openSym()">Kirjaa tänään</button>
-          <button class="btn sec sm" onclick="openAddSym()">Lisää seurattava oire</button>
-        </div>
-        <span class="pill off" id="gPill" style="margin:0">Koholla</span>
+        <span class="pill off" id="gPill" style="margin:0">—</span>
       </div>
       <div class="g-wrap">
         <svg id="bigGraph" viewBox="0 0 520 190"></svg>
@@ -732,7 +724,7 @@ body.doctor-mode{padding-bottom:24px}
         </div>
         <div class="sym-grid" id="symGrid"></div>
         <div class="sym-axis" id="symAxis"></div>
-        <div class="sym-note" id="symNote"><span class="se-mark"></span>Annos nostettu 14.10. — yskä alkoi 3 vrk myöhemmin</div>
+        <div class="sym-note" id="symNote" hidden></div>
       </div>
       <div class="sym-actions">
         <button class="btn sec sm" onclick="openSym()">Kirjaa tänään</button>
@@ -1090,14 +1082,12 @@ function renderSyms(){
   if(!grid)return;
   const SYMDAYS=symDays();
   grid.innerHTML='';
-  const note=$('symNote');
-  if(note) note.hidden=!(profile.seeded && EVENTS.some(e=>/annos|lääkitys/i.test(e.l||'')));
+  renderSymNote();
   if(!SYMS.length){
     grid.innerHTML='<div class="sym-empty">Et seuraa vielä yhtään oiretta.<br>Lisää ensimmäinen alta.</div>';
     if(axis)axis.innerHTML='';
     return;
   }
-  const days=symDayLabels();
   SYMS.forEach((sy,si)=>{
     const c=SYMC[si%SYMC.length];
     const bars=sy.v.map((v,i)=>{
@@ -1115,9 +1105,11 @@ function renderSyms(){
   });
   if(axis)axis.innerHTML='<span class="sym-days">'+SYMDAYS.map((d,i)=>
     '<span>'+(i===0||i===13||i===6?d:'')+'</span>').join('')+'</span>';
+}
 
-  /* Huomautus kertoo lääkemuutoksesta vain jos sellainen osuu samaan
-     14 vuorokauden ikkunaan — muuten oireiden rinnalla ei ole mitään verrattavaa. */
+/* Huomautus kertoo lääkemuutoksesta vain jos sellainen osuu samaan
+   14 vuorokauden ikkunaan — muuten oireiden rinnalla ei ole mitään verrattavaa. */
+function renderSymNote(){
   const note=$('symNote');
   if(!note)return;
   const recent=MEDS.filter(m=>m.startedOn&&(TODAY_DATE-dayStart(m.startedOn))/864e5<14)
